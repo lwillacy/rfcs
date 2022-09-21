@@ -1827,11 +1827,11 @@ transactions, using the keys derived from the master key.</li>
 </ul>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0152emojiid"><a class="header" href="#rfc-0152emojiid">RFC-0152/EmojiId</a></h1>
 <h2 id="emoji-id-specification"><a class="header" href="#emoji-id-specification">Emoji Id specification</a></h2>
-<p><img src="theme/images/status-outofdate.svg" alt="Status: Outdated" /></p>
+<p><img src="theme/images/status-draft.svg" alt="status: draft" /></p>
 <p><strong>Maintainer(s)</strong>:<a href="https://github.com/CjS77">Cayle Sharrock</a></p>
 <h1 id="licence-10"><a class="header" href="#licence-10">Licence</a></h1>
 <p><a href="https://opensource.org/licenses/BSD-3-Clause"> The 3-Clause BSD Licence</a>.</p>
-<p>Copyright 2020. The Tari Development Community</p>
+<p>Copyright 2022. The Tari Development Community</p>
 <p>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 following conditions are met:</p>
 <ol>
@@ -1881,13 +1881,13 @@ in the encoding.</li>
 </ul>
 <h3 id="the-specification"><a class="header" href="#the-specification">The specification</a></h3>
 <h4 id="the-emoji-character-map"><a class="header" href="#the-emoji-character-map">The emoji character map</a></h4>
-<p>An emoji alphabet of 1,024 characters is selected. Each emoji is assigned a unique index from 0 to 1023 inclusive. This
+<p>An emoji alphabet of 256 characters is selected. Each emoji is assigned a unique index from 0 to 255 inclusive. This
 list is the emoji map. For example,</p>
 <ul>
 <li>😀 =&gt; 0</li>
 <li>😘 =&gt; 1</li>
 <li>...</li>
-<li>🦊 =&gt; 1023</li>
+<li>🦊 =&gt; 255</li>
 </ul>
 <p>The emoji SHOULD be selected such that</p>
 <ul>
@@ -1896,78 +1896,32 @@ Côte d'Ivoirean flags look very similar, and both should be excluded.</li>
 <li>Modified emoji (skin tones, gender modifiers) are excluded. Only the &quot;base&quot; emoji is considered.</li>
 </ul>
 <h4 id="encoding"><a class="header" href="#encoding">Encoding</a></h4>
-<p>The essential strategy in the encoding process is to map a sequence of 8-bit values onto a 10-bit alphabet. The general
-encoding procedure is as follows:</p>
-<p>Given a large integer value, represented as a <em>byte array</em>, <code>S</code>, in little-endian format (most significant digit last).
-Assume the string is addressable, i.e. <code>S[i]</code> is the <code>i</code>th byte in the array.</p>
-<ul>
-<li>Set <code>CURSOR</code> to 0, Set <code>L</code> to a multiple of 10 that is <code>&lt;= len(S)</code>.</li>
-<li>Set <code>IDX</code> to <code>[]</code> (an empty array)</li>
-<li>While <code>CURSOR &lt; L</code>:
-<ul>
-<li>Set <code>L &lt;= S[CURSOR/8 + 1]</code>, the current low byte; if the index would overflow, set <code>L</code> to zero.</li>
-<li>Set <code>H &lt;= S[CURSOR/8]</code>, the current high byte</li>
-<li>Set <code>n &lt;= CURSOR % 8</code>, the position of the cursor in the current high byte</li>
-<li>Set <code>i &lt;= ((H as u8) &lt;&lt; n) &lt;&lt; 2 + (L &gt;&gt; (6 - n))</code>, where the first shift left (<code>H as u8 &lt;&lt;n</code>) is on a one-byte width
-(effectively losing the first n bits) and the second shift left is on a 8-byte width (u64).</li>
-<li>Push <code>i</code> onto <code>IDX</code></li>
-<li><code>CURSOR &lt;= CURSOR + 10</code></li>
-</ul>
-</li>
-<li>Return <code>IDX</code></li>
-</ul>
-<p>The emoji string is created by mapping the <code>IDX</code> array to the emoji map.</p>
+<p>The selection of an alphabet with 256 symbols means there is a direct mapping between bytes and emoji. For each byte
+in the input data to be encoded, map the byte to the corresponding emoji using the emoji map. The resulting
+concatenation of emoji characters is the emoji string.</p>
 <h4 id="emoji-id-definition"><a class="header" href="#emoji-id-definition">Emoji ID definition</a></h4>
-<p>The emoji ID is an emoji string of 12 characters. Each character encodes 10 bits according to the bitmap:</p>
-<pre><code class="language-text">+---------------------+------------------+-------------------+
-|  Node Id (104 bits) | Version (6 bits) | Checksum (10 bits)|
-+---------------------+------------------+-------------------+
+<p>The emoji ID is an emoji string of 33 symbols from the emoji alphabet. It uses this bitmap:</p>
+<pre><code class="language-text">+-----------------------------+-------------------+
+|  Node public key (256 bits) | Checksum (8 bits) |
++-----------------------------+-------------------+
 </code></pre>
-<p>The emoji ID is calculated from a 104-bit node id represented as 13 bytes (<code>B</code>) as follows:</p>
+<p>The emoji ID is calculated from a node public key serialized as 32 bytes (<code>B</code>) as follows:</p>
 <ul>
-<li>Take the current emoji ID version number, <code>v</code> and add <code>v &lt;&lt; 2</code> as an additional byte to <code>B</code>. This &quot;right-pads&quot; the
-version in the last byte. This is necessary since we have a 14 byte (112 bit) sequence, which is not divisible by 10.
-This padding sets the last 2 bits, which will be discarded, to zero.</li>
-<li>Encode B into an emoji string with <code>L</code> = 11.</li>
-<li>Calculate a 12th emoji using the Luhn mod 1024 checksum algorithm.</li>
+<li>Use the <a href="https://github.com/cypherstack/dammsum">DammSum</a> algorithm with <code>k = 8</code> and <code>m = 32</code> to compute an 8-bit
+checksum <code>C</code> from <code>B</code>.</li>
+<li>Encode <code>B</code> into an emoji string.</li>
+<li>Encode <code>C</code> into an emoji string.</li>
+<li>Concatenate <code>B</code> and <code>C</code> as the emoji ID.</li>
 </ul>
 <h4 id="decoding"><a class="header" href="#decoding">Decoding</a></h4>
-<p>One can extract the node id from an emoji ID as follows:</p>
-<ol>
-<li>Calculate the checksum of the first 11 emoji using the Luhn mod 1024 algorithm. If it does not match the 12th emoji,
-return with an error. if any emoji character is not in the emoji map, return an error.</li>
-<li>Extract the version number:
-<ol start="3">
-<li>Do a reverse lookup of emoji<code>[10]</code> to find its index. Store this u64 value in <code>I</code>.</li>
-<li>The Version number is <code>(I &amp;&amp; 0x3F) &gt;&gt; 2</code>. This can be used to set the Emoji map accordingly (and may have to be
-done iteratively, since the version is encoded into the emoji string).</li>
-</ol>
-</li>
-<li>Set <code>CURSOR = 0</code>.</li>
-<li>Set <code>B = []</code>, and empty byte array</li>
-<li>While <code>CURSOR &lt;= 11</code>:
-<ol start="4">
-<li>Set <code>k &lt;= CURSOR * 2</code></li>
-<li>Do a reverse lookup of the emoji<code>[CURSOR]</code> to find its index. Store this u64 value in <code>L</code>.</li>
-<li>If <code>k &gt; 0</code>, set <code>H</code> to the reverse lookup index of emoji<code>[CURSOR-1]</code> as u8 (first 2 bits are discarded), else
-<code>H=0</code>.</li>
-<li>Set <code>v = ((H as u8)  &lt;&lt; (8-k)) + (L &gt;&gt; (2+k))</code>. Push v onto tho <code>B</code>.</li>
-<li>Set <code>CURSOR &lt;= CURSOR + 1</code></li>
-</ol>
-</li>
-</ol>
-<p>If the algorithm completes, <code>B</code> holds the node ID.</p>
-<h4 id="versioning"><a class="header" href="#versioning">Versioning</a></h4>
-<p>The current emoji ID version number is 1. If the emoji alphabet changes, the version number MUST be incremented. This
-will usually cause incompatible versions of the emoji ID to be detected. However, this is not fail-safe.</p>
-<p>The last 6 bits of the 11th emoji encodes the version; this means that the first 4 bits are part of the node ID. On a
-reverse mapping, there is a chance that the reverse mapping would offer a valid, but incorrect version number if the new
-mapping are not chosen carefully.</p>
-<h5 id="example-1"><a class="header" href="#example-1">Example.</a></h5>
-<p>In version 1, 😘 =&gt; <code>0b0000_000001</code> = 1 in the map. Seeing 😘 as the 11th emoji in a string would result in a version
-code of 1, which is consistent and expected.</p>
-<p>However, in unlucky version 13, if 😘 moves in the map to number 13 (<code>0b0000_001101</code>), the version decoding would also
-be valid and thus we wouldn't be able to unambiguously identify the version.</p>
+<p>One can extract the node public key from an emoji ID as follows:</p>
+<ul>
+<li>Assert that the emoji ID contains exactly 33 valid emoji characters from the emoji alphabet. If not, return an error.</li>
+<li>Decode the emoji ID as an emoji string by mapping each emoji character to a byte value using the emoji map, producing
+33 bytes. Let <code>B</code> be the first 32 bytes, and <code>C</code> be the last byte.</li>
+<li>Use the DammSum validation algorithm on <code>B</code> to assert that <code>C</code> is a valid checksum. If not, return an error.</li>
+<li>Attempt to deserialize <code>B</code> as a public key. If this fails, return an error. If it succeeds, return the public key.</li>
+</ul>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0153stagedwalletsecurity"><a class="header" href="#rfc-0153stagedwalletsecurity">RFC-0153/StagedWalletSecurity</a></h1>
 <h2 id="staged-wallet-security"><a class="header" href="#staged-wallet-security">Staged Wallet Security</a></h2>
 <p><img src="https://github.com/tari-project/tari/raw/master/RFC/src/theme/images/status-draft.svg" alt="status: draft" /></p>
@@ -3534,7 +3488,7 @@ the connection is bound, a dedicated &quot;secure connection negotiation socket&
 <li>Which <a href="RFC-0172_PeerToPeerMessagingProtocol.html#netaddress">NetAddress</a> to use if a peer has many.</li>
 </ul>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0173versioning"><a class="header" href="#rfc-0173versioning">RFC-0173/Versioning</a></h1>
-<h2 id="versioning-1"><a class="header" href="#versioning-1">Versioning</a></h2>
+<h2 id="versioning"><a class="header" href="#versioning">Versioning</a></h2>
 <p><img src="theme/images/status-draft.svg" alt="status: draft" /></p>
 <p><strong>Maintainer(s)</strong>: <a href="https://github.com/philipr-za">Philip Robinson</a></p>
 <h1 id="licence-16"><a class="header" href="#licence-16">Licence</a></h1>
