@@ -7134,8 +7134,11 @@ changes take place over at least a 4-checkpoint time span.</li>
 <li>In the proposal step, any authorised VNC change proposer, as defined in the <a href="RFC-0312_DANHighLevelSpecification.html#the-contract-constitution">contract constitution</a></li>
 </ul>
 <h3 id="contract-abandonment"><a class="header" href="#contract-abandonment">Contract abandonment</a></h3>
-<p>If a contract misses one or more checkpoints, nodes can mark it as <code>abandoned</code>. This is not formally marked on the
+<p>This is the state where VNC and the Asset Owner(s) have abandoned the contract.</p>
+<p>If a contract misses one or more checkpoints, nodes can mark it as <code>VNC abandoned</code>. This is not formally marked on the
 blockchain, (since something was NOT done on-chain), but nodes will be able to test for abandoned state.</p>
+<p>If a contract has not seen any new constitution amendment for a checkpoint period after it has been marked as <code>VNC abandoned</code>, 
+it is marked as <code>abandoned</code>. </p>
 <p>The <a href="RFC-0312_DANHighLevelSpecification.html#the-contract-constitution">contract constitution</a> SHOULD provide a set of emergency pubkeys that are able to</p>
 <ul>
 <li>perform a peg-out</li>
@@ -7148,10 +7151,15 @@ abandonment.</p>
 stay in <code>QUARANTINED</code> state for at least one month.</p>
 <p>The contract can leave the quarantined state in one of two ways:</p>
 <ul>
-<li>The current VNC MAY reinstate the contract operation by publishing the missing checkpoints, and committing to any
-remedial actions as specified in the <a href="RFC-0312_DANHighLevelSpecification.html#the-contract-constitution">contract constitution</a>, e.g. paying a fine, etc.</li>
-<li>The quarantine period lapses, at which point the emergency key holder(s) have full administrative power over the
-contract. So they can unilaterally establish a brand new VNC, peg-out and shut down the contract, or whatever.</li>
+<li>
+<p>The current VNC MAY reinstate the contract operation by publishing the missing checkpoint(s), and committing to any
+remedial actions as specified in the <a href="RFC-0312_DANHighLevelSpecification.html#the-contract-constitution">contract constitution</a>, e.g. paying a fine, etc.</p>
+</li>
+<li>
+<p>The quarantine period lapses, at which point the emergency key holder(s) have full administrative power over the
+contract. This means that they have to issue a new constitution to assign a new VNC, peg-out and shut down the contract, or whatever.</p>
+<p><strong>OPEN QUESTION</strong>:  Do we want to allow an additional fall back of everyone spend after years in <code>abandoned</code> state?</p>
+</li>
 </ul>
 <h2 id="contract-dissolution"><a class="header" href="#contract-dissolution">Contract dissolution</a></h2>
 <h2 id="contract-templates"><a class="header" href="#contract-templates">Contract templates</a></h2>
