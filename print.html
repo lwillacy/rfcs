@@ -6834,6 +6834,12 @@ confirm this.</p>
 of the contract.</p>
 <p>The asset issuer will also draft and publish the <a href="RFC-0312_DANHighLevelSpecification.html#the-contract-constitution">contract constitution</a>. The constitution defines <em>how</em> a contract is
 run, and defines the conditions under which the terms of the constitution can be changed.</p>
+<h3 id="the-constitution-committee"><a class="header" href="#the-constitution-committee">The Constitution Committee</a></h3>
+<p>The <a href="RFC-0312_DANHighLevelSpecification.html#asset_issuer">asset issuer</a> will in the creation of the <a href="RFC-0312_DANHighLevelSpecification.html#the-contract-constitution">contract constitution</a> nominate a key or set of keys to &quot;own&quot; the asset
+and control all things related to <em>how</em> the contract is run. They are known as the <a href="RFC-0312_DANHighLevelSpecification.html#constitution_committee">constitution committee</a> (CC)</p>
+<p>The CC has the power to change anything inside of the <a href="RFC-0312_DANHighLevelSpecification.html#the-contract-constitution">contract constitution</a>. In many cases, the CC will simply be the <a href="RFC-0312_DANHighLevelSpecification.html#asset_issuer">asset issuer</a>.
+However, allowing the CC to differ from the asset issuer enables a number of other use-cases 
+such as a DAO, a nominated list of keys, etc.</p>
 <h3 id="the-role-of-validator-nodes"><a class="header" href="#the-role-of-validator-nodes">The role of validator nodes</a></h3>
 <ul>
 <li>Validator nodes SHOULD diligently and accurately <a href="RFC-0312_DANHighLevelSpecification.html#validator-node-instructions">process all instructions</a> related to the contract.</li>
@@ -6901,7 +6907,7 @@ Technically, users do not have to wait until this point. The VNC COULD start pro
 mined on the base layer. However, this is not generally recommended.</li>
 <li>The VNC periodically publishes a <a href="RFC-0312_DANHighLevelSpecification.html#checkpoint-transactions">checkpoint</a> transaction.</li>
 <li>Failure to do so can lead to the contract being <a href="RFC-0312_DANHighLevelSpecification.html#contract-abandonment" title="Contract abandonment">abandoned</a>.</li>
-<li>The VNC MAY shut the contract down by publishing a <a href="RFC-0312_DANHighLevelSpecification.html#contract-dissolution" title="Contract dissolution">dissolution</a> transaction.</li>
+<li>The CC MAY shut the contract down by publishing a <a href="RFC-0312_DANHighLevelSpecification.html#contract-dissolution" title="Contract dissolution">dissolution</a> transaction.</li>
 </ol>
 <p>The following sections will discuss each of these steps in more detail.</p>
 <h2 id="contract-instantiation"><a class="header" href="#contract-instantiation">Contract instantiation</a></h2>
@@ -6922,7 +6928,7 @@ The contract definition transaction defines the "what" of the digital asset set 
 <li>Asset issuers MUST stake a small amount of Tari in order to publish a new contract.</li>
 <li>Exactly ONE output MUST have a <code>ContractSpecification</code> output feature.</li>
 <li>The contract specification UTXO MUST include a covenant that only permits it to be spent to a
-new <code>ContractSpecification</code> UTXO (when transferring ownership of a contract), or as an unencumbered UTXO in
+new <code>ContractSpecification</code> UTXO or as an unencumbered UTXO in
 a <code>ContractDeregistration</code> transaction.</li>
 </ul>
 <p>Note: The latter is desirable because it tidies up the UTXO set. But this transaction MUST NOT be published before
@@ -6990,12 +6996,11 @@ the following:</p>
 <li>It MUST include the contract id. The contract definition transaction SHOULD be mined prior to publication of the
 constitution transaction, but it strictly is not necessary if VNs are able to access the contract specification in
 some other way.</li>
+<li>It MUST include a list of public keys of the proposed <a href="RFC-0312_DANHighLevelSpecification.html#cc">CC</a>;</li>
 <li>It MUST include a list of public keys of the proposed VNC;</li>
 <li>It MUST include an expiry timestamp before which all VNs must sign and agree to these terms (the <a href="RFC-0312_DANHighLevelSpecification.html#the-contract-acceptance-transaction" title="The contract acceptance transaction">acceptance period</a>);</li>
 <li>It MAY include quorum conditions for acceptance of this proposal (default to 100% of VN signatures required);</li>
 <li>If the conditions will unequivocally pass, the acceptance period MAY be shortcut.</li>
-<li>There MAY be an initial reward that is paid to the VN committee when the UTXO is spent. This reward is simply included
-in the value of the <code>ContractConstitution</code> UTXO.</li>
 <li>The UTXO MUST only be spendable by a multisig of the quorum of VNs performing <a href="RFC-0312_DANHighLevelSpecification.html#the-side-chain-initialization-transaction" title="The side-chain initialization transaction">side-chain</a> initialisation. (e.g. a 3
 of 5 threshold signature).</li>
 <li>It MUST include the side-chain metadata record:
@@ -7007,19 +7012,22 @@ of 5 threshold signature).</li>
 <li>It MUST include the following Checkpoint Parameters Record
 <ul>
 <li>minimum checkpoint frequency,</li>
-<li>committee change rules. (e.g. asset issuer must sign, or a quorum of VNC members, or a whitelist of keys).</li>
+<li>minimum quarantine period.</li>
 </ul>
 </li>
 <li>It MAY include a <code>RequirementsForConstitutionChange</code> record. It omitted, the checkpoint parameters and side-chain
 metadata records are immutable via covenant.
 <ul>
+<li>How and when the Constitution UTXO can change.</li>
+<li>Quorum required by the <a href="RFC-0312_DANHighLevelSpecification.html#cc">CC</a>,</li>
+<li>Proposal period.</li>
 <li>How and when the Checkpoint Parameters record can change.</li>
-<li>How and when the side-chain metadata record can change</li>
+<li>How and when the side-chain metadata record can change.</li>
 </ul>
 </li>
 <li>It SHOULD include a list of emergency public keys that have signing power if the contract is <a href="RFC-0312_DANHighLevelSpecification.html#contract-abandonment" title="Contract abandonment">abandoned</a>.</li>
 </ul>
-<p>If both the <a href="RFC-0312_DANHighLevelSpecification.html#the-contract-acceptance-transaction" title="The contract acceptance transaction">acceptance period</a> and <a href="RFC-0312_DANHighLevelSpecification.html#the-side-chain-initialization-period" title="The side-chain initialization period">side-chain initialization period</a> elapses without quorum, the asset owner MAY spend
+<p>If both the <a href="RFC-0312_DANHighLevelSpecification.html#the-contract-acceptance-transaction" title="The contract acceptance transaction">acceptance period</a> and <a href="RFC-0312_DANHighLevelSpecification.html#the-side-chain-initialization-period" title="The side-chain initialization period">side-chain initialization period</a> elapses without quorum, the CC MAY spend
 the<code>ContractConstitution</code> UTXO back to himself to recover his funds.</p>
 <p>In this case, the asset issuer MAY try and publish a new contract constitution.</p>
 <h4 id="contract-constitutions-for-proof-of-work-side-chains"><a class="header" href="#contract-constitutions-for-proof-of-work-side-chains">Contract constitutions for proof-of-work side-chains</a></h4>
@@ -7057,7 +7065,7 @@ also an explicit agreement to manage the contract.</li>
 <li>allocate resources</li>
 <li>Setup whatever is needed to run the contract</li>
 <li>Set up consensus with their peer VNs (e.g. hotstuff)</li>
-<li>Intialise the contract and run the constructors</li>
+<li>Initialise the contract and run the constructors</li>
 <li>Reach consensus on the initial state.</li>
 <li>Prepare the <a href="RFC-0312_DANHighLevelSpecification.html#the-side-chain-initialization-transaction" title="The side-chain initialization transaction">side-chain initialization</a> transaction.</li>
 </ul>
@@ -7074,9 +7082,6 @@ spending the initial Contract Constitution transaction into the zero-th <a href=
 contains the correct covenants and output flags.</li>
 <li>There is a minimum [side-chain deposit] that MUST be included in the peg-in UTXO. A single aggregated UTXO containing
 at least $$ m D $$ Tari, where <em>m</em> is the number of VNs and <em>D</em> is the deposit required.</li>
-<li>The initial reward, if any, MAY be spent to any number of unencumbered outputs. In practice the VNC will have
-negotiated how to spend this, and so we can assume that consensus has been reached on how to spend the initial reward.
-Therefore the base layer places no additional restrictions on those funds.</li>
 <li>This transaction also acts as the zero-th checkpoint for the contract. As such, it requires all the checkpoint
 information.</li>
 <li>The state commitment is the merklish root of the state after running the code initialisation using the [initial data]
@@ -7123,15 +7128,16 @@ relevant parts of the <a href="RFC-0312_DANHighLevelSpecification.html#the-contr
 <p>If a valid checkpoint is not posted within the maximum allowed timeframe, the contract is <a href="RFC-0312_DANHighLevelSpecification.html#contract-abandonment" title="Contract abandonment">abandoned</a>. This COULD lead
 to penalties and stake slashing if enabled within the contract specification.</p>
 <h3 id="changes-to-the-constitution"><a class="header" href="#changes-to-the-constitution">Changes to the constitution</a></h3>
-<p>Any changes to the <a href="RFC-0312_DANHighLevelSpecification.html#the-contract-constitution">contract constitution</a> MUST happen at checkpoints. This also refers to any changes to the VNC.</p>
+<p>Changes to the <a href="RFC-0312_DANHighLevelSpecification.html#the-contract-constitution">contract constitution</a> can happen at any time through the [constitution amendment] process. This also applies to changes to the VNC. Only the <a href="RFC-0312_DANHighLevelSpecification.html#cc">CC</a> may 
+make changes to the<a href="RFC-0312_DANHighLevelSpecification.html#the-contract-constitution">contract constitution</a>.</p>
 <ul>
-<li>The rules over how members are added or removed are defined in the <a href="RFC-0312_DANHighLevelSpecification.html#the-contract-constitution">contract constitution</a>. It may be that the VNC has
-autonomy over these changes, or that the asset issuer must approve changes, or some other authorization mechanism.</li>
+<li>The rules over how members are added or removed are defined in the <a href="RFC-0312_DANHighLevelSpecification.html#the-contract-constitution">contract constitution</a>.</li>
 <li>At the minimum, there's a proposal step, a validation step, an acceptance step, and an activation step. Therefore
 changes take place over at least a 4-checkpoint time span.</li>
 <li>If a VN leaves a committee their [side-chain deposit] MAY be refunded to them.</li>
 <li>If a new VN joins the committee they must provide the [side-chain deposit] at their activation step.</li>
-<li>In the proposal step, any authorised VNC change proposer, as defined in the <a href="RFC-0312_DANHighLevelSpecification.html#the-contract-constitution">contract constitution</a></li>
+<li>In the proposal step, any authorised <a href="RFC-0312_DANHighLevelSpecification.html#cc">CC</a> may make a change proposal, within the limits defined by the change rules in the <a href="RFC-0312_DANHighLevelSpecification.html#the-contract-constitution">contract constitution</a></li>
+<li>Before activation, VNC members MAY submit an acceptance transaction that registers their willingness to validate the contract. If no acceptance is submitted within the <code>acceptance_period</code> the validator is assumed to be uninterested in running the contract and will not form part of the finalized contract committee. </li>
 </ul>
 <h3 id="contract-abandonment"><a class="header" href="#contract-abandonment">Contract abandonment</a></h3>
 <p>This is the state where VNC and the Asset Owner(s) have abandoned the contract.</p>
