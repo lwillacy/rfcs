@@ -4113,7 +4113,18 @@ participants, including the UTXO owner.</li>
 <li>The scripts and their redeeming inputs must be stored on the block chain. In particular, the input data must not be
 malleable.</li>
 </ul>
-<p>The next section discusses the specific proposals for achieving these requirements.</p>
+<h3 id="preventing-cut-through"><a class="header" href="#preventing-cut-through">Preventing Cut-through</a></h3>
+<p>A major issue with many Mimblewimble extension schemes is that miners are able to cut-through UTXOs if an output is 
+spent in the same block it was created. This makes it so that the intervening UTXO never existed; along with any checks 
+and balances carried in that UTXO. It's also impossible to prove without additional information that cut-through even 
+occurred (though one may suspect, since the &quot;one&quot; transaction would contribute two kernels to the block).</p>
+<p>In particular, cut-through is devastating for an idea like TariScript which relies on conditions present in the UTXO 
+being enforced. For example, say there is a UTXO in the mempool that everyone knows the blinding factor to, but is 
+restricted to a single public key via the TariScript. A malicious user can spend the UTXO in a zero conf transaction, 
+and send the cut-through transaction to the mempool. Since the miner only sees the resulting aggregate transaction, it 
+cannot know that there was a TariScript on the removed UTXO. The solution to this problem is described later in this RFC.</p>
+<p>In contrast range proofs are still valid if they are cut-through, because the resulting UTXOs must have
+valid range proofs. </p>
 <h2 id="protocol-modifications"><a class="header" href="#protocol-modifications">Protocol modifications</a></h2>
 <p>Please refer to <a href="RFC-0201_TariScript.html#notation">Notation</a>, which provides important pre-knowledge for the remainder of the report.</p>
 <p>At a high level, TariScript works as follows:</p>
@@ -4677,14 +4688,8 @@ the correct UTXO for the transaction.</p>
 <tr><td>script signature</td><td>\( (a_{Ss} ,b_{Ss} , R_{Ss}) \)</td><td>Alice knows \( (k_{SsA},\, r_{SsA}) \), Bob knows \( (k_{SsB},\, r_{SsB}) \), both parties know \( (k_{s},\, v_{s}) \), neither party knows \( k_{Ss}\).</td></tr>
 <tr><td>sender offset public key</td><td>\( K_{Os} \)</td><td>As above, Alice and Bob each know part of the sender offset key.</td></tr>
 </tbody></table>
-<h3 id="cut-through"><a class="header" href="#cut-through">Cut-through</a></h3>
-<p>A major issue with many Mimblewimble extension schemes is that miners are able to cut-through UTXOs if an output is 
-spent in the same block it was created. This makes it so that the intervening UTXO never existed; along with any checks 
-and balances carried in that UTXO. It's also impossible to prove without additional information that cut-through even 
-occurred (though one may suspect, since the &quot;one&quot; transaction would contribute two kernels to the block).</p>
-<p>In particular, cut-through is devastating for an idea like TariScript which relies on conditions present in the UTXO 
-being enforced.</p>
-<p>This is a reason for the presence of the script offset in the TariScript proposal. It mathematically links all inputs 
+<h3 id="preventing-cut-through-with-the-script-offset"><a class="header" href="#preventing-cut-through-with-the-script-offset">Preventing Cut-through with the Script Offset</a></h3>
+<p>Earlier, we described that cut-through needed to be prevented. This is achieved by the script offset in the TariScript proposal. It mathematically links all inputs 
 and outputs of all the transactions in a block and that tallied up to create the script offset. Providing the script 
 offset requires knowledge of keys that miners do not possess; thus they are unable to produce the necessary script 
 offset when attempting to perform cut-through on a pair of transactions.</p>
@@ -6593,7 +6598,7 @@ power given by covenants.</p>
 <p>The worst case complexity for covenant validation is <code>O(num_inputs*num_outputs)</code>, although as mentioned above
 validation for each input can be executed in parallel. To compensate for the additional workload the network
 encounters, use of covenants should incur heavily-weighted fees to discourage needlessly using them.</p>
-<h3 id="cut-through-1"><a class="header" href="#cut-through-1">Cut-through</a></h3>
+<h3 id="cut-through"><a class="header" href="#cut-through">Cut-through</a></h3>
 <p>The same arguments made in the <a href="./RFC-0201_TariScript.html#cut-through">TariScript RFC</a> for the need to prevent
 <a href="https://tlu.tarilabs.com/protocols/grin-protocol-overview/MainReport.html#cut-through">cut-through</a> apply to covenants.</p>
 <h3 id="chain-analysis"><a class="header" href="#chain-analysis">Chain analysis</a></h3>
@@ -10015,7 +10020,7 @@ was directly nominated by the <a href="Glossary.html#asset-issuer" title="An ent
 <h2 id="current-head"><a class="header" href="#current-head">Current head</a></h2>
 <p>The last <a href="Glossary.html#block" title="A collection of transactions and associated metadata recorded as a single entity in the Tari blockchain">block</a> of the base layer that represents the latest valid block. This <a href="Glossary.html#block" title="A collection of transactions and associated metadata recorded as a single entity in the Tari blockchain">block</a> must be from the longest
 proof-of-work chain to be the current head.</p>
-<h2 id="cut-through-2"><a class="header" href="#cut-through-2">Cut-Through</a></h2>
+<h2 id="cut-through-1"><a class="header" href="#cut-through-1">Cut-Through</a></h2>
 <p>Cut-through is the process where outputs spent within a single block may be removed without breaking the standard <a href="Glossary.html#mimblewimble">MimbleWimble</a>
 validation rules. Simplistically, <code>Alice -&gt; Bob -&gt; Carol</code> may be &quot;cut-through&quot; to <code>Alice -&gt; Carol</code>. Bob's commitments may be removed.</p>
 <p>On Tari, for reasons described in <a href="./RFC-0201_TariScript.html#utxo-data-commitments">RFC-0201_TariScript</a>, cut-through is prevented from ever happening.</p>
