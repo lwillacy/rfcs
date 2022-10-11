@@ -1397,7 +1397,7 @@ technological merits of the potential system outlined herein.</p>
 <h2 id="description-5"><a class="header" href="#description-5">Description</a></h2>
 <p>The following proposal draws from many of the key points of debate from the Tari community on the topic of Tari’s
 main chain proof of work strategy. The early working assumption was that Tari would be 100% merged mined by Monero.</p>
-<p>It would be nice to have a single, merge mined Proof of Work (PoW) algorithm, but the risks of hash rate attacks are 
+<p>Having a single, merge mined Proof of Work (PoW) algorithm would be nice, but the risks of hash rate attacks are 
 real and meaningful. Double-spends and altering history can happen with &gt;50% hash power, while selfish mining and 
 eclipse attacks can happen with &gt;33% hash power for a poorly connected attacker and &gt;25% for a well-connected attacker 
 (see <a href="http://repositum.tuwien.ac.at/obvutwhs/download/pdf/2315652"><em>Merged Mining: Analysis of Effects and Implications</em></a>).
@@ -1407,41 +1407,23 @@ hash rate on platforms like NiceHash.</p>
 independent, then one can get at most x% of the total hash rate, where x is the fraction of blocks apportioned to that
 algorithm. As a result, the threat of a double-spend or selfish mining attack is mitigated, and in some cases
 eliminated.</p>
-<p>This proposal puts forward Hybrid mining as the Tari PoW algorithm. However, some details still needed to be decided:</p>
-<ul>
-<li>the number of algorithms;</li>
-<li>the choice of algorithms;</li>
-<li>the block distribution;</li>
-<li>the difficulty adjustment strategy.</li>
-</ul>
-<h3 id="the-number-of-algorithms"><a class="header" href="#the-number-of-algorithms">The number of algorithms</a></h3>
-<p>In hybrid mining, &quot;independence&quot; of algorithms is key. If the same mining hardware can be used on multiple PoW
-algorithms in the hybrid mining scheme, you may as well not bother with hybrid mining, because miners can simply
-switch between them.</p>
-<p>In practice, no set of algorithms are truly independent. The best we can do is try to choose algorithms that work best
-on CPUs, GPUs, and ASICs. In truth, the distinction between GPUs and ASICs is only a matter of time. Any &quot;GPU-friendly&quot;
-algorithm is ASIC-friendly too; it's just a case of whether the capital outlay for fabricating them is worth it; and
-this will eventually become true for any algorithm that supplies PoW for a growing market cap. Employing merged mining
-with major players that use independent hardware introduces another degree of freedom, as long as those are independent,
-like RandomX with Monero, SHA-256 with Bitcoin and Scrypt with Litecoin.</p>
-<p><em><strong>Note:</strong> Merge mining does not add security per se, but it does add plenty of hash rate and continuity of the blockchain.</em></p>
-<p>So really the answer to how many algorithms is: More than one, as independent as possible.</p>
+<p>This proposal puts forward Hybrid mining as the Tari PoW algorithm. </p>
 <h3 id="the-choice-of-algorithms"><a class="header" href="#the-choice-of-algorithms">The choice of algorithms</a></h3>
-<p>A good technical choice would be merge mining with Monero, Bitcoin and Litecoin, if enough interest could be
-attracted from those mining communities. However, that would rule out any participation from Tari supporters and
-enthusiasts, at least in the early stages. So, to be inclusive of Tari supporters and enthusiasts, merge mining RandomX
-with Monero and another GPU/ASIC-friendly algorithm, like SHA3 also known as Keccak, is proposed. Using a custom
-configuration of such a simple and well understood algorithm means there is a low likelihood of unforeseen optimizations
-that will give a single miner a huge advantage. It also means that it stands a good chance of being &quot;commoditized&quot; when 
-ASICs are eventually manufactured. This means that SHA3 ASICs will be widely available and not available from only a 
-single supplier.</p>
-<p><em><strong>Edit:</strong> Handshake, which launched a few months ago, selected a Hashcash PoW algorithm
-<a href="https://handshake.org/files/handshake.txt">(see #Consensus)</a> using SHA3 and Blake2B for many of the same reasons:
-SHA3 is currently under-represented in PoW; SHA3 usage in combination with Blake2B in PoW creates a more level playing
-field for hardware manufacturers.</em></p>
+<p>In hybrid mining, &quot;independence&quot; of algorithms is key. If the same mining hardware can be used on multiple PoW
+algorithms in the hybrid mining scheme, you may as well not bother with hybrid mining because miners can simply
+switch between them.</p>
+<p>In practice, no set of algorithms is genuinely independent. The best we can do is try to choose algorithms that work best
+on CPUs, GPUs, and ASICs. In truth, the distinction between GPUs and ASICs is only a matter of time. Any &quot;GPU-friendly&quot;
+algorithm is ASIC-friendly, too; it's just a case of whether the capital outlay for fabricating them is worth it, and
+this will eventually become true for any algorithm that supplies PoW for a growing market cap.</p>
+<p>With this in mind, we should only choose one GPU/ASIC algorithm and one for CPUs. </p>
+<p>An excellent technical choice would be merge mining with Monero using RandomX as a CPU-only algorithm and SHA3, also known as Keccak
+, for a GPU/ASIC-friendly algorithm. Using a custom configuration of such a simple and well-understood algorithm means there is 
+a low likelihood of unforeseen optimizations that will give a single miner a considerable advantage. It also means that it stands a 
+good chance of being &quot;commoditized&quot; when ASICs are eventually manufactured. This would mean that SHA3 ASICs are widely available from multiple suppliers.</p>
 <h3 id="the-block-distribution"><a class="header" href="#the-block-distribution">The block distribution</a></h3>
-<p>To reduce the chance of hash rate attacks, an even 50/50 distribution is needed, as discussed earlier. However,
-sufficient buy-in is needed, especially with regards to merge mining RandomX with Monero. To make it worthwhile for a
+<p>A 50/50 split in hash rate among algorithms minimises the chance of hash rate attacks. However,
+sufficient buy-in is required, especially with regard to merge mining RandomX with Monero. To make it worthwhile for a
 Monero pool operator to merge mine Tari, but still guard against hash rate attacks and to be inclusive of independent
 Tari supporters and enthusiasts, a 60/40 split is proposed in favour of merge mining RandomX with Monero. The
 approaching <a href="https://web.getmonero.org/resources/moneropedia/tail-emission.html">Monero tail emission</a> at the end of May
@@ -1452,25 +1434,62 @@ completely independently with a scaled-up target block time and is the most like
 take. Tari testnet has been running very successfully on Linear Weighted Moving Average (LWMA) from Bitcoin &amp; Zcash
 Clones <a href="https://github.com/zawy12/difficulty-algorithms/issues/3#issuecomment-442129791">version 2018-11-27</a>. This LWMA
 difficulty adjustment algorithm has also been
-<a href="https://github.com/tari-labs/modelling/tree/master/scenarios/multi_pow_01">tested in simulations</a> and it proved to be a
-good choice in the multi-PoW scene as well.</p>
+<a href="https://github.com/tari-labs/modelling/tree/master/scenarios/multi_pow_01">tested in simulations</a>, and it proved to be a good choice in the multi-PoW scene as well.</p>
 <h3 id="final-proposal-hybrid-mining-details"><a class="header" href="#final-proposal-hybrid-mining-details">Final proposal, hybrid mining details</a></h3>
 <p>The final proposal is summarized below:</p>
 <ul>
-<li>2x mining algorithms, with average combined target block time at 120 s, to match Monero's block interval</li>
-<li>LWMA version 2018-11-27 difficulty algorithm adjustment for both with difficulty algo window of 90 blocks</li>
-<li>Algorithm 1: Monero merged mining
+<li>Two mining algorithms, with an average combined target block time of 120 s, to match Monero's block interval.</li>
+<li>A log-weighted moving average difficulty adjustment algorithm using a window of 90 blocks.</li>
+</ul>
+<h3 id="tari-mining-hash"><a class="header" href="#tari-mining-hash">Tari mining hash</a></h3>
+<p>Tari will use a mining hash that is hashed with a 256bit Blake2b hash constructed from the Tari blockheader. 
+The hash MUST be constructed with the following encoded with <a href="RFC-0121_ConsensusEncoding">consensus encoding</a>, in order:</p>
 <ul>
-<li>at ~60% blocks distribution, based on block time setting of 192.0</li>
-<li>using RandomX, with <code>seed_hash</code> as arbitrary data, re-use restricted by age measured in Tari blocks</li>
+<li>version</li>
+<li>previous header hash</li>
+<li>timestamp</li>
+<li>input Merkle root</li>
+<li>output Merkle root</li>
+<li>output Merkle mountain range size</li>
+<li>witness Merkle root</li>
+<li>kernel Merkle root</li>
+<li>kernel Merkle mountain range size</li>
+<li>total kernel offset</li>
+<li>total script offset</li>
+</ul>
+<h4 id="randomx"><a class="header" href="#randomx">RandomX</a></h4>
+<p>Monero blocks that are merge-mining Tari MUST include the Tari mining hash in the extra field of the Monero coinbase transaction.</p>
+<p>Tari also imposes the following consensus rules:</p>
+<ul>
+<li>The <code>seed_hash</code> MUST only be used for 3000 blocks, after which a block MUST be discarded if it's used again.</li>
+<li>The little-endian difficulty MUST be equal to or greater than the target for that block as determined by the LWMA for Tari.</li>
+<li>The LWMA MUST use a target time of 200 seconds.</li>
+<li>MUST set the header field PoW:pow_algo as 0 for a Monero block</li>
+<li>MUST encode the following data into the Pow:Pow_data field:
+<ul>
+<li>Monero BlockHeader,</li>
+<li>RandomX VM key,</li>
+<li>Monero transaction count,</li>
+<li>Monero merkle root,</li>
+<li>Monero coinbase merkle proof and,</li>
+<li>Monero coinbase transaction</li>
 </ul>
 </li>
-<li>Algorithm 2: Independent mining
-<ul>
-<li>at ~40% blocks distribution, based on block time setting of 288.0 s</li>
-<li>SHA3-based algorithm, details to be fleshed out</li>
 </ul>
-</li>
+<h4 id="sha3"><a class="header" href="#sha3">Sha3</a></h4>
+<p>The Sha3 mining hash is constructed as a Sha3-256 with the following fields:</p>
+<ul>
+<li>Nonce</li>
+<li>Tari mining hash</li>
+<li>Pow data</li>
+</ul>
+<p>For the Sha3 difficulty, the Sha3 mining hash is hashed with Sha3-256. </p>
+<p>Tari imposes the following consensus rules:</p>
+<ul>
+<li>The Big endian difficulty MUST be equal or greater than the target for that block as determined by the LWMA for Tari.</li>
+<li>MUST set the header field PoW:pow_algo as 1 for a Sha block.</li>
+<li>The PoW:pow_data field is empty</li>
+<li>The LWMA MUST use a target time of 300 seconds.</li>
 </ul>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0132mergeminingmonero"><a class="header" href="#rfc-0132mergeminingmonero">RFC-0132/MergeMiningMonero</a></h1>
 <h2 id="tari-protocol-for-merge-mining-with-monero"><a class="header" href="#tari-protocol-for-merge-mining-with-monero">Tari protocol for Merge Mining with Monero</a></h2>
