@@ -282,15 +282,20 @@ valid range proofs. </p>
 <p>At a high level, TariScript works as follows:</p>
 <ul>
 <li>The spending <em>script</em> \((\script)\) is recorded in the transaction UTXO.</li>
-<li>UTXOs also define a new, <em><a href="Glossary.html#sender-offset-keypair">sender offset</a> public key</em> \((K_{O})\).</li>
+<li>Although scripts are included on the UTXO, they are only executed when the UTXO is <strong>spent</strong>, and in most cases, will require additional
+input data to be provided at this time. </li>
+<li>The <em>script input data</em> is recorded in the transaction inputs.</li>
+<li>When validating a transaction, the <em>script</em> is executed using the <em>script input data</em>.</li>
 <li>After the <em>script</em> \((\script)\) is executed, the execution stack must contain exactly one value that will be 
-interpreted as the <em><a href="Glossary.html#script-keypair">script public key</a></em> \((K_{S})\). One can prove ownership of a UTXO by demonstrating knowledge 
-of both the commitment <em>blinding factor</em> \((k\)), <em>and</em> the <em><a href="Glossary.html#script-keypair">script private key</a></em> \((k_{S})\).</li>
-<li>The <em>script private key</em> \((k_{S})\), commitment <em>blinding factor</em> \((k)\) and commitment <em>value</em> \((v)\) signs 
-the <em>script input data</em> \((\input)\).</li>
+interpreted as the <em><a href="Glossary.html#script-keypair">script public key</a></em> \((K_{S})\). </li>
+<li>The <em><a href="Glossary.html#script-keypair">script public key</a></em> and commitment must match the <em>script signature</em> on the input, which prevents malleability of the data in the input.</li>
+<li>To prevent a script from being removed from a UTXO, a new field  <em><a href="Glossary.html#sender-offset-keypair">sender offset</a> public key</em> \((K_{O})\) has been added.</li>
 <li>The <em>sender offset private keys</em> \((k_{O})\) and <em>script private keys</em> \((k_{S})\) are used in conjunction to 
 create a <em>script offset</em> \((\so)\), which are used in the consensus balance to prevent a number of attacks.</li>
 </ul>
+<blockquote>
+<p>NOTE: One can prove ownership of a UTXO by demonstrating knowledge of both the commitment <em>blinding factor</em> \((k\)), <em>and</em> the <em><a href="Glossary.html#script-keypair">script private key</a></em> \((k_{S})\).</p>
+</blockquote>
 <h3 id="utxo-data-commitments"><a class="header" href="#utxo-data-commitments">UTXO data commitments</a></h3>
 <p>The script, as well as other UTXO metadata, such as the output features are signed for with the <a href="Glossary.html#sender-offset-keypair">sender offset</a> private 
 key to prevent malleability. As we will describe later, the notion of a <a href="Glossary.html#script-offset">script offset</a> is introduced to prevent 
