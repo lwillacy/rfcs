@@ -231,7 +231,7 @@ is popped off the stack instead of being hardcoded in the script. Pops the top o
 it to the current block height.</p>
 <ul>
 <li>Fails with <code>INVALID_INPUT</code> if there is not a valid integer value on top of the stack.</li>
-<li>Fails with <code>EMPTY_STACK</code> if the stack is empty.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
 <li>Fails with <code>VERIFY_FAILED</code> if the block height &lt; <code>height</code>.</li>
 </ul>
 <h5 id="compareheight"><a class="header" href="#compareheight">CompareHeight</a></h5>
@@ -241,7 +241,7 @@ is popped off the stack instead of being hardcoded in the script.</p>
 In other words, this opcode replaces the top of the stack with the difference between that value and the current height.</p>
 <ul>
 <li>Fails with <code>INVALID_INPUT</code> if there is not a valid integer value on top of the stack.</li>
-<li>Fails with <code>EMPTY_STACK</code> if the stack is empty.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
 </ul>
 <h3 id="stack-manipulation"><a class="header" href="#stack-manipulation">Stack manipulation</a></h3>
 <h5 id="noop"><a class="header" href="#noop">NoOp</a></h5>
@@ -279,66 +279,66 @@ In other words, this opcode replaces the top of the stack with the difference be
 <h5 id="drop"><a class="header" href="#drop">Drop</a></h5>
 <p>Drops the top stack item.</p>
 <ul>
-<li>Fails with <code>EMPTY_STACK</code> if the stack is empty.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
 </ul>
 <h5 id="dup"><a class="header" href="#dup">Dup</a></h5>
 <p>Duplicates the top stack item.</p>
 <ul>
-<li>Fails with <code>EMPTY_STACK</code> if the stack is empty.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
 <li>Fails with <code>STACK_OVERFLOW</code> if the stack would exceed the max stack height.</li>
 </ul>
 <h5 id="revrot"><a class="header" href="#revrot">RevRot</a></h5>
 <p>Reverse rotation. The top stack item moves into 3rd place, e.g. <code>abc =&gt; bca</code>.</p>
 <ul>
-<li>Fails with <code>EMPTY_STACK</code> if the stack has fewer than three items.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack has fewer than three items.</li>
 </ul>
 <h3 id="math-operations"><a class="header" href="#math-operations">Math operations</a></h3>
 <h4 id="gezero"><a class="header" href="#gezero">GeZero</a></h4>
 <p>Pops the top stack element as <code>val</code>. If <code>val</code> is greater than or equal to zero, push a 1 to the stack, otherwise push 0.</p>
 <ul>
-<li>Fails with <code>EMPTY_STACK</code> if the stack is empty.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
 <li>Fails with <code>INVALID_INPUT</code> if <code>val</code> is not an integer.</li>
 </ul>
 <h4 id="gtzero"><a class="header" href="#gtzero">GtZero</a></h4>
 <p>Pops the top stack element as <code>val</code>. If <code>val</code> is strictly greater than zero, push a 1 to the stack, otherwise push 0.</p>
 <ul>
-<li>Fails with <code>EMPTY_STACK</code> if the stack is empty.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
 <li>Fails with <code>INVALID_INPUT</code> if the item is not an integer.</li>
 </ul>
 <h4 id="lezero"><a class="header" href="#lezero">LeZero</a></h4>
 <p>Pops the top stack element as <code>val</code>. If <code>val</code> is less than or equal to zero, push a 1 to the stack, otherwise push 0.</p>
 <ul>
-<li>Fails with <code>EMPTY_STACK</code> if the stack is empty.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
 <li>Fails with <code>INVALID_INPUT</code> if the item is not an integer.</li>
 </ul>
 <h4 id="ltzero"><a class="header" href="#ltzero">LtZero</a></h4>
 <p>Pops the top stack element as <code>val</code>. If <code>val</code> is strictly less than zero, push a 1 to the stack, otherwise push 0.</p>
 <ul>
-<li>Fails with <code>EMPTY_STACK</code> if the stack is empty.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
 <li>Fails with <code>INVALID_INPUT</code> if the items is not an integer.</li>
 </ul>
 <h5 id="add"><a class="header" href="#add">Add</a></h5>
 <p>Pop two items and push their sum</p>
 <ul>
-<li>Fails with <code>EMPTY_STACK</code> if the stack has fewer than two items.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack has fewer than two items.</li>
 <li>Fails with <code>INVALID_INPUT</code> if the items cannot be added to each other (e.g. an integer and public key).</li>
 </ul>
 <h5 id="sub"><a class="header" href="#sub">Sub</a></h5>
 <p>Pop two items and push the second minus the top</p>
 <ul>
-<li>Fails with <code>EMPTY_STACK</code> if the stack has fewer than two items.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack has fewer than two items.</li>
 <li>Fails with <code>INVALID_INPUT</code> if the items cannot be subtracted from each other (e.g. an integer and public key).</li>
 </ul>
 <h5 id="equal"><a class="header" href="#equal">Equal</a></h5>
 <p>Pops the top two items, and pushes 1 to the stack if the inputs are exactly equal, 0 otherwise. 0 is also pushed if the
 values cannot be compared (e.g. integer and pubkey).</p>
 <ul>
-<li>Fails with <code>EMPTY_STACK</code> if the stack has fewer than two items.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack has fewer than two items.</li>
 </ul>
 <h5 id="equalverify"><a class="header" href="#equalverify">EqualVerify</a></h5>
 <p>Pops the top two items, and compares their values.</p>
 <ul>
-<li>Fails with <code>EMPTY_STACK</code> if the stack has fewer than two items.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack has fewer than two items.</li>
 <li>Fails with <code>VERIFY_FAILED</code> if the top two stack elements are not equal.</li>
 </ul>
 <h3 id="boolean-logic"><a class="header" href="#boolean-logic">Boolean logic</a></h3>
@@ -346,46 +346,60 @@ values cannot be compared (e.g. integer and pubkey).</p>
 <p><code>n</code> + 1 items are popped from the stack. If the last item popped matches at least one of the first <code>n</code> items popped,
 push 1 onto the stack. Push 0 otherwise.</p>
 <ul>
-<li>Fails with <code>EMPTY_STACK</code> if the stack has fewer than <code>n</code> + 1 items.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack has fewer than <code>n</code> + 1 items.</li>
 </ul>
 <h4 id="orverifyn"><a class="header" href="#orverifyn">OrVerify(n)</a></h4>
 <p><code>n</code> + 1 items are popped from the stack. If the last item popped matches at least one of the first <code>n</code> items popped,
 continue. Fail with <code>VERIFY_FAILED</code> otherwise.</p>
 <ul>
-<li>Fails with <code>EMPTY_STACK</code> if the stack has fewer than <code>n</code> + 1 items.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack has fewer than <code>n</code> + 1 items.</li>
 </ul>
 <h3 id="cryptographic-operations"><a class="header" href="#cryptographic-operations">Cryptographic operations</a></h3>
 <h5 id="hashblake256"><a class="header" href="#hashblake256">HashBlake256</a></h5>
 <p>Pop the top element, hash it with the Blake256 hash function and push the result to the stack.</p>
 <ul>
-<li>Fails with <code>EMPTY_STACK</code> if the stack is empty.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
 </ul>
 <h5 id="hashsha256"><a class="header" href="#hashsha256">HashSha256</a></h5>
 <p>Pop the top element, hash it with the SHA256 hash function and push the result to the stack.</p>
 <ul>
-<li>Fails with <code>EMPTY_STACK</code> if the stack is empty.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
 </ul>
 <h5 id="hashsha3"><a class="header" href="#hashsha3">HashSha3</a></h5>
 <p>Pop the top element, hash it with the SHA-3 hash function and push the result to the stack.</p>
 <ul>
-<li>Fails with <code>EMPTY_STACK</code> if the stack is empty.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
 </ul>
 <h5 id="checksigmsg"><a class="header" href="#checksigmsg">CheckSig(Msg)</a></h5>
 <p>Pop the public key and then the signature. If the signature signs the 32-byte message, push 1 to the stack, otherwise
 push 0.</p>
 <ul>
 <li>Fails with <code>INVALID_SCRIPT_DATA</code> if the <code>Msg</code> is not a valid 32-byte value.</li>
-<li>Fails with <code>EMPTY_STACK</code> if the stack has fewer than 2 items.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack has fewer than 2 items.</li>
 <li>Fails with <code>INVALID_INPUT</code> if the top stack element is not a PublicKey or Commitment</li>
 <li>Fails with <code>INVALID_INPUT</code> if the second stack element is not a Signature</li>
 </ul>
 <h5 id="checksigverifymsg"><a class="header" href="#checksigverifymsg">CheckSigVerify(Msg),</a></h5>
 <p>Identical to <a href="#checksigmsg"><code>CheckSig</code></a>, except that nothing is pushed to the stack if the signature is valid, and the
 operation fails with <code>VERIFY_FAILED</code> if the signature is invalid.</p>
+<h5 id="checkmultisigmsg"><a class="header" href="#checkmultisigmsg">CheckMultiSig(Msg)</a></h5>
+<p>Pop $m$ signatures from the stack. If $m$ signatures out of the provided $n$ public keys sign the 32-byte message,
+push 1 to the stack, otherwise push 0.</p>
+<ul>
+<li>Fails with <code>INVALID_SCRIPT_DATA</code> if the <code>Msg</code> is not a valid 32-byte value.</li>
+<li>Fails with <code>INVALID_SCRIPT_DATA</code> if $m$ or $n$ are zero.</li>
+<li>Fails with <code>INVALID_SCRIPT_DATA</code> if $m$ or $n$ are greater than <code>MAX_MULTISIG_LIMIT (32)</code>.</li>
+<li>Fails with <code>INVALID_SCRIPT_DATA</code> if $m &gt; n$ </li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack has fewer than $m$ items.</li>
+<li>Fails with <code>INVALID_INPUT</code> if $m$ stack elements are not a <code>Signature</code>.</li>
+</ul>
+<h5 id="checkmultisigverifymsg"><a class="header" href="#checkmultisigverifymsg">CheckMultiSigVerify(Msg),</a></h5>
+<p>Identical to <a href="#checkmultisigmsg"><code>CheckMultiSig</code></a>, except that nothing is pushed to the stack if the signatures are valid, and the
+operation fails with <code>VERIFY_FAILED</code> if the signatures are invalid.</p>
 <h5 id="toristrettopoint"><a class="header" href="#toristrettopoint">ToRistrettoPoint,</a></h5>
 <p>Pops the top element which must be a valid Ristretto scalar, calculates the corresponding Ristretto point, and pushes this to the stack.</p>
 <ul>
-<li>Fails with <code>EMPTY_STACK</code> if the stack is empty.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
 <li>Fails with <code>INVALID_INPUT</code> if the top stack element is not a scalar.</li>
 </ul>
 <h3 id="miscellaneous"><a class="header" href="#miscellaneous">Miscellaneous</a></h3>
@@ -400,7 +414,7 @@ then popped without being executed.</p>
 If <code>ELSE</code> is encountered, instructions are executed until <code>ENDIF</code> is reached.
 <code>ENDIF</code> is a marker opcode and a no-op.</p>
 <ul>
-<li>Fails with <code>EMPTY_STACK</code> if the stack is empty.</li>
+<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
 <li>If <code>pred</code> is anything other than 0 or 1, the script fails with <code>INVALID_INPUT</code>.</li>
 <li>If any instruction during execution of the clause causes a failure, the script fails with that failure code.</li>
 </ul>
@@ -552,18 +566,28 @@ continues.</p>
 or Bob can spend the output.</p>
 <h3 id="error-codes"><a class="header" href="#error-codes">Error codes</a></h3>
 <table><thead><tr><th align="left">Code</th><th align="left">Description</th></tr></thead><tbody>
-<tr><td align="left"><code>SCRIPT_TOO_LONG</code></td><td align="left">The serialised script exceeds 1024 bytes.</td></tr>
-<tr><td align="left"><code>SCRIPT_INPUT_TOO_LONG</code></td><td align="left">The serialised script input exceeds 1024 bytes.</td></tr>
+<tr><td align="left"><code>RETURN</code></td><td align="left">The serialised script exceeds 1024 bytes.</td></tr>
 <tr><td align="left"><code>STACK_OVERFLOW</code></td><td align="left">The stack exceeded 255 elements during script execution</td></tr>
-<tr><td align="left"><code>EMPTY_STACK</code></td><td align="left">There was an attempt to pop an item off an empty stack</td></tr>
+<tr><td align="left"><code>STACK_UNDERFLOW</code></td><td align="left">Attempt to pop more items than remain on the stack during script execution</td></tr>
+<tr><td align="left"><code>NON_UNIT_LENGTH_STACK</code></td><td align="left">The stack did not exactly 1 element after script execution</td></tr>
+<tr><td align="left"><code>INCOMPATIBLE_TYPES</code></td><td align="left">An operand was applied to incompatible types</td></tr>
+<tr><td align="left"><code>VALUE_EXCEEDS_BOUNDS</code></td><td align="left">A script opcode resulted in a value that exceeded the maximum or minimum value</td></tr>
 <tr><td align="left"><code>INVALID_OPCODE</code></td><td align="left">The script cannot be deserialised due to an invalid opcode</td></tr>
-<tr><td align="left"><code>INVALID_SCRIPT_DATA</code></td><td align="left">An opcode parameter is invalid or of the wrong type</td></tr>
+<tr><td align="left"><code>MISSING_OPCODE</code></td><td align="left">The script is missing closing opcodes (Else or EndIf)</td></tr>
+<tr><td align="left"><code>INVALID_SIGNATURE</code></td><td align="left">The script contained an invalid signature</td></tr>
 <tr><td align="left"><code>INVALID_INPUT</code></td><td align="left">Invalid or incompatible data was popped off the stack as input into an operation</td></tr>
+<tr><td align="left"><code>INVALID_SCRIPT_DATA</code></td><td align="left">An opcode parameter is invalid or of the wrong type</td></tr>
 <tr><td align="left"><code>VERIFY_FAILED</code></td><td align="left">A script condition (typically a <code>nnnVerify</code> opcode) failed</td></tr>
 </tbody></table>
 <h3 id="credits"><a class="header" href="#credits">Credits</a></h3>
 <p>Thanks to <a href="https://github.com/philipr-za">@philipr-za</a> and <a href="https://github.com/SWvheerden">@SWvheerden</a> for their input
 and contributions to this RFC.</p>
+<h1 id="change-log"><a class="header" href="#change-log">Change Log</a></h1>
+<table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
+<tr><td align="left">17 Aug 2020</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
+<tr><td align="left">8 Mar 2021</td><td align="left">Minor update</td><td align="left">philip-za</td></tr>
+<tr><td align="left">28 Sep 2022</td><td align="left">Minor update to reflect implementation</td><td align="left">sdbondi</td></tr>
+</tbody></table>
 
                     </main>
 
