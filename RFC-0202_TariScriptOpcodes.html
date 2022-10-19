@@ -379,10 +379,10 @@ push 0.</p>
 <li>Fails with <code>INVALID_INPUT</code> if the top stack element is not a PublicKey or Commitment</li>
 <li>Fails with <code>INVALID_INPUT</code> if the second stack element is not a Signature</li>
 </ul>
-<h5 id="checksigverifymsg"><a class="header" href="#checksigverifymsg">CheckSigVerify(Msg),</a></h5>
+<h5 id="checksigverifymsg"><a class="header" href="#checksigverifymsg">CheckSigVerify(Msg)</a></h5>
 <p>Identical to <a href="#checksigmsg"><code>CheckSig</code></a>, except that nothing is pushed to the stack if the signature is valid, and the
 operation fails with <code>VERIFY_FAILED</code> if the signature is invalid.</p>
-<h5 id="checkmultisigmsg"><a class="header" href="#checkmultisigmsg">CheckMultiSig(Msg)</a></h5>
+<h5 id="checkmultisigm-n-public-keys-msg"><a class="header" href="#checkmultisigm-n-public-keys-msg">CheckMultiSig(m, n, public keys, Msg)</a></h5>
 <p>Pop $m$ signatures from the stack. If $m$ signatures out of the provided $n$ public keys sign the 32-byte message,
 push 1 to the stack, otherwise push 0.</p>
 <ul>
@@ -393,9 +393,12 @@ push 1 to the stack, otherwise push 0.</p>
 <li>Fails with <code>STACK_UNDERFLOW</code> if the stack has fewer than $m$ items.</li>
 <li>Fails with <code>INVALID_INPUT</code> if $m$ stack elements are not a <code>Signature</code>.</li>
 </ul>
-<h5 id="checkmultisigverifymsg"><a class="header" href="#checkmultisigverifymsg">CheckMultiSigVerify(Msg),</a></h5>
+<h5 id="checkmultisigverifym-n-public-keys-msg"><a class="header" href="#checkmultisigverifym-n-public-keys-msg">CheckMultiSigVerify(m, n, public keys, Msg)</a></h5>
 <p>Identical to <a href="#checkmultisigmsg"><code>CheckMultiSig</code></a>, except that nothing is pushed to the stack if the signatures are valid, and the
 operation fails with <code>VERIFY_FAILED</code> if the signatures are invalid.</p>
+<h5 id="checkmultisigverifyaggregatepubkeym-n-public-keys-msg"><a class="header" href="#checkmultisigverifyaggregatepubkeym-n-public-keys-msg">CheckMultiSigVerifyAggregatePubKey(m, n, public keys, Msg)</a></h5>
+<p>Pop m signatures from the stack. If m signatures out of the provided n public keys sign the 32-byte message,
+push the aggregate of the public keys to the stack, otherwise fails with VERIFY_FAILED.</p>
 <h5 id="toristrettopoint"><a class="header" href="#toristrettopoint">ToRistrettoPoint,</a></h5>
 <p>Pops the top element which must be a valid Ristretto scalar, calculates the corresponding Ristretto point, and pushes this to the stack.</p>
 <ul>
