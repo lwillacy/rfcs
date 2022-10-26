@@ -134,7 +134,7 @@
                     <main>
                         <h1 id="rfc-0132mergeminingmonero"><a class="header" href="#rfc-0132mergeminingmonero">RFC-0132/MergeMiningMonero</a></h1>
 <h2 id="tari-protocol-for-merge-mining-with-monero"><a class="header" href="#tari-protocol-for-merge-mining-with-monero">Tari protocol for Merge Mining with Monero</a></h2>
-<p><img src="theme/images/status-draft.svg" alt="status: draft" /></p>
+<p><img src="theme/images/status-stable.svg" alt="status: stable" /></p>
 <p><strong>Maintainer(s)</strong>: <a href="https://github.com/sdbondi">Stanley Bondi</a></p>
 <h1 id="licence"><a class="header" href="#licence">Licence</a></h1>
 <p><a href="https://opensource.org/licenses/BSD-3-Clause"> The 3-Clause BSD Licence</a>.</p>
@@ -187,7 +187,7 @@ are independent (See <a href="/RFC-0131_Mining.html">RFC-0131_Mining.html</a>). 
 the <code>get_coinbase</code> gRPC function. </p>
 <p>Next, the coinbase transaction is added to the new block template and passed back to the base node for the new MMR roots to be calculated.
 Furthermore, the base node constructs a <em>Blake256</em> hash of <em>some</em> of the Tari header fields. We'll call this hash the merge mining hash \( h_m \) that commits to 
-the following header fields in order: <code>version</code>, <code>height</code>,<code>prev_hash</code>,<code>timestamp</code>,<code>output_mr</code>,<code>range_proof_mr</code>,<code>output_mmr_size</code>,<code>kernel_mr</code>,
+the following header fields in order: <code>version</code>, <code>height</code>,<code>prev_hash</code>,<code>timestamp</code>,<code>input_mr</code>, <code>output_mr</code>,<code>output_mmr_size</code>,<code>kernel_mr</code>,
 <code>kernel_mmr_size</code>,<code>total_kernel_offset</code>,<code>total_script_offset</code>. Note, this hash does not include the <code>pow</code> and <code>nonce</code> fields, as these fields are set as part of mining.</p>
 <p>To have the chance of mining a Monero block as well as a Tari block, we must obtain a new valid monero block template, by calling <a href="https://ww.getmonero.org/resources/developer-guides/daemon-rpc.html#get_block_template">get_block_template</a>.
 This returns a <code>blocktemplate_blob</code>, that is, a serialized Monero block containing the Monero block header, coinbase and a list of hashes referencing the 
@@ -217,7 +217,7 @@ Concretely, A miner must serialize <code>MoneroPowData</code> using Monero conse
     /// transaction count
     transaction_count: u16,
     /// transaction root
-    transaction_root: Hash,
+    merkle_root: MoneroHash,
     /// Coinbase merkle proof hashes
     coinbase_merkle_proof: MerkleProof,
     /// Coinbase tx from Monero
@@ -228,7 +228,7 @@ Concretely, A miner must serialize <code>MoneroPowData</code> using Monero conse
 <pre><code class="language-rust ignore">pub struct MerkleProof {
    branch: Vec&lt;Hash&gt;,
    depth: u16,
-   path: u32,
+   path_bitmap: u32,
 }
 </code></pre>
 <p><em>fig 3. Merkle proof struct</em></p>
@@ -262,6 +262,11 @@ so that the miner submits the found block at either chain's difficulty. The Tari
 <h3 id="submit_block"><a class="header" href="#submit_block"><code>submit_block</code></a></h3>
 <p>The miner submits a solved Monero block (at a difficulty of <code>min(monero_difficulty, tari_difficulty)</code>) to the proxy. The cached
 Tari block is retrieved, enriched with the <code>MoneroPowData</code> struct and submitted to the Tari base node.</p>
+<h1 id="change-log"><a class="header" href="#change-log">Change Log</a></h1>
+<table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
+<tr><td align="left">26 Oct 2022</td><td align="left">Stablise RFC</td><td align="left">CjS77</td></tr>
+<tr><td align="left">21 Oct 2022</td><td align="left">Update fields</td><td align="left">Cifko</td></tr>
+</tbody></table>
 
                     </main>
 

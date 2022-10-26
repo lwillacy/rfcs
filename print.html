@@ -1497,7 +1497,7 @@ The hash MUST be constructed with the following encoded with <a href="RFC-0121_C
 </tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0132mergeminingmonero"><a class="header" href="#rfc-0132mergeminingmonero">RFC-0132/MergeMiningMonero</a></h1>
 <h2 id="tari-protocol-for-merge-mining-with-monero"><a class="header" href="#tari-protocol-for-merge-mining-with-monero">Tari protocol for Merge Mining with Monero</a></h2>
-<p><img src="theme/images/status-draft.svg" alt="status: draft" /></p>
+<p><img src="theme/images/status-stable.svg" alt="status: stable" /></p>
 <p><strong>Maintainer(s)</strong>: <a href="https://github.com/sdbondi">Stanley Bondi</a></p>
 <h1 id="licence-7"><a class="header" href="#licence-7">Licence</a></h1>
 <p><a href="https://opensource.org/licenses/BSD-3-Clause"> The 3-Clause BSD Licence</a>.</p>
@@ -1550,7 +1550,7 @@ are independent (See <a href="/RFC-0131_Mining.html">RFC-0131_Mining.html</a>). 
 the <code>get_coinbase</code> gRPC function. </p>
 <p>Next, the coinbase transaction is added to the new block template and passed back to the base node for the new MMR roots to be calculated.
 Furthermore, the base node constructs a <em>Blake256</em> hash of <em>some</em> of the Tari header fields. We'll call this hash the merge mining hash \( h_m \) that commits to 
-the following header fields in order: <code>version</code>, <code>height</code>,<code>prev_hash</code>,<code>timestamp</code>,<code>output_mr</code>,<code>range_proof_mr</code>,<code>output_mmr_size</code>,<code>kernel_mr</code>,
+the following header fields in order: <code>version</code>, <code>height</code>,<code>prev_hash</code>,<code>timestamp</code>,<code>input_mr</code>, <code>output_mr</code>,<code>output_mmr_size</code>,<code>kernel_mr</code>,
 <code>kernel_mmr_size</code>,<code>total_kernel_offset</code>,<code>total_script_offset</code>. Note, this hash does not include the <code>pow</code> and <code>nonce</code> fields, as these fields are set as part of mining.</p>
 <p>To have the chance of mining a Monero block as well as a Tari block, we must obtain a new valid monero block template, by calling <a href="https://ww.getmonero.org/resources/developer-guides/daemon-rpc.html#get_block_template">get_block_template</a>.
 This returns a <code>blocktemplate_blob</code>, that is, a serialized Monero block containing the Monero block header, coinbase and a list of hashes referencing the 
@@ -1580,7 +1580,7 @@ Concretely, A miner must serialize <code>MoneroPowData</code> using Monero conse
     /// transaction count
     transaction_count: u16,
     /// transaction root
-    transaction_root: Hash,
+    merkle_root: MoneroHash,
     /// Coinbase merkle proof hashes
     coinbase_merkle_proof: MerkleProof,
     /// Coinbase tx from Monero
@@ -1591,7 +1591,7 @@ Concretely, A miner must serialize <code>MoneroPowData</code> using Monero conse
 <pre><code class="language-rust ignore">pub struct MerkleProof {
    branch: Vec&lt;Hash&gt;,
    depth: u16,
-   path: u32,
+   path_bitmap: u32,
 }
 </code></pre>
 <p><em>fig 3. Merkle proof struct</em></p>
@@ -1625,6 +1625,11 @@ so that the miner submits the found block at either chain's difficulty. The Tari
 <h3 id="submit_block"><a class="header" href="#submit_block"><code>submit_block</code></a></h3>
 <p>The miner submits a solved Monero block (at a difficulty of <code>min(monero_difficulty, tari_difficulty)</code>) to the proxy. The cached
 Tari block is retrieved, enriched with the <code>MoneroPowData</code> struct and submitted to the Tari base node.</p>
+<h1 id="change-log-3"><a class="header" href="#change-log-3">Change Log</a></h1>
+<table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
+<tr><td align="left">26 Oct 2022</td><td align="left">Stablise RFC</td><td align="left">CjS77</td></tr>
+<tr><td align="left">21 Oct 2022</td><td align="left">Update fields</td><td align="left">Cifko</td></tr>
+</tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0140syncandseeding"><a class="header" href="#rfc-0140syncandseeding">RFC-0140/SyncAndSeeding</a></h1>
 <h2 id="synchronizing-the-blockchain-archival-and-pruned-modes"><a class="header" href="#synchronizing-the-blockchain-archival-and-pruned-modes">Synchronizing the Blockchain: Archival and Pruned Modes</a></h2>
 <p><img src="theme/images/status-draft.svg" alt="status: draft" /></p>
@@ -2664,7 +2669,7 @@ it is proposed that a <code>MessageFormat</code> trait be defined:</p>
 <p>This trait will have default implementations to cover most use cases (e.g. a simple call through to <code>serde_json</code>). Serde
 also offers significant ability to tweak how a given struct will be serialized through the use of
 <a href="https://serde.rs/attributes.html">attributes</a>.</p>
-<h1 id="change-log-3"><a class="header" href="#change-log-3">Change Log</a></h1>
+<h1 id="change-log-4"><a class="header" href="#change-log-4">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">29 Mar 2019</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">24 Jul 2019</td><td align="left">Technical editing</td><td align="left">anselld</td></tr>
@@ -4810,7 +4815,7 @@ validation.</p>
 <li><a href="https://github.com/SWvheerden">@SWvheerden</a></li>
 </ul>
 <p>Thanks to David Burkett for proposing a method to prevent cut-through and willingness to discuss ideas.</p>
-<h1 id="change-log-4"><a class="header" href="#change-log-4">Change Log</a></h1>
+<h1 id="change-log-5"><a class="header" href="#change-log-5">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Aug 2020</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">11 Feb 2021</td><td align="left">Major update</td><td align="left">CjS77, SWvheerden, philipr-za</td></tr>
@@ -5274,7 +5279,7 @@ or Bob can spend the output.</p>
 <h3 id="credits-2"><a class="header" href="#credits-2">Credits</a></h3>
 <p>Thanks to <a href="https://github.com/philipr-za">@philipr-za</a> and <a href="https://github.com/SWvheerden">@SWvheerden</a> for their input
 and contributions to this RFC.</p>
-<h1 id="change-log-5"><a class="header" href="#change-log-5">Change Log</a></h1>
+<h1 id="change-log-6"><a class="header" href="#change-log-6">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Aug 2020</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">8 Mar 2021</td><td align="left">Minor update</td><td align="left">philip-za</td></tr>
@@ -5365,7 +5370,7 @@ then does the following to test for ownership:</p>
 If \( K_S' = K_S \) is included in the script, the recipient can produce the required script signature using the corresponding
 one-time private key \( c + a \).</li>
 </ol>
-<h1 id="change-log-6"><a class="header" href="#change-log-6">Change Log</a></h1>
+<h1 id="change-log-7"><a class="header" href="#change-log-7">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">01 Dec 2022</td><td align="left">First draft</td><td align="left">philip-za</td></tr>
 </tbody></table>
@@ -6388,7 +6393,7 @@ chain.</li>
 <li>Contract B is a trusted party from the PoV of Bob / A (e.g. Bob &amp; B collude to lie about account updates in order to
 defraud A)</li>
 </ul>
-<h1 id="change-log-7"><a class="header" href="#change-log-7">Change Log</a></h1>
+<h1 id="change-log-8"><a class="header" href="#change-log-8">Change Log</a></h1>
 <ul>
 <li><strong>06-04-2022</strong>: First draft</li>
 </ul>
@@ -7489,7 +7494,7 @@ to track the spent TXO set's commitment and the UTXO set.</p>
 </ul>
 </li>
 </ul>
-<h1 id="change-log-8"><a class="header" href="#change-log-8">Change Log</a></h1>
+<h1 id="change-log-9"><a class="header" href="#change-log-9">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">2022-10-19</td><td align="left">Minor editorial changes</td><td align="left">CjS77</td></tr>
 <tr><td align="left">2022-10-10</td><td align="left">First outline</td><td align="left">SWvheerden</td></tr>
@@ -7948,7 +7953,7 @@ assigned greek lowercase letters in most cases. Some terms used here are noted d
 <tr><td align="left">Pre-image</td><td>\( \preimage \)</td><td>The random byte data used for the pre-image of the hash</td></tr>
 <tr><td align="left"></td><td></td><td></td></tr>
 </tbody></table>
-<h2 id="change-log-9"><a class="header" href="#change-log-9">Change Log</a></h2>
+<h2 id="change-log-10"><a class="header" href="#change-log-10">Change Log</a></h2>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Oct 2022</td><td align="left">First outline</td><td align="left">SWvHeerden</td></tr>
 </tbody></table>
@@ -9678,7 +9683,7 @@ deployed as part of the Tari network.</p>
 <p>Github: <a href="https://github.com/tari-project/tari-crypto">tari-project/tari-crypto</a></p>
 <p>Tari Crypto was refactored into its own <a href="https://crates.io/crates/tari_crypto">crate</a>, for ease of use and integration across different projects.
 It includes all cryptographic services, including a Curve25519 implementation.</p>
-<h1 id="change-log-10"><a class="header" href="#change-log-10">Change Log</a></h1>
+<h1 id="change-log-11"><a class="header" href="#change-log-11">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Description</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">21 Dec 2018</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">14 Jan 2022</td><td align="left">Deprecated in favour of README</td><td align="left">CjS77</td></tr>
@@ -10460,7 +10465,7 @@ technological merits of the potential system outlined herein.</p>
 <h2 id="goals-47"><a class="header" href="#goals-47">Goals</a></h2>
 <h2 id="related-requests-for-comment-40"><a class="header" href="#related-requests-for-comment-40">Related Requests for Comment</a></h2>
 <h2 id="description-37"><a class="header" href="#description-37">Description</a></h2>
-<h1 id="change-log-11"><a class="header" href="#change-log-11">Change Log</a></h1>
+<h1 id="change-log-12"><a class="header" href="#change-log-12">Change Log</a></h1>
 <ul>
 <li><strong>dd-mm-yyyy</strong>: Summary of changes</li>
 </ul>
