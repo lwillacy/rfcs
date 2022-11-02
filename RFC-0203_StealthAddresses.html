@@ -134,7 +134,7 @@
                     <main>
                         <h1 id="rfc-0203stealth-addresses"><a class="header" href="#rfc-0203stealth-addresses">RFC-0203/Stealth addresses</a></h1>
 <h2 id="stealth-addresses"><a class="header" href="#stealth-addresses">Stealth addresses</a></h2>
-<p><img src="theme/images/status-testing.svg" alt="status: testing" /></p>
+<p><img src="theme/images/status-stable.svg" alt="status: stable" /></p>
 <p><strong>Maintainer(s)</strong>: <a href="https://github.com/philipr-za">Philip Robinson</a></p>
 <h1 id="licence"><a class="header" href="#licence">Licence</a></h1>
 <p><a href="https://opensource.org/licenses/BSD-3-Clause">The 3-Clause BSD Licence</a>.</p>
@@ -186,7 +186,7 @@ key when sending a one-sided payment.</p>
 <h2 id="background"><a class="header" href="#background">Background</a></h2>
 <p>Stealth addresses were first proposed on the Bitcoin Talk forum by user <a href="https://bitcointalk.org/index.php?topic=5965.0">Bytecoin</a>. The concept was further refined by
 <a href="https://www.mail-archive.com/bitcoin-development@lists.sourceforge.net/msg03613.html">Peter Todd</a>, using a design similar to the <a href="https://en.bitcoin.it/wiki/BIP_0032">BIP-32</a> style of address generation. In this approach, the sender can use an
-ephemerial public key (derived from a nonce) to perform a non-interactive Diffie-Hellman exchange with the recipient's
+ephemeral public key (derived from a nonce) to perform a non-interactive Diffie-Hellman exchange with the recipient's
 public key, and use this to derive a one-time public key to which only the recipient can derive the corresponding private
 key. This reduces on-chain linkability (but, importantly, does not eliminate it).</p>
 <p>The approach was further extended in the <a href="https://cryptonote.org/whitepaper.pdf">CryptoNote</a> whitepaper to support a dual-key design, whereby a separate scanning
@@ -205,7 +205,7 @@ manner.</p>
 <li>Compute a Diffie-Hellman exchange to obtain the shared secret \( c = H( r \cdot A ) \), where \( H \) is a cryptographic
 hash function.</li>
 <li>Include \( K_S = c \cdot G + A \) as the last public key in a <a href="./RFC-0201_TariScript.html#one-sided-payment">one-sided payment</a> script in a transaction.</li>
-<li>Include \( R \) in the script for use by the recipient, but drop it so it is not used in script execution.
+<li>Include \( R \) in the script for use by the recipient, but <code>DROP</code> it so that it is not used in script execution.
 This changes the script for a <a href="./RFC-0201_TariScript.html#one-sided-payment">one-sided payment</a> from <code>PushPubkey(K_S)</code> to <code>PushPubkey(R) Drop PushPubkey(K_S)</code>.</li>
 </ol>
 <p>To identify <a href="./RFC-0201_TariScript.html#one-sided-payment">one-sided payments</a>, the recipient scans the blockchain for outputs containing a <a href="./RFC-0201_TariScript.html#one-sided-payment">one-sided payment</a> script. It
@@ -217,9 +217,15 @@ then does the following to test for ownership:</p>
 If \( K_S' = K_S \) is included in the script, the recipient can produce the required script signature using the corresponding
 one-time private key \( c + a \).</li>
 </ol>
+<h2 id="implementation-notes"><a class="header" href="#implementation-notes">Implementation notes</a></h2>
+<ul>
+<li>Stealth addresses were included in the Tari Console Wallet as of version v0.35.0 (2022-08-11).</li>
+<li>The FFI (used in Aurora) uses stealth addresses by default as of libwallet-v0.35.0 (2022-08-11).</li>
+</ul>
 <h1 id="change-log"><a class="header" href="#change-log">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
-<tr><td align="left">01 Dec 2022</td><td align="left">First draft</td><td align="left">philip-za</td></tr>
+<tr><td align="left">26 Oct 2022</td><td align="left">Stabilise RFC</td><td align="left">CjS77</td></tr>
+<tr><td align="left">01 Jun 2022</td><td align="left">First draft</td><td align="left">philip-za</td></tr>
 </tbody></table>
 
                     </main>
