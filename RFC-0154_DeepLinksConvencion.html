@@ -134,10 +134,10 @@
                     <main>
                         <h1 id="rfc-0154deeplinksconvention"><a class="header" href="#rfc-0154deeplinksconvention">RFC-0154/DeepLinksConvention</a></h1>
 <h2 id="deep-links-structure-convention"><a class="header" href="#deep-links-structure-convention">Deep links structure convention.</a></h2>
-<p><img src="theme/images/status-draft.svg" alt="status: raw" /></p>
+<p><img src="theme/images/status-stable.svg" alt="status: stable" /></p>
 <p><strong>Maintainer(s)</strong>: <a href="https://github.com/TruszczynskiA">Adrian Truszczyński</a></p>
 <h1 id="licence"><a class="header" href="#licence">Licence</a></h1>
-<p><a href="https://opensource.org/licenses/BSD-3-Clause"> The 3-Clause BSD Licence</a>.</p>
+<p><a href="https://opensource.org/licenses/BSD-3-Clause">The 3-Clause BSD Licence</a>.</p>
 <p>Copyright 2022 The Tari Development Community</p>
 <p>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 following conditions are met:</p>
@@ -191,7 +191,7 @@ testnet/payments/request
 <p>The data component is an optional string of key-value pairs used by the parser/decoder to deserialize the data, which the client passes to the command function. The data component should be formatted in the same way as a URL query. The sub-component should have a <code>?</code> prefix, the key-value pairs should be separated by <code>&amp;</code>, and every key should be separated from the value by <code>=</code> character.</p>
 <h3 id="the-structure"><a class="header" href="#the-structure">The Structure</a></h3>
 <p>Combining all three components, they will form a deep link with a structure presented below:</p>
-<pre><code class="language-ignore">{scheme}://{command}?{data}
+<pre><code class="language-ignore">{scheme}://{network_name}/{command}?{data}
 </code></pre>
 <h4 id="examples-1"><a class="header" href="#examples-1">Examples:</a></h4>
 <pre><code class="language-ignore">tari://mainnet/profile
@@ -200,7 +200,7 @@ tari://testnet/payments/send?amount=1.23&amp;pubKey=01234556789abcde
 </code></pre>
 <h3 id="deeplinks-in-use"><a class="header" href="#deeplinks-in-use">Deeplinks in use:</a></h3>
 <ul>
-<li><code>/transactions/send</code></li>
+<li><code>{network_name}/transactions/send</code></li>
 </ul>
 <p>The data contains transaction information used in the send tokens process.</p>
 <table><thead><tr><th>Value Name</th><th align="center">Value Type</th><th>Note</th></tr></thead><tbody>
@@ -209,7 +209,7 @@ tari://testnet/payments/send?amount=1.23&amp;pubKey=01234556789abcde
 <tr><td>note</td><td align="center">String?</td><td>Note passed with transaction</td></tr>
 </tbody></table>
 <ul>
-<li><code>/base_nodes/add</code></li>
+<li><code>{network_name}/base_nodes/add</code></li>
 </ul>
 <p>The data contains a custom base node configuration. This deep link adds a new base node configuration to the pool and switches to the added base node. </p>
 <table><thead><tr><th>Value Name</th><th align="center">Value Type</th><th>Note</th></tr></thead><tbody>

@@ -6122,7 +6122,7 @@ to track the spent TXO set's commitment and the UTXO set.</p>
 </tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0153stagedwalletsecurity"><a class="header" href="#rfc-0153stagedwalletsecurity">RFC-0153/StagedWalletSecurity</a></h1>
 <h2 id="staged-wallet-security"><a class="header" href="#staged-wallet-security">Staged Wallet Security</a></h2>
-<p><img src="https://github.com/tari-project/tari/raw/master/RFC/src/theme/images/status-draft.svg" alt="status: draft" /></p>
+<p><img src="theme/images/status-stable.svg" alt="status: stable" /></p>
 <p><strong>Maintainer(s)</strong>: <a href="https://github.com/neonknight64">Yuko Roodt</a>, <a href="https://github.com/CjS77">Cayle Sharrock</a></p>
 <h1 id="licence-23"><a class="header" href="#licence-23">Licence</a></h1>
 <p><a href="https://opensource.org/licenses/BSD-3-Clause">The 3-Clause BSD Licence</a>.</p>
@@ -6237,6 +6237,7 @@ metadata, rather than just the commitments). For this reason, Stage 1b is option
 transaction.</p>
 <p>When migrating from Stage 1 to Stage 2, the Stage 1b backups SHOULD be deleted.</p>
 <h4 id="stage-3---sweep-to-cold-wallet"><a class="header" href="#stage-3---sweep-to-cold-wallet">Stage 3 - Sweep to cold wallet</a></h4>
+<p><strong>Pending hardware wallet support</strong></p>
 <p>Above a given limit -- user-defined, or the default <code>MAX_HOT_WALLET_BALANCE</code>, the user should be prompted to transfer
 funds into a cold wallet. The amount to sweep can be calculated as <code>MAX_HOT_WALLET_BALANCE</code> - <code>SAFE_HOT_WALLET_BALANCE</code>.</p>
 <p>If the user ignores the prompt, they SHOULD be reminded one week later. From the second prompt onward, users SHOULD be given
@@ -6251,10 +6252,10 @@ Once every two months is sufficient.</li>
 </ul>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0154deeplinksconvention"><a class="header" href="#rfc-0154deeplinksconvention">RFC-0154/DeepLinksConvention</a></h1>
 <h2 id="deep-links-structure-convention"><a class="header" href="#deep-links-structure-convention">Deep links structure convention.</a></h2>
-<p><img src="theme/images/status-draft.svg" alt="status: raw" /></p>
+<p><img src="theme/images/status-stable.svg" alt="status: stable" /></p>
 <p><strong>Maintainer(s)</strong>: <a href="https://github.com/TruszczynskiA">Adrian Truszczyński</a></p>
 <h1 id="licence-24"><a class="header" href="#licence-24">Licence</a></h1>
-<p><a href="https://opensource.org/licenses/BSD-3-Clause"> The 3-Clause BSD Licence</a>.</p>
+<p><a href="https://opensource.org/licenses/BSD-3-Clause">The 3-Clause BSD Licence</a>.</p>
 <p>Copyright 2022 The Tari Development Community</p>
 <p>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 following conditions are met:</p>
@@ -6308,7 +6309,7 @@ testnet/payments/request
 <p>The data component is an optional string of key-value pairs used by the parser/decoder to deserialize the data, which the client passes to the command function. The data component should be formatted in the same way as a URL query. The sub-component should have a <code>?</code> prefix, the key-value pairs should be separated by <code>&amp;</code>, and every key should be separated from the value by <code>=</code> character.</p>
 <h3 id="the-structure"><a class="header" href="#the-structure">The Structure</a></h3>
 <p>Combining all three components, they will form a deep link with a structure presented below:</p>
-<pre><code class="language-ignore">{scheme}://{command}?{data}
+<pre><code class="language-ignore">{scheme}://{network_name}/{command}?{data}
 </code></pre>
 <h4 id="examples-3"><a class="header" href="#examples-3">Examples:</a></h4>
 <pre><code class="language-ignore">tari://mainnet/profile
@@ -6317,7 +6318,7 @@ tari://testnet/payments/send?amount=1.23&amp;pubKey=01234556789abcde
 </code></pre>
 <h3 id="deeplinks-in-use"><a class="header" href="#deeplinks-in-use">Deeplinks in use:</a></h3>
 <ul>
-<li><code>/transactions/send</code></li>
+<li><code>{network_name}/transactions/send</code></li>
 </ul>
 <p>The data contains transaction information used in the send tokens process.</p>
 <table><thead><tr><th>Value Name</th><th align="center">Value Type</th><th>Note</th></tr></thead><tbody>
@@ -6326,7 +6327,7 @@ tari://testnet/payments/send?amount=1.23&amp;pubKey=01234556789abcde
 <tr><td>note</td><td align="center">String?</td><td>Note passed with transaction</td></tr>
 </tbody></table>
 <ul>
-<li><code>/base_nodes/add</code></li>
+<li><code>{network_name}/base_nodes/add</code></li>
 </ul>
 <p>The data contains a custom base node configuration. This deep link adds a new base node configuration to the pool and switches to the added base node. </p>
 <table><thead><tr><th>Value Name</th><th align="center">Value Type</th><th>Note</th></tr></thead><tbody>
