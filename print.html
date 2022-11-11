@@ -1653,11 +1653,11 @@ Tari block is retrieved, enriched with the <code>MoneroPowData</code> struct and
 </tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0140syncandseeding"><a class="header" href="#rfc-0140syncandseeding">RFC-0140/SyncAndSeeding</a></h1>
 <h2 id="synchronizing-the-blockchain-archival-and-pruned-modes"><a class="header" href="#synchronizing-the-blockchain-archival-and-pruned-modes">Synchronizing the Blockchain: Archival and Pruned Modes</a></h2>
-<p><img src="theme/images/status-draft.svg" alt="status: draft" /></p>
+<p><img src="theme/images/status-stable.svg" alt="status: stable" /></p>
 <p><strong>Maintainer(s)</strong>: <a href="https://github.com/SWvheerden">S W van Heerden</a>, <a href="https://github.com/philipr-za">Philip Robinson</a></p>
 <h1 id="licence-8"><a class="header" href="#licence-8">Licence</a></h1>
 <p><a href="https://opensource.org/licenses/BSD-3-Clause"> The 3-Clause BSD Licence</a>.</p>
-<p>Copyright 2018 The Tari Development Community</p>
+<p>Copyright 2022 The Tari Development Community</p>
 <p>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 following conditions are met:</p>
 <ol>
@@ -1687,7 +1687,7 @@ without notice.</p>
 community. The release of this document is intended solely for review and discussion by the community of the
 technological merits of the potential system outlined herein.</p>
 <h2 id="goals-8"><a class="header" href="#goals-8">Goals</a></h2>
-<p>The aim of this Request for Comment (RFC) is to describe the syncing, seeding and pruning process.</p>
+<p>This Request for Comment (RFC) describes the syncing and pruning process.</p>
 <h2 id="related-requests-for-comment-7"><a class="header" href="#related-requests-for-comment-7">Related Requests for Comment</a></h2>
 <ul>
 <li><a href="RFC-0110_BaseNodes.html">RFC-0110: Base Nodes</a></li>
@@ -1700,7 +1700,15 @@ divided into two <a href="Glossary.html#synchronisationstrategy">Synchronization
 communicates with an archive node to get the complete history of every single block from genesis block. Horizon Sync 
 involves the node getting every block from its <a href="Glossary.html#pruning-horizon">pruning horizon</a> to <a href="Glossary.html#current-head">current head</a>, as well as every block header 
 up to the genesis block. </p>
-<p>To determine if the node needs to synchronise the node will monitor the broadcast chain_metadata provided by its neighbours.</p>
+<p>To determine if the node needs to synchronise, the node will monitor the broadcasted <code>chain_metadata</code> messages provided by its neighbours. The fields in the <code>chain_metadata</code> messages MUST be:</p>
+<table><thead><tr><th>Field</th><th>Description</th></tr></thead><tbody>
+<tr><td>height_of_longest_chain</td><td>64-bit unsigned</td></tr>
+<tr><td>best_block</td><td>hash of the tip block (32-bit)</td></tr>
+<tr><td>pruning_horizon</td><td>64-bit unsigned</td></tr>
+<tr><td>pruned_height</td><td>64-bit unsigned</td></tr>
+<tr><td>accumulated_difficulty</td><td>128-bit unsigned</td></tr>
+<tr><td>timestamp</td><td>64-bit unsigned</td></tr>
+</tbody></table>
 <h4 id="complete-sync"><a class="header" href="#complete-sync">Complete Sync</a></h4>
 <p>Complete sync is only available from archival nodes, as these will be the only nodes that will be able to supply the 
 complete history required to sync every block with every transaction from genesis block up onto <a href="Glossary.html#current-head">current head</a>. </p>
@@ -1734,7 +1742,7 @@ consensus rules and has a valid proof-of-work that is higher than any competing 
 <li>Validate kernel MMR root against headers.</li>
 <li>Download all <a href="Glossary.html#unspent-transaction-outputs">utxo</a>'s from the current network tip back to this node's <a href="Glossary.html#pruning-horizon">pruning horizon</a>.</li>
 <li>Validate outputs and <a href="Glossary.html#unspent-transaction-outputs">utxo</a> MMR.</li>
-<li>Validate the chain balances with the expect total emission that the final sync height.</li>
+<li>Validate the chain balances with the expected total emission that the final sync height.</li>
 <li>Once all kernels and <a href="Glossary.html#unspent-transaction-outputs">utxo</a>s have been downloaded from the network tip back to this node's <a href="Glossary.html#pruning-horizon">pruning horizon</a> set 
 the <a href="Glossary.html#synchronisationstate">SynchronizationState</a> to <code>block_sync</code>. This hands over further syncing to the standard sync protocol which 
 should return to the <code>listening</code> state if no further data has been received from peers.</li>
@@ -1743,11 +1751,9 @@ should return to the <code>listening</code> state if no further data has been re
 arrive.</p>
 <h4 id="keeping-in-sync"><a class="header" href="#keeping-in-sync">Keeping in Sync</a></h4>
 <p>The node that is in the <code>listening</code> state SHOULD periodically test a subset of its peers with ping messages to ensure 
-that they are alive. When a node sends a ping message, it MUST include the height of the current longest chain, current 
-accumulated PoW difficulty, hash of the <a href="Glossary.html#current-head">current head</a>, it's pruning horizon and it's current pruned height. The 
-receiving node MUST reply with a pong message, which should include it's version of the information contained within the
-ping message.</p>
-<p>When a node receives pong replies from the current ping round, or the timeout expires, the collected chain_metadata
+that they are alive. When a node sends a ping message, it MUST include the all the <code>chain_metadata</code> fields. The 
+receiving node MUST reply with a pong message, which should also include its version of the <code>chain_metadata</code> information.</p>
+<p>When a node receives pong replies from the current ping round, or the timeout expires, the collected <code>chain_metadata</code>
 replies will be examined to determine what the current best chain is, i.e. the chain with the most accumulated work.
 If the best chain is longer than out chain data the node will set <a href="Glossary.html#synchronisationstate">SynchronizationState</a> to <code>header_sync</code> and catch up
 with the network.</p>
