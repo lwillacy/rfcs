@@ -135,7 +135,7 @@
                         <h1 id="rfc-0172peertopeermessaging"><a class="header" href="#rfc-0172peertopeermessaging">RFC-0172/PeerToPeerMessaging</a></h1>
 <h2 id="peer-to-peer-messaging-protocol"><a class="header" href="#peer-to-peer-messaging-protocol">Peer to Peer Messaging Protocol</a></h2>
 <p><img src="theme/images/status-outofdate.svg" alt="status: outdated" /></p>
-<p><strong>Maintainer(s)</strong>: <a href="https://github.com/sdbondi">Stanley Bondi</a>, <a href="https://github.com/CjS77">Cayle Sharrock</a> and <a href="https://github.com/neonknight64">Yuko Roodt</a></p>
+<p><strong>Maintainer(s)</strong>: <a href="https://github.com/sdbondi">Stanley Bondi</a>, <a href="https://github.com/CjS77">Cayle Sharrock</a>, <a href="https://github.com/neonknight64">Yuko Roodt</a>, <a href="https://github.com/stringhandler">Stringhandler</a></p>
 <h1 id="licence"><a class="header" href="#licence">Licence</a></h1>
 <p><a href="https://opensource.org/licenses/BSD-3-Clause"> The 3-Clause BSD Licence</a>.</p>
 <p>Copyright 2019 The Tari Development Community</p>
@@ -178,8 +178,6 @@ and <a href="Glossary.html#communication-client">communication client</a>s on th
 <h2 id="description"><a class="header" href="#description">Description</a></h2>
 <h3 id="assumptions"><a class="header" href="#assumptions">Assumptions</a></h3>
 <ul>
-<li>Either every <a href="Glossary.html#communication-node">communication node</a> or <a href="Glossary.html#communication-client">communication client</a> has access to a Tor/I2P proxy, or a native Tor/I2P implementation
-exists, which allows communication across the Tor network.</li>
 <li>All messages are de/serialized as per <a href="RFC-0171_MessageSerialisation.html">RFC-0171: Message Serialisation</a>.</li>
 </ul>
 <h3 id="broad-requirements"><a class="header" href="#broad-requirements">Broad Requirements</a></h3>
@@ -187,15 +185,19 @@ exists, which allows communication across the Tor network.</li>
 between peers. Broadly, a <a href="Glossary.html#communication-node">communication node</a> or <a href="Glossary.html#communication-client">communication client</a> MUST be capable of:</p>
 <ul>
 <li>bidirectional communication between multiple connected peers;</li>
-<li>private and secure over-the-wire communication;</li>
+<li>encrypted, authenticated over-the-wire communication;</li>
 <li>understanding and constructing Tari messages;</li>
-<li>encrypting and decrypting message payloads;</li>
 <li>gracefully reestablishing dropped connections; and (optionally)</li>
-<li>communicating to a SOCKS5 proxy (for connections over Tor and I2P).</li>
+<li>either: 
+<ul>
+<li>communicating to a SOCKS5 proxy (for connections over Tor).</li>
+<li>or have a static public IPv4 address.</li>
+</ul>
+</li>
 </ul>
 <p>Additionally, communication nodes MUST be capable of performing the following tasks:</p>
 <ul>
-<li>opening a control port for establishing secure peer channels;</li>
+<li>opening a proxy control port for establishing secure peer channels;</li>
 <li>maintaining a list of known peers in the form of a routing table;</li>
 <li>forwarding directed messages to neighbouring peers; and</li>
 <li>broadcasting messages to neighbouring peers.</li>
@@ -203,37 +205,6 @@ between peers. Broadly, a <a href="Glossary.html#communication-node">communicati
 <h3 id="overall-architectural-design"><a class="header" href="#overall-architectural-design">Overall Architectural Design</a></h3>
 <p>The Tari communication layer has a modular design to allow for the various communicating nodes and clients to
 use the same infrastructure code.</p>
-<p>The design is influenced by an open-source library called <a href="http://zeromq.org/">ZeroMQ</a> and the ZeroMQ C bindings are a dependency of
-the project. ZeroMQ's over-the-wire protocol is relatively simple, and replicating ZeroMQ framing in a custom
-implementation should not be prohibitively difficult. However, ZeroMQ offers many valuable features, which would be a 
-significantly larger undertaking to reproduce. Fortunately, bindings or native ports are available in numerous languages.</p>
-<p>To learn more about ZeroMQ, read <a href="http://zguide.zeromq.org/page:all">the guide</a>. It's an enjoyable and worthwhile read.</p>
-<p>A quick overview of what ZeroMQ provides:</p>
-<ul>
-<li>A simple socket Application Programming Interface (API).</li>
-<li>Some well-defined patterns to connect sockets together.</li>
-<li>Sockets that are tiny asynchronous message queues, which:
-<ul>
-<li>abstract away complexity around the underlying socket;</li>
-<li>are transport agnostic, meaning you can choose between Transmission Control Protocol (TCP), Pragmatic General 
-Multicast (PGM), Inter-process Communication (IPC) and in-process (inproc) transports with little or no changes to code; 
-and</li>
-<li>transparently reconnect when connections are dropped.</li>
-</ul>
-</li>
-<li>The <code>inproc</code> transport for message passing between threads without mutex locks.</li>
-<li>Built-in protocol for asymmetric encryption over the wire using Curve25519.</li>
-<li>Ability to send and receive multipart messages using a simple framing scheme. More info <a href="http://zguide.zeromq.org/php:chapter2#toc11">here</a>.</li>
-<li>Support for Secure Socket (SOCKS) proxies.</li>
-</ul>
-<p>This document will refer to several <a href="http://api.zeromq.org/2-1:zmq-socket">ZeroMQ socket</a>s. These are referred to by prepending <code>ZMQ_</code> and the name
-of the socket in capitals. For example, <code>ZMQ_ROUTER</code>.</p>
-<p><strong>Note about ZeroMQ frames and multipart messages:</strong></p>
-<p>ZeroMQ frames are length-specified blocks of binary data and can be strung together to make multipart messages.</p>
-<pre><code class="language-text">|5|H|E|L|L|O|*|0|*|3|F|O|O|+|
-* = more flag
-+ = no more flag
-</code></pre>
 <p><em>A multipart message consisting of three frames &quot;HELLO&quot;, a zero-length frame and &quot;FOO&quot;</em></p>
 <p>When this RFC mentions 'multipart messages', this is what it's referring to.</p>
 <h4 id="establishing-a-connection"><a class="header" href="#establishing-a-connection">Establishing a Connection</a></h4>
@@ -244,13 +215,8 @@ to the control socket of the destination peer to negotiate a new encrypted PeerC
 <p>Once a connection is established, messages can be sent and received directly to or from the <a href="#peer">Peer</a>.</p>
 <p>Incoming messages are validated, deserialized and handled as appropriate.</p>
 <h4 id="encryption"><a class="header" href="#encryption">Encryption</a></h4>
-<p>Two forms of encryption are used:</p>
-<ul>
-<li>Over-the-wire encryption, in which traffic between nodes is encrypted using ZMQ's <a href="http://curvezmq.org/page:read-the-docs">CURVE</a>
-implementation.</li>
-<li>Payload encryption, in which the <a href="#messageenvelopebody">MessageEnvelopeBody</a> is encrypted in such a way that it can only be decrypted by the 
-destination recipient.</li>
-</ul>
+<p>The <a href="#messageenvelopebody">MessageEnvelopeBody</a> is encrypted so that it can only be decrypted by the destination recipient using DHKE and Chacha20Poly1305. </p>
+<p>If the messages are transported over Tor, they will also be encrypted according to Tor's protocol. If they are transported over TCP/IP, only the message envelope body will be encrypted.</p>
 <h3 id="components"><a class="header" href="#components">Components</a></h3>
 <p>The following components are proposed:</p>
 <div class="mermaid">
@@ -262,7 +228,7 @@ CM[ConnectionManager]
 BCS[BroadcastStrategy]
 OMS[OutboundMessageService] 
 PC[PeerConnection] 
-NA[NetAddress]
+MA[Multaddr]
 STR[Storage]
 PEER[Peer]
 RT[RoutingTable]
@@ -277,28 +243,10 @@ PM --> RT
 PM --> STR
 CM --> PC
 PC -->|has one| PEER
-PEER -->|has many| NA
+PEER -->|has many| MA
 </div>
-<h4 id="netaddress"><a class="header" href="#netaddress">NetAddress</a></h4>
-<p>Represents:</p>
-<ul>
-<li>IP address;</li>
-<li>Onion address; or</li>
-<li>I2P address.</li>
-</ul>
-<pre><pre class="playground"><code class="language-rust compile_fail">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>#[derive(Clone, PartialEq, Eq, Debug)]
-/// Represents an address which can be used to reach a node on the network
-pub enum NetAddress {
-    /// IPv4 and IPv6
-    IP(SocketAddress),
-    Tor(OnionAddress),
-    I2P(I2PAddress),
-}
-<span class="boring">}
-</span></code></pre></pre>
+<h4 id="multiaddr"><a class="header" href="#multiaddr">Multiaddr</a></h4>
+<p><a href="https://multiformats.io/multiaddr/">Multiaddr</a> is a self-describing network address. Currently, only IP4 and Onion addresses are supported.</p>
 <h4 id="messaging-structure"><a class="header" href="#messaging-structure">Messaging Structure</a></h4>
 <p>The following illustrates the structure of a Tari message:</p>
 <pre><code class="language-text">+----------------------------------------+
@@ -801,6 +749,11 @@ the connection is bound, a dedicated &quot;secure connection negotiation socket&
 <li>Details of distributed message storage.</li>
 <li>Which <a href="#netaddress">NetAddress</a> to use if a peer has many.</li>
 </ul>
+<h1 id="change-log"><a class="header" href="#change-log">Change Log</a></h1>
+<table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
+<tr><td align="left">13 Jun 2022</td><td align="left">Moved from tari repo</td><td align="left">sdbondi</td></tr>
+<tr><td align="left">9 Nov 2022</td><td align="left">Removed I2P and ZeroMQ</td><td align="left">stringhandler</td></tr>
+</tbody></table>
 
                     </main>
 
