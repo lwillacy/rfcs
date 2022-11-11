@@ -406,7 +406,7 @@ project source code:</p>
 <p><a href="RFCD-0010_CodeStructure.html">RFC-0010</a> provides more detail on how the source code is structured within the Tari codebase.</p>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0110basenodes"><a class="header" href="#rfc-0110basenodes">RFC-0110/BaseNodes</a></h1>
 <h2 id="base-layer-full-nodes-base-nodes"><a class="header" href="#base-layer-full-nodes-base-nodes">Base Layer Full Nodes (Base Nodes)</a></h2>
-<p><img src="theme/images/status-draft.svg" alt="status: draft" /></p>
+<p><img src="theme/images/status-stable.svg" alt="status: stable" /></p>
 <p><strong>Maintainer(s)</strong>: <a href="https://github.com/CjS77">Cayle Sharrock</a>, <a href="https://github.com/SWvheerden">S W van heerden</a> and  <a href="https://github.com/sdbondi">Stanley Bondi</a></p>
 <h1 id="licence-2"><a class="header" href="#licence-2">Licence</a></h1>
 <p><a href="https://opensource.org/licenses/BSD-3-Clause">The 3-Clause BSD Licence</a>.</p>
@@ -465,7 +465,10 @@ Arguments for this design are presented <a href="RFC-0001_overview.html#proof-of
 <li>provide historical block information to peers that are syncing.</li>
 </ul>
 <p>Once the Digital Assets Network (DAN) goes live, Base Nodes will also need to support the tasks described in
-<a href="RFCD-0300_DAN.html">RFC-0300_DAN</a>. These requirements are omitted for the moment.</p>
+<a href="RFC-0303_DanOverview.html">RFC-0303_DAN</a>. These requirements may involve but are not limited to:</p>
+<ul>
+<li>maintain an index of validator node registrations;</li>
+</ul>
 <p>To carry out these tasks effectively, Base Nodes SHOULD:</p>
 <ul>
 <li>save the <a href="Glossary.html#blockchain">blockchain</a> into an indexed local database;</li>
@@ -474,7 +477,7 @@ Arguments for this design are presented <a href="RFC-0001_overview.html#proof-of
 <li>manage a list of Base Node peers present on the network.</li>
 </ul>
 <p>Tari Base Nodes MAY implement chain pruning strategies that are features of Mimblewimble, including transaction
-<a href="https://tlu.tarilabs.com/protocols/grin-protocol-overview/MainReport.html#mimblewimble-protocol-overview">cut-through and block compaction techniques</a>.</p>
+<a href="https://tlu.tarilabs.com/protocols/grin-protocol-overview/MainReport.html#mimblewimble-protocol-overview">block compaction techniques</a>.</p>
 <p>Tari Base Nodes MAY also implement the following services via an Application Programming Interface (API) to clients:</p>
 <ul>
 <li>Block queries</li>
@@ -509,7 +512,7 @@ $$ \Sigma \left( \mathrm{inputs} - \mathrm{outputs} - \mathrm{fees} \right) = 0 
 <li>The <a href="./RFC-0201_TariScript.html">Tari script</a> of each input must execute successfully and return the public key that signs the script signature. </li>
 <li>The script offset \( \so\) is calculated and verified as per <a href="./RFC-0201_TariScript.html">RFC-0201_TariScript</a>.</li>
 </ul>
-<p>Rejected transactions are dropped silently.</p>
+<p>Rejected transactions are dropped without service interruption and noted in log files.</p>
 <p>Timelocked transactions are rejected by the mempool. The onus is on the client to submit transactions once they are 
 able to be spent.</p>
 <p><strong>Note:</strong> More detailed information is available in the <a href="RFC-0230_HTLC.html#time-locked-contracts">timelocks</a> RFC document.</p>
@@ -522,18 +525,17 @@ able to be spent.</p>
 <p>The weight of a transaction / block measured in &quot;grams&quot;. Input, output and kernel weights reflect their respective relative 
 storage and computation cost. Transaction fees are typically proportional to a transaction body's total weight, creating 
 incentive to reduce the size of the UTXO set.</p>
-<p>Given the target block size of <code>S</code> and the choice for 1 gram to represent <code>N</code> bytes, we end up with
+<p>With a target block size of <code>S</code> and 1 gram to represent <code>N</code> bytes, we have 
 a maximum block weight of <code>S/N</code> grams. </p>
-<p>To illustrate (these values should not be considered authoritative), with an <code>S</code> of 1MiB and <code>N</code> of 16, the block and 
-transaction body weights are as follows:</p>
-<p>|                   	| Byte size 	| Natural Weight         	| Adjust 	| Final                  	|
-|-------------------	|-----------	|------------------------	|--------	|------------------------	|
-| Output            	|           	|                        	|        	|                        	|
-| - Per output      	| 832       	| 52                     	| 0      	| 52                     	|
-| - Tari Script     	| variable  	| size_of(script) / 16   	| 0      	| size_of(script) / 16   	|
-| - Output Features 	| variable  	| size_of(features) / 16 	| 0      	| size_of(features) / 16 	|
-| Input             	|       169 	|                     11 	|     -2 	|                      9 	|
-| Kernel size       	|       113 	|                      8 	|      2 	|                     10 	|</p>
+<p>With an <code>S</code> of 1MiB and <code>N</code> of 16, the block and transaction body weights are as follows:</p>
+<table><thead><tr><th></th><th>Byte size</th><th>Natural Weight</th><th>Adjust</th><th>Final</th></tr></thead><tbody>
+<tr><td>Output</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>- Per output</td><td>832</td><td>52</td><td>0</td><td>52</td></tr>
+<tr><td>- Tari Script</td><td>variable</td><td>size_of(script) / 16</td><td>0</td><td>size_of(script) / 16</td></tr>
+<tr><td>- Output Features</td><td>variable</td><td>size_of(features) / 16</td><td>0</td><td>size_of(features) / 16</td></tr>
+<tr><td>Input</td><td>169</td><td>11</td><td>-2</td><td>9</td></tr>
+<tr><td>Kernel size</td><td>113</td><td>8</td><td>2</td><td>10</td></tr>
+</tbody></table>
 <p>Pseudocode: </p>
 <pre><code class="language-text">    output_weight = num_outputs * PER_OUTPUT_GRAMS(53)
     foreach output in outputs:
@@ -567,8 +569,7 @@ $$ \Sigma \left( \mathrm{inputs} - \mathrm{outputs} - \mathrm{fees} \right) = 0$
 <li>That all kernel excess values are unique for that block and the entire chain.</li>
 <li>Check if a block contains already spent outputs, reject that block.</li>
 <li>The <a href="./RFC-0201_TariScript.html">Tari script</a> of every input must execute successfully and return the public key that signs the script signature.</li>
-<li>The script offset \( \so\) is calculated and verified as per <a href="./RFC-0201_TariScript.html">RFC-0201_TariScript</a>. This prevents <a href="Glossary.html#cut-through">cut-through</a> from 
-being applied.</li>
+<li>The script offset \( \so\) is calculated and verified as per <a href="./RFC-0201_TariScript.html">RFC-0201_TariScript</a>.</li>
 </ul>
 <p>Because Mimblewimble blocks can simply be seen as large transactions with multiple inputs and outputs, the block 
 validation service checks all transaction verification on the block as well.</p>
@@ -581,24 +582,32 @@ validation service checks all transaction verification on the block as well.</p>
 <p>Validated blocks are</p>
 <ul>
 <li>added to the <a href="Glossary.html#blockchain">blockchain</a>;</li>
-<li>forwarded to peers using the block <a href="Glossary.html#broadcaststrategy">BroadcastStrategy</a>.</li>
+<li>forwarded to every connected base node peer using the block flood <a href="Glossary.html#broadcaststrategy">BroadcastStrategy</a>.</li>
 </ul>
 <p>In addition, when a block has been validated and added to the blockchain:</p>
 <ul>
 <li>The mempool MUST also remove all transactions that are present in the newly validated block.</li>
 <li>The UTXO set MUST be updated by removing all inputs in the block, and adding all the new outputs into it.</li>
 </ul>
+<h3 id="peer-validation-and-propagation"><a class="header" href="#peer-validation-and-propagation">Peer Validation and Propagation</a></h3>
+<p>When a peer attempts to connect or is shared by a trusted peer the base node will perform a peer validation. Ensuring
+the peer has a valid id, signature, and peer address before adding or propagating the peer back to the network.</p>
 <h3 id="synchronizing-and-pruning-of-the-chain"><a class="header" href="#synchronizing-and-pruning-of-the-chain">Synchronizing and Pruning of the Chain</a></h3>
-<p>Syncing, pruning and cut-through are discussed in detail in <a href="RFC-0140_Syncing_and_seeding.html">RFC-0140</a>.</p>
+<p>Syncing and pruning are discussed in detail in <a href="RFC-0140_Syncing_and_seeding.html">RFC-0140</a>.</p>
 <h3 id="archival-nodes"><a class="header" href="#archival-nodes">Archival Nodes</a></h3>
 <p><a href="Glossary.html#archive-node">Archival nodes</a> are used to keep a complete history of the blockchain since genesis block. They do not employ pruning
 at all. These nodes will allow full syncing of the blockchain, because normal nodes will not keep the full history to
 enable this. These nodes must sync from another archival node.</p>
 <h3 id="pruned-nodes"><a class="header" href="#pruned-nodes">Pruned Nodes</a></h3>
-<p>[Pruned nodes] take advantage of the cryptography of <a href="Glossary.html#mimblewimble">mimblewimble</a> to allow them to prune spent inputs and outputs 
+<p><a href="Glossary.html#pruned-node">Pruned nodes</a> take advantage of the cryptography of <a href="Glossary.html#mimblewimble">mimblewimble</a> to allow them to prune spent inputs and outputs 
 beyond the pruning horizon and still validate the integrity of the blockchain i.e. no coins were destroyed or created 
 beyond what is allowed by consensus rules. A sufficient number of blocks back from the tip should be configured because 
 reorgs are no longer possible beyond that horizon. These nodes can sync from any other base node (archival and pruned).</p>
+<h1 id="change-log-1"><a class="header" href="#change-log-1">Change Log</a></h1>
+<table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
+<tr><td align="left">18 Dec 2019</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
+<tr><td align="left">19 Oct 2022</td><td align="left">Stabilizing updates</td><td align="left">brianp</td></tr>
+</tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0111basenodesarchitecture"><a class="header" href="#rfc-0111basenodesarchitecture">RFC-0111/BaseNodesArchitecture</a></h1>
 <h2 id="base-node-architecture"><a class="header" href="#base-node-architecture">Base Node Architecture</a></h2>
 <p><img src="theme/images/status-draft.svg" alt="status: draft" /></p>
@@ -764,7 +773,7 @@ provides; third-party applications such as block explorers; and, of course, mine
 <li>Block and transaction validation calls</li>
 <li>Block synchronisation calls</li>
 </ul>
-<h1 id="change-log-1"><a class="header" href="#change-log-1">Change Log</a></h1>
+<h1 id="change-log-2"><a class="header" href="#change-log-2">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">2 Jul 2019</td><td align="left">First outline</td><td align="left">CjS77</td></tr>
 <tr><td align="left">11 Aug 2019</td><td align="left">Updates</td><td align="left">CjS77</td></tr>
@@ -1511,7 +1520,7 @@ used little-endian, our block hashes would have trailing zeroes. So we use the b
 expected in block explorers and such that block hashes should always start with a series of zeroes.</p>
 <h1 id="stabilisation-note"><a class="header" href="#stabilisation-note">Stabilisation note</a></h1>
 <p>This RFC is stable as of PR#4862</p>
-<h1 id="change-log-2"><a class="header" href="#change-log-2">Change Log</a></h1>
+<h1 id="change-log-3"><a class="header" href="#change-log-3">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">2022-11-26</td><td align="left">Finalise SHA-3 algorithm</td><td align="left">CjS77</td></tr>
 <tr><td align="left">2022-10-11</td><td align="left">First outline</td><td align="left">SWvHeerden</td></tr>
@@ -1646,7 +1655,7 @@ so that the miner submits the found block at either chain's difficulty. The Tari
 <h3 id="submit_block"><a class="header" href="#submit_block"><code>submit_block</code></a></h3>
 <p>The miner submits a solved Monero block (at a difficulty of <code>min(monero_difficulty, tari_difficulty)</code>) to the proxy. The cached
 Tari block is retrieved, enriched with the <code>MoneroPowData</code> struct and submitted to the Tari base node.</p>
-<h1 id="change-log-3"><a class="header" href="#change-log-3">Change Log</a></h1>
+<h1 id="change-log-4"><a class="header" href="#change-log-4">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">26 Oct 2022</td><td align="left">Stablise RFC</td><td align="left">CjS77</td></tr>
 <tr><td align="left">21 Oct 2022</td><td align="left">Update fields</td><td align="left">Cifko</td></tr>
@@ -2696,7 +2705,7 @@ it is proposed that a <code>MessageFormat</code> trait be defined:</p>
 <p>This trait will have default implementations to cover most use cases (e.g. a simple call through to <code>serde_json</code>). Serde
 also offers significant ability to tweak how a given struct will be serialized through the use of
 <a href="https://serde.rs/attributes.html">attributes</a>.</p>
-<h1 id="change-log-4"><a class="header" href="#change-log-4">Change Log</a></h1>
+<h1 id="change-log-5"><a class="header" href="#change-log-5">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">29 Mar 2019</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">24 Jul 2019</td><td align="left">Technical editing</td><td align="left">anselld</td></tr>
@@ -3492,7 +3501,7 @@ used in the construction and validation of this block. Consensus rules versions 
 and as such will be represented with a single incremented integer. This coupled with the internal list of fork versions,
 that includes the height at which they came into effect, will be used to validate whether the consensus rules specified 
 in the header are valid for that block's height.</p>
-<h1 id="change-log-5"><a class="header" href="#change-log-5">Change Log</a></h1>
+<h1 id="change-log-6"><a class="header" href="#change-log-6">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">26 Oct 2022</td><td align="left">Stabilise RFC</td><td align="left">CjS77</td></tr>
 </tbody></table>
@@ -4858,7 +4867,7 @@ validation.</p>
 <li><a href="https://github.com/SWvheerden">@SWvheerden</a></li>
 </ul>
 <p>Thanks to David Burkett for proposing a method to prevent cut-through and willingness to discuss ideas.</p>
-<h1 id="change-log-6"><a class="header" href="#change-log-6">Change Log</a></h1>
+<h1 id="change-log-7"><a class="header" href="#change-log-7">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Aug 2020</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">11 Feb 2021</td><td align="left">Major update</td><td align="left">CjS77, SWvheerden, philipr-za</td></tr>
@@ -5322,7 +5331,7 @@ or Bob can spend the output.</p>
 <h3 id="credits-2"><a class="header" href="#credits-2">Credits</a></h3>
 <p>Thanks to <a href="https://github.com/philipr-za">@philipr-za</a> and <a href="https://github.com/SWvheerden">@SWvheerden</a> for their input
 and contributions to this RFC.</p>
-<h1 id="change-log-7"><a class="header" href="#change-log-7">Change Log</a></h1>
+<h1 id="change-log-8"><a class="header" href="#change-log-8">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Aug 2020</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">8 Mar 2021</td><td align="left">Minor update</td><td align="left">philip-za</td></tr>
@@ -5418,7 +5427,7 @@ one-time private key \( c + a \).</li>
 <li>Stealth addresses were included in the Tari Console Wallet as of version v0.35.0 (2022-08-11).</li>
 <li>The FFI (used in Aurora) uses stealth addresses by default as of libwallet-v0.35.0 (2022-08-11).</li>
 </ul>
-<h1 id="change-log-8"><a class="header" href="#change-log-8">Change Log</a></h1>
+<h1 id="change-log-9"><a class="header" href="#change-log-9">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">01 Jun 2022</td><td align="left">First draft</td><td align="left">philip-za</td></tr>
 <tr><td align="left">26 Oct 2022</td><td align="left">Stabilise RFC</td><td align="left">CjS77</td></tr>
@@ -5736,7 +5745,7 @@ xor(
 <li><code>filter_script_match(&lt;pattern&gt;)</code></li>
 <li><code>filter_covenant_match(&lt;pattern&gt;)</code></li>
 </ul>
-<h1 id="change-log-9"><a class="header" href="#change-log-9">Change Log</a></h1>
+<h1 id="change-log-10"><a class="header" href="#change-log-10">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Oct 2021</td><td align="left">First draft</td><td align="left">sbondi</td></tr>
 <tr><td align="left">08 Oct 2022</td><td align="left">Stable update</td><td align="left">brianp</td></tr>
@@ -5879,7 +5888,7 @@ with every instruction to provide a constant source of demand for Thaums in the 
 <p>There is no peg out back to the base layer for Thaums. The reason for this is explained in <a href="RFC-0320_TurbineModel.html">RFC-0320</a>. Thaum holders wishing to convert back to Tari will be able to 
 perform a submarine swap with a Tari seller. We also anticipate that exchanges will list the Thaum-Tari pair to 
 enable easy conversion of Thaums back to Tari.</p>
-<h1 id="change-log-10"><a class="header" href="#change-log-10">Change Log</a></h1>
+<h1 id="change-log-11"><a class="header" href="#change-log-11">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">1 Nov 2022</td><td align="left">High-level overview</td><td align="left">CjS77</td></tr>
 <tr><td align="left">26 Oct 2022</td><td align="left">First outline</td><td align="left">SWvHeerden</td></tr>
@@ -6006,7 +6015,7 @@ occasionally dropping below parity and possibly remaining there for some time. A
 Tari-Thaum pair matures, this event will immediately create a bid on Thaums, since -- in the absence of catastrophic 
 failure -- speculators know that the Thaum price will eventually return to parity, causing upward pressure to come into 
 play quickly and efficiently.</p>
-<h1 id="change-log-11"><a class="header" href="#change-log-11">Change Log</a></h1>
+<h1 id="change-log-12"><a class="header" href="#change-log-12">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">1 Nov 2022</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 </tbody></table>
@@ -6118,7 +6127,7 @@ to track the spent TXO set's commitment and the UTXO set.</p>
 </ul>
 </li>
 </ul>
-<h1 id="change-log-12"><a class="header" href="#change-log-12">Change Log</a></h1>
+<h1 id="change-log-13"><a class="header" href="#change-log-13">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">2022-10-19</td><td align="left">Minor editorial changes</td><td align="left">CjS77</td></tr>
 <tr><td align="left">2022-10-10</td><td align="left">First outline</td><td align="left">SWvheerden</td></tr>
@@ -6582,7 +6591,7 @@ assigned greek lowercase letters in most cases. Some terms used here are noted d
 <tr><td align="left">Pre-image</td><td>\( \preimage \)</td><td>The random byte data used for the pre-image of the hash</td></tr>
 <tr><td align="left"></td><td></td><td></td></tr>
 </tbody></table>
-<h2 id="change-log-13"><a class="header" href="#change-log-13">Change Log</a></h2>
+<h2 id="change-log-14"><a class="header" href="#change-log-14">Change Log</a></h2>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Oct 2022</td><td align="left">First outline</td><td align="left">SWvHeerden</td></tr>
 </tbody></table>
@@ -8099,7 +8108,7 @@ deployed as part of the Tari network.</p>
 <p>Github: <a href="https://github.com/tari-project/tari-crypto">tari-project/tari-crypto</a></p>
 <p>Tari Crypto was refactored into its own <a href="https://crates.io/crates/tari_crypto">crate</a>, for ease of use and integration across different projects.
 It includes all cryptographic services, including a Curve25519 implementation.</p>
-<h1 id="change-log-14"><a class="header" href="#change-log-14">Change Log</a></h1>
+<h1 id="change-log-15"><a class="header" href="#change-log-15">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Description</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">21 Dec 2018</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">14 Jan 2022</td><td align="left">Deprecated in favour of README</td><td align="left">CjS77</td></tr>
@@ -9865,7 +9874,7 @@ chain.</li>
 <li>Contract B is a trusted party from the PoV of Bob / A (e.g. Bob &amp; B collude to lie about account updates in order to
 defraud A)</li>
 </ul>
-<h1 id="change-log-15"><a class="header" href="#change-log-15">Change Log</a></h1>
+<h1 id="change-log-16"><a class="header" href="#change-log-16">Change Log</a></h1>
 <ul>
 <li><strong>06-04-2022</strong>: First draft</li>
 </ul>
@@ -10782,7 +10791,7 @@ technological merits of the potential system outlined herein.</p>
 <h2 id="goals-49"><a class="header" href="#goals-49">Goals</a></h2>
 <h2 id="related-requests-for-comment-42"><a class="header" href="#related-requests-for-comment-42">Related Requests for Comment</a></h2>
 <h2 id="description-39"><a class="header" href="#description-39">Description</a></h2>
-<h1 id="change-log-16"><a class="header" href="#change-log-16">Change Log</a></h1>
+<h1 id="change-log-17"><a class="header" href="#change-log-17">Change Log</a></h1>
 <ul>
 <li><strong>dd-mm-yyyy</strong>: Summary of changes</li>
 </ul>
@@ -10934,7 +10943,20 @@ but does not maintain it">communication client</a>.</p>
 <p>A Non-fungible token is a specific instance of a token issued as part of a <a href="Glossary.html#digital-asset" title="Sets of Native digital tokens, both fungible and non-fungible that are created by
 asset issuers on the Tari 2nd layer">digital asset</a>. It is another name for a
 [digital asset token]. NFTs are contained within specially marked <a href="Glossary.html#unspent-transaction-outputs">UTXO</a>s on the Tari Base Layer.</p>
-<h2 id="pruning-horizon"><a class="header" href="#pruning-horizon">Pruning horizon</a></h2>
+<h2 id="orphan-pool"><a class="header" href="#orphan-pool">Orphan Pool</a></h2>
+<p>The orphan pool is part of the <a href="Glossary.html#mempool" title="A memory pool for unconfirmed transactions on the base layer">mempool</a> and manages all <a href="Glossary.html#transaction" title="Base layer tari coin transfers.">transaction</a>s that have been verified but attempt to spend
+<a href="Glossary.html#unspent-transaction-outputs">UTXO</a>s that do not exist or haven't been created yet.</p>
+<h2 id="pending-pool"><a class="header" href="#pending-pool">Pending Pool</a></h2>
+<p>The pending pool is part of the <a href="Glossary.html#mempool" title="A memory pool for unconfirmed transactions on the base layer">mempool</a> and manages all <a href="Glossary.html#transaction" title="Base layer tari coin transfers.">transaction</a>s that have a time-lock restriction on when it
+can be processed or attempts to spend <a href="Glossary.html#unspent-transaction-outputs">UTXO</a>s with time-locks.</p>
+<h2 id="pruned-node"><a class="header" href="#pruned-node">Pruned Node</a></h2>
+<p>This is a pruned history <a href="Glossary.html#base-node" title="A full Tari node running on the base layer, validating and propagating Tari coin transactions
+and blocks">base node</a>. It uses cryptography of <a href="Glossary.html#mimblewimble" title="a privacy-centric cryptocurrency protocol">mimblewimble</a> to allow the removal of spent inputs and
+outputs beyond the <a href="Glossary.html#pruning-horizon" title="Block height at which pruning will commence">pruninghorizon</a>.</p>
+<p>It can still validate the integrity of the blockchain i.e. no coins were destroyed or created beyond what is allowed by
+consensus rules. A sufficient number of blocks back from the tip should be configured because reorgs are no longer
+possible beyond that horizon.</p>
+<h2 id="pruning-horizon"><a class="header" href="#pruning-horizon">Pruning Horizon</a></h2>
 <p>This is a local setting for each node to help reduce syncing time and bandwidth. This is the number of blocks from the
 chain tip beyond which a chain will be pruned.</p>
 <h2 id="public-nomination-mode"><a class="header" href="#public-nomination-mode">Public Nomination Mode</a></h2>

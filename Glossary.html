@@ -280,7 +280,20 @@ but does not maintain it">communication client</a>.</p>
 <p>A Non-fungible token is a specific instance of a token issued as part of a <a href="#digital-asset" title="Sets of Native digital tokens, both fungible and non-fungible that are created by
 asset issuers on the Tari 2nd layer">digital asset</a>. It is another name for a
 [digital asset token]. NFTs are contained within specially marked <a href="#unspent-transaction-outputs">UTXO</a>s on the Tari Base Layer.</p>
-<h2 id="pruning-horizon"><a class="header" href="#pruning-horizon">Pruning horizon</a></h2>
+<h2 id="orphan-pool"><a class="header" href="#orphan-pool">Orphan Pool</a></h2>
+<p>The orphan pool is part of the <a href="#mempool" title="A memory pool for unconfirmed transactions on the base layer">mempool</a> and manages all <a href="#transaction" title="Base layer tari coin transfers.">transaction</a>s that have been verified but attempt to spend
+<a href="#unspent-transaction-outputs">UTXO</a>s that do not exist or haven't been created yet.</p>
+<h2 id="pending-pool"><a class="header" href="#pending-pool">Pending Pool</a></h2>
+<p>The pending pool is part of the <a href="#mempool" title="A memory pool for unconfirmed transactions on the base layer">mempool</a> and manages all <a href="#transaction" title="Base layer tari coin transfers.">transaction</a>s that have a time-lock restriction on when it
+can be processed or attempts to spend <a href="#unspent-transaction-outputs">UTXO</a>s with time-locks.</p>
+<h2 id="pruned-node"><a class="header" href="#pruned-node">Pruned Node</a></h2>
+<p>This is a pruned history <a href="#base-node" title="A full Tari node running on the base layer, validating and propagating Tari coin transactions
+and blocks">base node</a>. It uses cryptography of <a href="#mimblewimble" title="a privacy-centric cryptocurrency protocol">mimblewimble</a> to allow the removal of spent inputs and
+outputs beyond the <a href="#pruning-horizon" title="Block height at which pruning will commence">pruninghorizon</a>.</p>
+<p>It can still validate the integrity of the blockchain i.e. no coins were destroyed or created beyond what is allowed by
+consensus rules. A sufficient number of blocks back from the tip should be configured because reorgs are no longer
+possible beyond that horizon.</p>
+<h2 id="pruning-horizon"><a class="header" href="#pruning-horizon">Pruning Horizon</a></h2>
 <p>This is a local setting for each node to help reduce syncing time and bandwidth. This is the number of blocks from the
 chain tip beyond which a chain will be pruned.</p>
 <h2 id="public-nomination-mode"><a class="header" href="#public-nomination-mode">Public Nomination Mode</a></h2>

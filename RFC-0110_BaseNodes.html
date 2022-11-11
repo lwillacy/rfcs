@@ -134,7 +134,7 @@
                     <main>
                         <h1 id="rfc-0110basenodes"><a class="header" href="#rfc-0110basenodes">RFC-0110/BaseNodes</a></h1>
 <h2 id="base-layer-full-nodes-base-nodes"><a class="header" href="#base-layer-full-nodes-base-nodes">Base Layer Full Nodes (Base Nodes)</a></h2>
-<p><img src="theme/images/status-draft.svg" alt="status: draft" /></p>
+<p><img src="theme/images/status-stable.svg" alt="status: stable" /></p>
 <p><strong>Maintainer(s)</strong>: <a href="https://github.com/CjS77">Cayle Sharrock</a>, <a href="https://github.com/SWvheerden">S W van heerden</a> and  <a href="https://github.com/sdbondi">Stanley Bondi</a></p>
 <h1 id="licence"><a class="header" href="#licence">Licence</a></h1>
 <p><a href="https://opensource.org/licenses/BSD-3-Clause">The 3-Clause BSD Licence</a>.</p>
@@ -193,7 +193,10 @@ Arguments for this design are presented <a href="RFC-0001_overview.html#proof-of
 <li>provide historical block information to peers that are syncing.</li>
 </ul>
 <p>Once the Digital Assets Network (DAN) goes live, Base Nodes will also need to support the tasks described in
-<a href="RFCD-0300_DAN.html">RFC-0300_DAN</a>. These requirements are omitted for the moment.</p>
+<a href="RFC-0303_DanOverview.html">RFC-0303_DAN</a>. These requirements may involve but are not limited to:</p>
+<ul>
+<li>maintain an index of validator node registrations;</li>
+</ul>
 <p>To carry out these tasks effectively, Base Nodes SHOULD:</p>
 <ul>
 <li>save the <a href="Glossary.html#blockchain">blockchain</a> into an indexed local database;</li>
@@ -202,7 +205,7 @@ Arguments for this design are presented <a href="RFC-0001_overview.html#proof-of
 <li>manage a list of Base Node peers present on the network.</li>
 </ul>
 <p>Tari Base Nodes MAY implement chain pruning strategies that are features of Mimblewimble, including transaction
-<a href="https://tlu.tarilabs.com/protocols/grin-protocol-overview/MainReport.html#mimblewimble-protocol-overview">cut-through and block compaction techniques</a>.</p>
+<a href="https://tlu.tarilabs.com/protocols/grin-protocol-overview/MainReport.html#mimblewimble-protocol-overview">block compaction techniques</a>.</p>
 <p>Tari Base Nodes MAY also implement the following services via an Application Programming Interface (API) to clients:</p>
 <ul>
 <li>Block queries</li>
@@ -237,7 +240,7 @@ $$ \Sigma \left( \mathrm{inputs} - \mathrm{outputs} - \mathrm{fees} \right) = 0 
 <li>The <a href="./RFC-0201_TariScript.html">Tari script</a> of each input must execute successfully and return the public key that signs the script signature. </li>
 <li>The script offset \( \so\) is calculated and verified as per <a href="./RFC-0201_TariScript.html">RFC-0201_TariScript</a>.</li>
 </ul>
-<p>Rejected transactions are dropped silently.</p>
+<p>Rejected transactions are dropped without service interruption and noted in log files.</p>
 <p>Timelocked transactions are rejected by the mempool. The onus is on the client to submit transactions once they are 
 able to be spent.</p>
 <p><strong>Note:</strong> More detailed information is available in the <a href="RFC-0230_HTLC.html#time-locked-contracts">timelocks</a> RFC document.</p>
@@ -250,18 +253,17 @@ able to be spent.</p>
 <p>The weight of a transaction / block measured in &quot;grams&quot;. Input, output and kernel weights reflect their respective relative 
 storage and computation cost. Transaction fees are typically proportional to a transaction body's total weight, creating 
 incentive to reduce the size of the UTXO set.</p>
-<p>Given the target block size of <code>S</code> and the choice for 1 gram to represent <code>N</code> bytes, we end up with
+<p>With a target block size of <code>S</code> and 1 gram to represent <code>N</code> bytes, we have 
 a maximum block weight of <code>S/N</code> grams. </p>
-<p>To illustrate (these values should not be considered authoritative), with an <code>S</code> of 1MiB and <code>N</code> of 16, the block and 
-transaction body weights are as follows:</p>
-<p>|                   	| Byte size 	| Natural Weight         	| Adjust 	| Final                  	|
-|-------------------	|-----------	|------------------------	|--------	|------------------------	|
-| Output            	|           	|                        	|        	|                        	|
-| - Per output      	| 832       	| 52                     	| 0      	| 52                     	|
-| - Tari Script     	| variable  	| size_of(script) / 16   	| 0      	| size_of(script) / 16   	|
-| - Output Features 	| variable  	| size_of(features) / 16 	| 0      	| size_of(features) / 16 	|
-| Input             	|       169 	|                     11 	|     -2 	|                      9 	|
-| Kernel size       	|       113 	|                      8 	|      2 	|                     10 	|</p>
+<p>With an <code>S</code> of 1MiB and <code>N</code> of 16, the block and transaction body weights are as follows:</p>
+<table><thead><tr><th></th><th>Byte size</th><th>Natural Weight</th><th>Adjust</th><th>Final</th></tr></thead><tbody>
+<tr><td>Output</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>- Per output</td><td>832</td><td>52</td><td>0</td><td>52</td></tr>
+<tr><td>- Tari Script</td><td>variable</td><td>size_of(script) / 16</td><td>0</td><td>size_of(script) / 16</td></tr>
+<tr><td>- Output Features</td><td>variable</td><td>size_of(features) / 16</td><td>0</td><td>size_of(features) / 16</td></tr>
+<tr><td>Input</td><td>169</td><td>11</td><td>-2</td><td>9</td></tr>
+<tr><td>Kernel size</td><td>113</td><td>8</td><td>2</td><td>10</td></tr>
+</tbody></table>
 <p>Pseudocode: </p>
 <pre><code class="language-text">    output_weight = num_outputs * PER_OUTPUT_GRAMS(53)
     foreach output in outputs:
@@ -295,8 +297,7 @@ $$ \Sigma \left( \mathrm{inputs} - \mathrm{outputs} - \mathrm{fees} \right) = 0$
 <li>That all kernel excess values are unique for that block and the entire chain.</li>
 <li>Check if a block contains already spent outputs, reject that block.</li>
 <li>The <a href="./RFC-0201_TariScript.html">Tari script</a> of every input must execute successfully and return the public key that signs the script signature.</li>
-<li>The script offset \( \so\) is calculated and verified as per <a href="./RFC-0201_TariScript.html">RFC-0201_TariScript</a>. This prevents <a href="Glossary.html#cut-through">cut-through</a> from 
-being applied.</li>
+<li>The script offset \( \so\) is calculated and verified as per <a href="./RFC-0201_TariScript.html">RFC-0201_TariScript</a>.</li>
 </ul>
 <p>Because Mimblewimble blocks can simply be seen as large transactions with multiple inputs and outputs, the block 
 validation service checks all transaction verification on the block as well.</p>
@@ -309,24 +310,32 @@ validation service checks all transaction verification on the block as well.</p>
 <p>Validated blocks are</p>
 <ul>
 <li>added to the <a href="Glossary.html#blockchain">blockchain</a>;</li>
-<li>forwarded to peers using the block <a href="Glossary.html#broadcaststrategy">BroadcastStrategy</a>.</li>
+<li>forwarded to every connected base node peer using the block flood <a href="Glossary.html#broadcaststrategy">BroadcastStrategy</a>.</li>
 </ul>
 <p>In addition, when a block has been validated and added to the blockchain:</p>
 <ul>
 <li>The mempool MUST also remove all transactions that are present in the newly validated block.</li>
 <li>The UTXO set MUST be updated by removing all inputs in the block, and adding all the new outputs into it.</li>
 </ul>
+<h3 id="peer-validation-and-propagation"><a class="header" href="#peer-validation-and-propagation">Peer Validation and Propagation</a></h3>
+<p>When a peer attempts to connect or is shared by a trusted peer the base node will perform a peer validation. Ensuring
+the peer has a valid id, signature, and peer address before adding or propagating the peer back to the network.</p>
 <h3 id="synchronizing-and-pruning-of-the-chain"><a class="header" href="#synchronizing-and-pruning-of-the-chain">Synchronizing and Pruning of the Chain</a></h3>
-<p>Syncing, pruning and cut-through are discussed in detail in <a href="RFC-0140_Syncing_and_seeding.html">RFC-0140</a>.</p>
+<p>Syncing and pruning are discussed in detail in <a href="RFC-0140_Syncing_and_seeding.html">RFC-0140</a>.</p>
 <h3 id="archival-nodes"><a class="header" href="#archival-nodes">Archival Nodes</a></h3>
 <p><a href="Glossary.html#archive-node">Archival nodes</a> are used to keep a complete history of the blockchain since genesis block. They do not employ pruning
 at all. These nodes will allow full syncing of the blockchain, because normal nodes will not keep the full history to
 enable this. These nodes must sync from another archival node.</p>
 <h3 id="pruned-nodes"><a class="header" href="#pruned-nodes">Pruned Nodes</a></h3>
-<p>[Pruned nodes] take advantage of the cryptography of <a href="Glossary.html#mimblewimble">mimblewimble</a> to allow them to prune spent inputs and outputs 
+<p><a href="Glossary.html#pruned-node">Pruned nodes</a> take advantage of the cryptography of <a href="Glossary.html#mimblewimble">mimblewimble</a> to allow them to prune spent inputs and outputs 
 beyond the pruning horizon and still validate the integrity of the blockchain i.e. no coins were destroyed or created 
 beyond what is allowed by consensus rules. A sufficient number of blocks back from the tip should be configured because 
 reorgs are no longer possible beyond that horizon. These nodes can sync from any other base node (archival and pruned).</p>
+<h1 id="change-log"><a class="header" href="#change-log">Change Log</a></h1>
+<table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
+<tr><td align="left">18 Dec 2019</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
+<tr><td align="left">19 Oct 2022</td><td align="left">Stabilizing updates</td><td align="left">brianp</td></tr>
+</tbody></table>
 
                     </main>
 
