@@ -5425,11 +5425,11 @@ one-time private key \( c + a \).</li>
 </tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0250covenants"><a class="header" href="#rfc-0250covenants">RFC-0250/Covenants</a></h1>
 <h2 id="covenants-1"><a class="header" href="#covenants-1">Covenants</a></h2>
-<p><img src="theme/images/status-draft.svg" alt="status: draft" /></p>
+<p><img src="theme/images/status-stable.svg" alt="status: stable" /></p>
 <p><strong>Maintainer(s)</strong>: <a href="https://github.com/sdbondi">Stanley Bondi</a></p>
 <h1 id="licence-19"><a class="header" href="#licence-19">Licence</a></h1>
 <p><a href="https://opensource.org/licenses/BSD-3-Clause">The 3-Clause BSD Licence</a>.</p>
-<p>Copyright 2021 The Tari Development Community</p>
+<p>Copyright 2022 The Tari Development Community</p>
 <p>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 following conditions are met:</p>
 <ol>
@@ -5475,10 +5475,10 @@ use-cases, such as</p>
 </ul>
 <h2 id="introduction-5"><a class="header" href="#introduction-5">Introduction</a></h2>
 <p>The Tari protocol already provides programmable consensus, through <a href="./Glossary.html#tariscript">TariScript</a>, that restricts whether a <a href="./Glossary.html#unspent-transaction-outputs">UTXO</a>
-may be included as an input to a transaction (a.k.a spent). The scope of information <a href="./Glossary.html#tariscript">TariScript</a> is inherently limited,
-by the [TariScript Opcodes] and the input data provided by a spender. Once the requirements of the script are met,
+may be included as an input to a transaction (a.k.a spent). The scope of information within <a href="./Glossary.html#tariscript">TariScript</a> is inherently limited,
+by the <a href="./RFC-0202_TariScriptOpcodes.html">TariScript Opcodes</a> and the input data provided by a spender. Once the requirements of the script are met,
 a spender may generate <a href="./Glossary.html#unspent-transaction-outputs">UTXO</a>s of their choosing, within the constraints of <a href="./Glossary.html#mimblewimble">MimbleWimble</a>.</p>
-<p>This RFC aims to expand the capabilities of Tari protocol by adding <em>additional requirements</em>, called covenants
+<p>This RFC expands the capabilities of Tari protocol by adding <em>additional requirements</em>, called covenants
 that allow the owner(s) of a <a href="./Glossary.html#unspent-transaction-outputs">UTXO</a> to control the composition of a <em>subsequent</em> transaction.</p>
 <p>Covenants are not a new idea and have been proposed and implemented in various forms by others.</p>
 <p>For example,</p>
@@ -5497,7 +5497,7 @@ to put a &quot;box&quot; around these inputs/outputs there is nothing to stop so
 outputs from other boxes as long as balance is maintained.</p>
 <p>This results in an interesting dilemma: how do we allow rules that dictate how future outputs look only armed with
 the knowledge that the rule must apply to one or more outputs?</p>
-<p>In this RFC, we propose a covenant scheme that allows the <a href="./Glossary.html#unspent-transaction-outputs">UTXO</a> originator to express a <em>filter</em> that must be
+<p>In this RFC, we detail a covenant scheme that allows the <a href="./Glossary.html#unspent-transaction-outputs">UTXO</a> originator to express a <em>filter</em> that must be
 satisfied for a subsequent spending transaction to be considered valid.</p>
 <h2 id="assumptions-3"><a class="header" href="#assumptions-3">Assumptions</a></h2>
 <p>The following assumptions are made:</p>
@@ -5549,23 +5549,26 @@ which invalidates the transaction/block.</p>
     // data size: 32 bytes
     Commitment(PedersonCommitment),
     // byte code: 0x04
-    // data size: 64 bytes
-    Signature(Signature),
+    // data size: variable
+    TariScript(TariScript),
     // byte code: 0x05
-    // data size: variable
-    Script(TariScript),
-    // byte code: 0x06
-    // data size: variable
+    // data size: &lt;= 4096 bytes
     Covenant(Covenant),
-    // byte code: 0x07
+    // byte cide: 0x06
     // data size: variable
-    VarInt(VarInt),
-    // byte code: 0x08
-    // data size: 1 byte
-    Field(FieldKey),
-    // byte code: 0x09
+    Uint(u64),
+    // byte cide: 0x07
     // data size: variable
-    Fields(Vec&lt;FieldKey&gt;),
+    OutputField(OutputField),
+    // byte cide: 0x08
+    // data size: variable
+    OutputFields(OutputFields),
+    // byte cide: 0x09
+    // data size: variable
+    Bytes(Vec&lt;u8&gt;),
+    // byte cide: 0x0a
+    // data size: 1 bytes
+    OutputType(OutputType),
 }
 </code></pre>
 <h5 id="output-field-tags"><a class="header" href="#output-field-tags">Output field tags</a></h5>
@@ -5577,15 +5580,14 @@ The available fields are defined as follows:</p>
 <tr><td><code>field::sender_offset_public_key</code></td><td>0x02</td><td>output.sender_offset_public_key</td></tr>
 <tr><td><code>field::covenant</code></td><td>0x03</td><td>output.covenant</td></tr>
 <tr><td><code>field::features</code></td><td>0x04</td><td>output.features</td></tr>
-<tr><td><code>field::features_flags</code></td><td>0x05</td><td>output.features.flags</td></tr>
+<tr><td><code>field::features_output_type</code></td><td>0x05</td><td>output.features.output_type</td></tr>
 <tr><td><code>field::features_maturity</code></td><td>0x06</td><td>output.features.maturity</td></tr>
-<tr><td><code>field::features_unique_id</code></td><td>0x07</td><td>output.features.unique_id</td></tr>
-<tr><td><code>field::features_parent_public_key</code></td><td>0x08</td><td>output.features.parent_public_key</td></tr>
-<tr><td><code>field::features_metadata</code></td><td>0x09</td><td>output.features.metadata</td></tr>
+<tr><td><code>field::features_metadata</code></td><td>0x07</td><td>output.features.metadata</td></tr>
+<tr><td><code>field::features_sidechain_features</code></td><td>0x08</td><td>output.features.sidechain_features</td></tr>
 </tbody></table>
 <p>Each field tag returns a consensus encoded byte representation of the value contained in the field.
 How those bytes are interpreted depends on the covenant. For instance, <code>filter_fields_hashed_eq</code> will
-concatenate the bytes and hash the result whereas <code>filter_field_int_eq</code> will interpret the bytes as a
+concatenate the bytes and hash the result whereas <code>filter_field_eq</code> will interpret the bytes as a
 little-endian 64-bit unsigned integer.</p>
 <h4 id="set-operations"><a class="header" href="#set-operations">Set operations</a></h4>
 <h5 id="identity"><a class="header" href="#identity">identity()</a></h5>
@@ -5610,11 +5612,6 @@ args: [Covenant, Covenant]</p>
 resultant output set.</p>
 <p>op_byte: 0x24<br>
 args: [Covenant]</p>
-<h5 id="empty"><a class="header" href="#empty">empty()</a></h5>
-<p>Returns an empty set. This will always fail and, if used alone, prevents the UTXO from ever being spent.
-A more useful reason to use <code>empty</code> is in conjunction a conditional e.g. <code>if_else(Condition(older_rel(10)), A, empty)</code></p>
-<p>op_byte: 0x25<br>
-args: []</p>
 <h4 id="filters"><a class="header" href="#filters">Filters</a></h4>
 <h5 id="filter_output_hash_eqhash"><a class="header" href="#filter_output_hash_eqhash">filter_output_hash_eq(hash)</a></h5>
 <p>Filters for a single output that matches the hash. This filter only returns zero or one outputs.</p>
@@ -5624,17 +5621,17 @@ args: [Hash]</p>
 <p>Filter for outputs where all given fields in the input are preserved in the output.</p>
 <p>op_byte: 0x31<br>
 args: [Fields]</p>
-<h5 id="filter_field_int_eqfield-int"><a class="header" href="#filter_field_int_eqfield-int">filter_field_int_eq(field, int)</a></h5>
+<h5 id="filter_fields_hashed_eqfields-hash"><a class="header" href="#filter_fields_hashed_eqfields-hash">filter_fields_hashed_eq(fields, hash)</a></h5>
+<p>op_byte: 0x32<br>
+args: [Fields, VarInt]</p>
+<h5 id="filter_field_eqfield-int"><a class="header" href="#filter_field_eqfield-int">filter_field_eq(field, int)</a></h5>
 <p>Filters for outputs whose field value matches the given integer value. If the given field cannot be cast
 to an unsigned 64-bit integer, the transaction/block is rejected.</p>
-<p>op_byte: 0x32<br>
-args: [Field, VarInt]</p>
-<h5 id="filter_fields_hashed_eqfields-hash"><a class="header" href="#filter_fields_hashed_eqfields-hash">filter_fields_hashed_eq(fields, hash)</a></h5>
 <p>op_byte: 0x33<br>
-args: [Fields, VarInt]</p>
-<h5 id="filter_relative_heightheight"><a class="header" href="#filter_relative_heightheight">filter_relative_height(height)</a></h5>
-<p>Checks the block height that the current <a href="./Glossary.html#unspent-transaction-outputs">UTXO</a> (i.e. the current input) was mined plus <code>height</code> is greater than or
-equal to the current block height. If so, the <code>identity()</code> is returned, otherwise <code>empty()</code>.</p>
+args: [Field, VarInt]</p>
+<h5 id="filter_absolute_heightheight"><a class="header" href="#filter_absolute_heightheight">filter_absolute_height(height)</a></h5>
+<p>Checks the block height that the current <a href="./Glossary.html#unspent-transaction-outputs">UTXO</a> (i.e. the current input) is greater than or
+equal to the <code>HEIGHT</code> block height. If so, the <code>identity()</code> is returned.</p>
 <p>op_byte: 0x34<br>
 args: [VarInt]</p>
 <h4 id="encoding--decoding"><a class="header" href="#encoding--decoding">Encoding / Decoding</a></h4>
@@ -5653,10 +5650,10 @@ Let's unpack that as follows:</p>
 01 // 32-byte hash
 a8b3f48e39449e89f7ff699b3eb2b080a2479b09a600a19d8ba48d765fe5d47d // data
 // end filter_output_hash_eq
-35 // 2nd covenant - filter_relative_height
+35 // 2nd covenant - filter_absolute_height
 07 // varint
 0A // 10
-// end varint, filter_relative_height, xor
+// end varint, filter_absolute_height, xor
 </code></pre>
 <p>Some functions can take any number of arguments, such as <code>filter_fields_hashed_eq</code> which defines the <code>Fields</code> type.
 This type is encoded first by its byte code <code>34</code> followed by a varint encoded number that indicates the number
@@ -5693,25 +5690,20 @@ encounters, use of covenants should incur heavily-weighted fees to discourage ne
 one or more outputs.</p>
 <h2 id="examples-1"><a class="header" href="#examples-1">Examples</a></h2>
 <h3 id="now-or-never"><a class="header" href="#now-or-never">Now or never</a></h3>
-<p>Spend within 10 blocks or burn</p>
-<pre><code class="language-ignore">not(filter_relative_height(10))
+<p>Spend by block 10 or burn</p>
+<pre><code class="language-ignore">not(filter_absolute_height(10))
 </code></pre>
 <p>Note, this covenant may be valid when submitted to the mempool, but invalid by the time it is put in a block for
 the miner.</p>
-<h3 id="nft-transfer"><a class="header" href="#nft-transfer">NFT transfer</a></h3>
-<p>Output features as detailed in [RFC-310-AssetImplementation] (early draft stages, still to be finalised) contain the
-NFT details. This covenant preserves both the covenant protecting the token, and the token itself.</p>
-<pre><code class="language-ignore">filter_fields_preserved([field::features, field::covenant])
-</code></pre>
 <h3 id="side-chain-checkpointing"><a class="header" href="#side-chain-checkpointing">Side-chain checkpointing</a></h3>
 <pre><code class="language-ignore">and(
-   filter_field_int_eq(field::feature_flags, 16) // SIDECHAIN CHECKPOINT = 16
+   filter_field_eq(field::feature_flags, 16) // SIDECHAIN CHECKPOINT = 16
    filter_fields_preserved([field::features, field::covenant, field::script])
 )
 </code></pre>
-<h3 id="restrict-spending-to-a-particular-commitment-if-not-spent-within-100-blocks"><a class="header" href="#restrict-spending-to-a-particular-commitment-if-not-spent-within-100-blocks">Restrict spending to a particular commitment if not spent within 100 blocks</a></h3>
+<h3 id="restrict-spending-to-a-particular-commitment-if-not-spent-by-block-100"><a class="header" href="#restrict-spending-to-a-particular-commitment-if-not-spent-by-block-100">Restrict spending to a particular commitment if not spent by block 100</a></h3>
 <pre><code class="language-ignore">or(
-   not(filter_relative_height(100)),
+   not(filter_absolute_height(100)),
    filter_fields_hashed_eq([field::commmitment], Hash(xxxx))
 )
 </code></pre>
@@ -5719,7 +5711,7 @@ NFT details. This covenant preserves both the covenant protecting the token, and
 <pre><code class="language-ignore">xor(
     filter_fields_preserved([field::features, field::covenant, field::script]),
     and(
-        filter_field_int_eq(field::features_flags, 128), // FLAG_BURN = 128
+        filter_field_eq(field::features_flags, 128), // FLAG_BURN = 128
         filter_fields_hashed_eq([field::commitment, field::script], Hash(...)),
     ),
 )
@@ -5744,6 +5736,11 @@ xor(
 <li><code>filter_script_match(&lt;pattern&gt;)</code></li>
 <li><code>filter_covenant_match(&lt;pattern&gt;)</code></li>
 </ul>
+<h1 id="change-log-9"><a class="header" href="#change-log-9">Change Log</a></h1>
+<table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
+<tr><td align="left">17 Oct 2021</td><td align="left">First draft</td><td align="left">sbondi</td></tr>
+<tr><td align="left">08 Oct 2022</td><td align="left">Stable update</td><td align="left">brianp</td></tr>
+</tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0303danoverview"><a class="header" href="#rfc-0303danoverview">RFC-0303/DanOverview</a></h1>
 <h2 id="digital-assets-network-1"><a class="header" href="#digital-assets-network-1">Digital Assets Network</a></h2>
 <p><img src="theme/images/status-draft.svg" alt="status: draft" /></p>
@@ -5882,7 +5879,7 @@ with every instruction to provide a constant source of demand for Thaums in the 
 <p>There is no peg out back to the base layer for Thaums. The reason for this is explained in <a href="RFC-0320_TurbineModel.html">RFC-0320</a>. Thaum holders wishing to convert back to Tari will be able to 
 perform a submarine swap with a Tari seller. We also anticipate that exchanges will list the Thaum-Tari pair to 
 enable easy conversion of Thaums back to Tari.</p>
-<h1 id="change-log-9"><a class="header" href="#change-log-9">Change Log</a></h1>
+<h1 id="change-log-10"><a class="header" href="#change-log-10">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">1 Nov 2022</td><td align="left">High-level overview</td><td align="left">CjS77</td></tr>
 <tr><td align="left">26 Oct 2022</td><td align="left">First outline</td><td align="left">SWvHeerden</td></tr>
@@ -6009,7 +6006,7 @@ occasionally dropping below parity and possibly remaining there for some time. A
 Tari-Thaum pair matures, this event will immediately create a bid on Thaums, since -- in the absence of catastrophic 
 failure -- speculators know that the Thaum price will eventually return to parity, causing upward pressure to come into 
 play quickly and efficiently.</p>
-<h1 id="change-log-10"><a class="header" href="#change-log-10">Change Log</a></h1>
+<h1 id="change-log-11"><a class="header" href="#change-log-11">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">1 Nov 2022</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 </tbody></table>
@@ -6121,7 +6118,7 @@ to track the spent TXO set's commitment and the UTXO set.</p>
 </ul>
 </li>
 </ul>
-<h1 id="change-log-11"><a class="header" href="#change-log-11">Change Log</a></h1>
+<h1 id="change-log-12"><a class="header" href="#change-log-12">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">2022-10-19</td><td align="left">Minor editorial changes</td><td align="left">CjS77</td></tr>
 <tr><td align="left">2022-10-10</td><td align="left">First outline</td><td align="left">SWvheerden</td></tr>
@@ -6585,7 +6582,7 @@ assigned greek lowercase letters in most cases. Some terms used here are noted d
 <tr><td align="left">Pre-image</td><td>\( \preimage \)</td><td>The random byte data used for the pre-image of the hash</td></tr>
 <tr><td align="left"></td><td></td><td></td></tr>
 </tbody></table>
-<h2 id="change-log-12"><a class="header" href="#change-log-12">Change Log</a></h2>
+<h2 id="change-log-13"><a class="header" href="#change-log-13">Change Log</a></h2>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Oct 2022</td><td align="left">First outline</td><td align="left">SWvHeerden</td></tr>
 </tbody></table>
@@ -8102,7 +8099,7 @@ deployed as part of the Tari network.</p>
 <p>Github: <a href="https://github.com/tari-project/tari-crypto">tari-project/tari-crypto</a></p>
 <p>Tari Crypto was refactored into its own <a href="https://crates.io/crates/tari_crypto">crate</a>, for ease of use and integration across different projects.
 It includes all cryptographic services, including a Curve25519 implementation.</p>
-<h1 id="change-log-13"><a class="header" href="#change-log-13">Change Log</a></h1>
+<h1 id="change-log-14"><a class="header" href="#change-log-14">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Description</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">21 Dec 2018</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">14 Jan 2022</td><td align="left">Deprecated in favour of README</td><td align="left">CjS77</td></tr>
@@ -9868,7 +9865,7 @@ chain.</li>
 <li>Contract B is a trusted party from the PoV of Bob / A (e.g. Bob &amp; B collude to lie about account updates in order to
 defraud A)</li>
 </ul>
-<h1 id="change-log-14"><a class="header" href="#change-log-14">Change Log</a></h1>
+<h1 id="change-log-15"><a class="header" href="#change-log-15">Change Log</a></h1>
 <ul>
 <li><strong>06-04-2022</strong>: First draft</li>
 </ul>
@@ -10785,7 +10782,7 @@ technological merits of the potential system outlined herein.</p>
 <h2 id="goals-49"><a class="header" href="#goals-49">Goals</a></h2>
 <h2 id="related-requests-for-comment-42"><a class="header" href="#related-requests-for-comment-42">Related Requests for Comment</a></h2>
 <h2 id="description-39"><a class="header" href="#description-39">Description</a></h2>
-<h1 id="change-log-15"><a class="header" href="#change-log-15">Change Log</a></h1>
+<h1 id="change-log-16"><a class="header" href="#change-log-16">Change Log</a></h1>
 <ul>
 <li><strong>dd-mm-yyyy</strong>: Summary of changes</li>
 </ul>
