@@ -1891,7 +1891,7 @@ transactions, using the keys derived from the master key.</li>
 </ul>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0152emojiid"><a class="header" href="#rfc-0152emojiid">RFC-0152/EmojiId</a></h1>
 <h2 id="emoji-id-specification"><a class="header" href="#emoji-id-specification">Emoji Id specification</a></h2>
-<p><img src="theme/images/status-draft.svg" alt="status: draft" /></p>
+<p><img src="theme/images/status-stable.svg" alt="status: stable" /></p>
 <p><strong>Maintainer(s)</strong>:<a href="https://github.com/CjS77">Cayle Sharrock</a></p>
 <h1 id="licence-10"><a class="header" href="#licence-10">Licence</a></h1>
 <p><a href="https://opensource.org/licenses/BSD-3-Clause"> The 3-Clause BSD Licence</a>.</p>
@@ -1925,26 +1925,25 @@ without notice.</p>
 community. The release of this document is intended solely for review and discussion by the community regarding the
 technological merits of the potential system outlined herein.</p>
 <h2 id="goals-10"><a class="header" href="#goals-10">Goals</a></h2>
-<p>This document describes the specification for Emoji Ids. Emoji Ids are encoded node ids used for humans to easily verify
-peer node addresses.</p>
+<p>This document describes the specification for Emoji Ids. Emoji Ids are encoded node ids used for humans to verify peer node addresses easily.</p>
 <h2 id="related-requests-for-comment-9"><a class="header" href="#related-requests-for-comment-9">Related Requests for Comment</a></h2>
 <p>None</p>
 <h2 id="description-7"><a class="header" href="#description-7">Description</a></h2>
 <p>Tari <a href="Glossary.html#communication-node">Communication Node</a>s are identified on the network via their <a href="Glossary.html#node-id">Node ID</a>; which in turn are derived from the node's
 public key. Both the node id and public key are simple large integer numbers.</p>
-<p>The most common practice for human beings to copy large numbers in cryptocurrency software is to scan a QR code or copy
-and paste a value from one application to another. These numbers are typically encoded using hexadecimal or Base58
+<p>The most common practice for human beings to copy large numbers in cryptocurrency software is scanning a QR code or copying and pasting a value from one application to another. These numbers are typically encoded using hexadecimal or Base58
 encoding. The user will then typically scan (parts) of the string by eye to ensure that the value was transferred
 correctly.</p>
-<p>For Tari, we propose encoding values, the node ID in particular, using emoji. The advantages of this approach are:</p>
+<p>For Tari, we propose encoding values, the node ID and network identifier in particular, for Tari, using emojis. The advantages of this approach are:</p>
 <ul>
-<li>Emoji are more easily identifiable; and if selected carefully, less prone to identification errors (e.g. mistaking an
+<li>Emoji are more easily identifiable; and, if selected carefully, less prone to identification errors (e.g., mistaking an
 O for a 0).</li>
 <li>The alphabet can be considerably larger than hexadecimal (16) or Base58 (58), resulting in shorter character sequences
 in the encoding.</li>
+<li>Should be be able to detect if the address used belongs to the correct network. </li>
 </ul>
-<h3 id="the-specification"><a class="header" href="#the-specification">The specification</a></h3>
-<h4 id="the-emoji-character-map"><a class="header" href="#the-emoji-character-map">The emoji character map</a></h4>
+<h2 id="the-specification"><a class="header" href="#the-specification">The specification</a></h2>
+<h3 id="the-emoji-character-map"><a class="header" href="#the-emoji-character-map">The emoji character map</a></h3>
 <p>An emoji alphabet of 256 characters is selected. Each emoji is assigned a unique index from 0 to 255 inclusive. This
 list is the emoji map. For example,</p>
 <ul>
@@ -1953,39 +1952,53 @@ list is the emoji map. For example,</p>
 <li>...</li>
 <li>🦊 =&gt; 255</li>
 </ul>
-<p>The emoji SHOULD be selected such that</p>
+<p>The emoji SHOULD be selected such that:</p>
 <ul>
-<li>Similar looking emoji are excluded from the map. e.g. Neither 😁 or 😄 should be included. Similarly the Irish and
-Côte d'Ivoirean flags look very similar, and both should be excluded.</li>
+<li>Similar-looking emoji are excluded from the map. e.g. Neither 😁 or 😄 should be included. Similarly, the Irish and
+Côte d'Ivoire flags look very similar, and both should be excluded.</li>
 <li>Modified emoji (skin tones, gender modifiers) are excluded. Only the &quot;base&quot; emoji is considered.</li>
 </ul>
-<h4 id="encoding"><a class="header" href="#encoding">Encoding</a></h4>
+<h3 id="encoding"><a class="header" href="#encoding">Encoding</a></h3>
 <p>The selection of an alphabet with 256 symbols means there is a direct mapping between bytes and emoji. For each byte
 in the input data to be encoded, map the byte to the corresponding emoji using the emoji map. The resulting
 concatenation of emoji characters is the emoji string.</p>
-<h4 id="emoji-id-definition"><a class="header" href="#emoji-id-definition">Emoji ID definition</a></h4>
-<p>The emoji ID is an emoji string of 33 symbols from the emoji alphabet. It uses this bitmap:</p>
-<pre><code class="language-text">+-----------------------------+-------------------+
-|  Node public key (256 bits) | Checksum (8 bits) |
-+-----------------------------+-------------------+
+<h3 id="emoji-id-definition"><a class="header" href="#emoji-id-definition">Emoji ID definition</a></h3>
+<p>The emoji ID is a string of 33 symbols from the emoji alphabet. It uses this bitmap:</p>
+<pre><code class="language-text">+-----------------------------+--------------------------+
+|  Node public key (256 bits) | MaskedChecksum (8 bits)  |
++-----------------------------+--------------------------+
 </code></pre>
 <p>The emoji ID is calculated from a node public key serialized as 32 bytes (<code>B</code>) as follows:</p>
 <ul>
 <li>Use the <a href="https://github.com/cypherstack/dammsum">DammSum</a> algorithm with <code>k = 8</code> and <code>m = 32</code> to compute an 8-bit
-checksum <code>C</code> from <code>B</code>.</li>
+masked checksum <code>'C</code> from <code>B</code> and network <code>N</code>.</li>
 <li>Encode <code>B</code> into an emoji string.</li>
-<li>Encode <code>C</code> into an emoji string.</li>
-<li>Concatenate <code>B</code> and <code>C</code> as the emoji ID.</li>
+<li>Encode <code>'C</code> into an emoji string.</li>
+<li>Concatenate <code>B</code> and <code>'C</code> as the emoji ID.</li>
 </ul>
-<h4 id="decoding"><a class="header" href="#decoding">Decoding</a></h4>
+<h4 id="checksum-effectiveness"><a class="header" href="#checksum-effectiveness">Checksum effectiveness</a></h4>
+<p>It is important to note that by masking the checksum we technically reduce the effectiveness of the checksum. These emoji ids wont
+however, be sent over the wire in raw form and its far more likely that they will just be copied thus it's important to verify the
+network of the wallet.</p>
+<h3 id="checksum"><a class="header" href="#checksum">Checksum</a></h3>
+<p>For the MaskedChecksum we use the <a href="https://github.com/cypherstack/dammsum">DammSum</a> algorithm with <code>k = 8</code> and <code>m = 32</code> to compute an 8-bit
+Checksum <code>C</code> from the public key <code>B</code>.
+To assert that the network that the public key comes from is the expected network, we mask the checksum with the network. 
+We calculate the MaskedChecksum <code>'C</code> as <code>C XOR N</code> where <code>N</code> is the network defined as 8-bits.</p>
+<h3 id="decoding"><a class="header" href="#decoding">Decoding</a></h3>
 <p>One can extract the node public key from an emoji ID as follows:</p>
 <ul>
 <li>Assert that the emoji ID contains exactly 33 valid emoji characters from the emoji alphabet. If not, return an error.</li>
 <li>Decode the emoji ID as an emoji string by mapping each emoji character to a byte value using the emoji map, producing
-33 bytes. Let <code>B</code> be the first 32 bytes, and <code>C</code> be the last byte.</li>
+33 bytes. Let <code>B</code> be the first 32 bytes and <code>'C</code> be the last byte.</li>
+<li>Calculate <code>C</code> by <code>'C XOR N</code>.</li>
 <li>Use the DammSum validation algorithm on <code>B</code> to assert that <code>C</code> is a valid checksum. If not, return an error.</li>
 <li>Attempt to deserialize <code>B</code> as a public key. If this fails, return an error. If it succeeds, return the public key.</li>
 </ul>
+<h2 id="change-log-5"><a class="header" href="#change-log-5">Change Log</a></h2>
+<table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
+<tr><td align="left">2022-11-10</td><td align="left">Initial stable</td><td align="left">SWvHeerden</td></tr>
+</tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0160blockserialization"><a class="header" href="#rfc-0160blockserialization">RFC-0160/BlockSerialization</a></h1>
 <h2 id="tari-block-binary-serialization"><a class="header" href="#tari-block-binary-serialization">Tari Block Binary Serialization</a></h2>
 <p><img src="https://github.com/tari-project/tari/raw/master/RFC/src/theme/images/status-draft.svg" alt="status: draft" /></p>
@@ -2705,7 +2718,7 @@ it is proposed that a <code>MessageFormat</code> trait be defined:</p>
 <p>This trait will have default implementations to cover most use cases (e.g. a simple call through to <code>serde_json</code>). Serde
 also offers significant ability to tweak how a given struct will be serialized through the use of
 <a href="https://serde.rs/attributes.html">attributes</a>.</p>
-<h1 id="change-log-5"><a class="header" href="#change-log-5">Change Log</a></h1>
+<h1 id="change-log-6"><a class="header" href="#change-log-6">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">29 Mar 2019</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">24 Jul 2019</td><td align="left">Technical editing</td><td align="left">anselld</td></tr>
@@ -3329,7 +3342,7 @@ the connection is bound, a dedicated &quot;secure connection negotiation socket&
 <li>Details of distributed message storage.</li>
 <li>Which <a href="RFC-0172_PeerToPeerMessagingProtocol.html#netaddress">NetAddress</a> to use if a peer has many.</li>
 </ul>
-<h1 id="change-log-6"><a class="header" href="#change-log-6">Change Log</a></h1>
+<h1 id="change-log-7"><a class="header" href="#change-log-7">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">13 Jun 2022</td><td align="left">Moved from tari repo</td><td align="left">sdbondi</td></tr>
 <tr><td align="left">9 Nov 2022</td><td align="left">Removed I2P and ZeroMQ</td><td align="left">stringhandler</td></tr>
@@ -3454,7 +3467,7 @@ used in the construction and validation of this block. Consensus rules versions 
 and as such will be represented with a single incremented integer. This coupled with the internal list of fork versions,
 that includes the height at which they came into effect, will be used to validate whether the consensus rules specified 
 in the header are valid for that block's height.</p>
-<h1 id="change-log-7"><a class="header" href="#change-log-7">Change Log</a></h1>
+<h1 id="change-log-8"><a class="header" href="#change-log-8">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">26 Oct 2022</td><td align="left">Stabilise RFC</td><td align="left">CjS77</td></tr>
 </tbody></table>
@@ -4297,7 +4310,7 @@ validation.</p>
 <li><a href="https://github.com/SWvheerden">@SWvheerden</a></li>
 </ul>
 <p>Thanks to David Burkett for proposing a method to prevent cut-through and willingness to discuss ideas.</p>
-<h1 id="change-log-8"><a class="header" href="#change-log-8">Change Log</a></h1>
+<h1 id="change-log-9"><a class="header" href="#change-log-9">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Aug 2020</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">11 Feb 2021</td><td align="left">Major update</td><td align="left">CjS77, SWvheerden, philipr-za</td></tr>
@@ -4762,7 +4775,7 @@ or Bob can spend the output.</p>
 <h3 id="credits-2"><a class="header" href="#credits-2">Credits</a></h3>
 <p>Thanks to <a href="https://github.com/philipr-za">@philipr-za</a> and <a href="https://github.com/SWvheerden">@SWvheerden</a> for their input
 and contributions to this RFC.</p>
-<h1 id="change-log-9"><a class="header" href="#change-log-9">Change Log</a></h1>
+<h1 id="change-log-10"><a class="header" href="#change-log-10">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Aug 2020</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">8 Mar 2021</td><td align="left">Minor update</td><td align="left">philip-za</td></tr>
@@ -5288,7 +5301,7 @@ one-time private key \( c + a \).</li>
 <li>Stealth addresses were included in the Tari Console Wallet as of version v0.35.0 (2022-08-11).</li>
 <li>The FFI (used in Aurora) uses stealth addresses by default as of libwallet-v0.35.0 (2022-08-11).</li>
 </ul>
-<h1 id="change-log-10"><a class="header" href="#change-log-10">Change Log</a></h1>
+<h1 id="change-log-11"><a class="header" href="#change-log-11">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">01 Jun 2022</td><td align="left">First draft</td><td align="left">philip-za</td></tr>
 <tr><td align="left">26 Oct 2022</td><td align="left">Stabilise RFC</td><td align="left">CjS77</td></tr>
@@ -5606,7 +5619,7 @@ xor(
 <li><code>filter_script_match(&lt;pattern&gt;)</code></li>
 <li><code>filter_covenant_match(&lt;pattern&gt;)</code></li>
 </ul>
-<h1 id="change-log-11"><a class="header" href="#change-log-11">Change Log</a></h1>
+<h1 id="change-log-12"><a class="header" href="#change-log-12">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Oct 2021</td><td align="left">First draft</td><td align="left">sbondi</td></tr>
 <tr><td align="left">08 Oct 2022</td><td align="left">Stable update</td><td align="left">brianp</td></tr>
@@ -5749,7 +5762,7 @@ with every instruction to provide a constant source of demand for Thaums in the 
 <p>There is no peg out back to the base layer for Thaums. The reason for this is explained in <a href="RFC-0320_TurbineModel.html">RFC-0320</a>. Thaum holders wishing to convert back to Tari will be able to 
 perform a submarine swap with a Tari seller. We also anticipate that exchanges will list the Thaum-Tari pair to 
 enable easy conversion of Thaums back to Tari.</p>
-<h1 id="change-log-12"><a class="header" href="#change-log-12">Change Log</a></h1>
+<h1 id="change-log-13"><a class="header" href="#change-log-13">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">1 Nov 2022</td><td align="left">High-level overview</td><td align="left">CjS77</td></tr>
 <tr><td align="left">26 Oct 2022</td><td align="left">First outline</td><td align="left">SWvHeerden</td></tr>
@@ -5876,7 +5889,7 @@ occasionally dropping below parity and possibly remaining there for some time. A
 Tari-Thaum pair matures, this event will immediately create a bid on Thaums, since -- in the absence of catastrophic 
 failure -- speculators know that the Thaum price will eventually return to parity, causing upward pressure to come into 
 play quickly and efficiently.</p>
-<h1 id="change-log-13"><a class="header" href="#change-log-13">Change Log</a></h1>
+<h1 id="change-log-14"><a class="header" href="#change-log-14">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">1 Nov 2022</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 </tbody></table>
@@ -5988,7 +6001,7 @@ to track the spent TXO set's commitment and the UTXO set.</p>
 </ul>
 </li>
 </ul>
-<h1 id="change-log-14"><a class="header" href="#change-log-14">Change Log</a></h1>
+<h1 id="change-log-15"><a class="header" href="#change-log-15">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">2022-10-19</td><td align="left">Minor editorial changes</td><td align="left">CjS77</td></tr>
 <tr><td align="left">2022-10-10</td><td align="left">First outline</td><td align="left">SWvheerden</td></tr>
@@ -6452,7 +6465,7 @@ assigned greek lowercase letters in most cases. Some terms used here are noted d
 <tr><td align="left">Pre-image</td><td>\( \preimage \)</td><td>The random byte data used for the pre-image of the hash</td></tr>
 <tr><td align="left"></td><td></td><td></td></tr>
 </tbody></table>
-<h2 id="change-log-15"><a class="header" href="#change-log-15">Change Log</a></h2>
+<h2 id="change-log-16"><a class="header" href="#change-log-16">Change Log</a></h2>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Oct 2022</td><td align="left">First outline</td><td align="left">SWvHeerden</td></tr>
 </tbody></table>
@@ -7969,7 +7982,7 @@ deployed as part of the Tari network.</p>
 <p>Github: <a href="https://github.com/tari-project/tari-crypto">tari-project/tari-crypto</a></p>
 <p>Tari Crypto was refactored into its own <a href="https://crates.io/crates/tari_crypto">crate</a>, for ease of use and integration across different projects.
 It includes all cryptographic services, including a Curve25519 implementation.</p>
-<h1 id="change-log-16"><a class="header" href="#change-log-16">Change Log</a></h1>
+<h1 id="change-log-17"><a class="header" href="#change-log-17">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Description</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">21 Dec 2018</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">14 Jan 2022</td><td align="left">Deprecated in favour of README</td><td align="left">CjS77</td></tr>
@@ -9735,7 +9748,7 @@ chain.</li>
 <li>Contract B is a trusted party from the PoV of Bob / A (e.g. Bob &amp; B collude to lie about account updates in order to
 defraud A)</li>
 </ul>
-<h1 id="change-log-17"><a class="header" href="#change-log-17">Change Log</a></h1>
+<h1 id="change-log-18"><a class="header" href="#change-log-18">Change Log</a></h1>
 <ul>
 <li><strong>06-04-2022</strong>: First draft</li>
 </ul>
@@ -10652,7 +10665,7 @@ technological merits of the potential system outlined herein.</p>
 <h2 id="goals-49"><a class="header" href="#goals-49">Goals</a></h2>
 <h2 id="related-requests-for-comment-42"><a class="header" href="#related-requests-for-comment-42">Related Requests for Comment</a></h2>
 <h2 id="description-39"><a class="header" href="#description-39">Description</a></h2>
-<h1 id="change-log-18"><a class="header" href="#change-log-18">Change Log</a></h1>
+<h1 id="change-log-19"><a class="header" href="#change-log-19">Change Log</a></h1>
 <ul>
 <li><strong>dd-mm-yyyy</strong>: Summary of changes</li>
 </ul>
