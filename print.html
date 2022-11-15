@@ -2248,7 +2248,7 @@ technological merits of the potential system outlined herein.</p>
 </tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0170networkcommunicationprotocol"><a class="header" href="#rfc-0170networkcommunicationprotocol">RFC-0170/NetworkCommunicationProtocol</a></h1>
 <h2 id="the-tari-communication-network-and-network-communication-protocol"><a class="header" href="#the-tari-communication-network-and-network-communication-protocol">The Tari Communication Network and Network Communication Protocol</a></h2>
-<p><img src="theme/images/status-outofdate.svg" alt="status: Outdated" /></p>
+<p><img src="theme/images/status-stable.svg" alt="status: stable" /></p>
 <p><strong>Maintainer(s)</strong>: <a href="https://github.com/neonknight64">Yuko Roodt</a></p>
 <h1 id="license"><a class="header" href="#license">License</a></h1>
 <p><a href="https://opensource.org/licenses/BSD-3-Clause"> The 3-Clause BSD License</a>.</p>
@@ -2287,13 +2287,12 @@ technological merits of the potential system outlined herein.</p>
 <h2 id="related-rfcs"><a class="header" href="#related-rfcs">Related RFCs</a></h2>
 <ul>
 <li><a href="RFC-0100_BaseLayer.html">RFC-0100: The Tari Base Layer</a></li>
-<li><a href="RFCD-0300_DAN.html">RFC-0300: Digital asset network</a></li>
+<li><a href="RFCD-0303_DanOverview.html">RFC-0303: DAN Overview</a></li>
 </ul>
 <h2 id="description-8"><a class="header" href="#description-8">Description</a></h2>
 <h3 id="assumptions"><a class="header" href="#assumptions">Assumptions</a></h3>
 <ul>
 <li>A communication channel can be established between two peers once their online communication addresses are known to each other.</li>
-<li>A <a href="Glossary.html#validator-node">Validator Node</a> is able to derive a <a href="Glossary.html#node-id">node ID</a> from the Validator Node registration transaction on the Base Layer.</li>
 </ul>
 <h3 id="abstract-1"><a class="header" href="#abstract-1">Abstract</a></h3>
 <p>The backbone of the Tari communication network consists of a large number of nodes that maintain peer connections between each other.
@@ -2307,26 +2306,26 @@ Where messages are of importance to a wide variety of entities on the network, G
 The majority of the communication required on the <a href="Glossary.html#base-layer">Base Layer</a> and <a href="Glossary.html#digital-asset-network">Digital Asset Network</a> (DAN) will be performed via direct P2P communication between known clients and nodes.
 Alternatively, the Tari communication network can be used for broadcasting joining requests, discovery requests and propagating data messages such as completed blocks, transactions and data messages that are of interest to a large part of the Tari communication network. </p>
 <p>The Tari communication network consists of a number of different entities that need to communicate in a distributed and ad-hoc manner. 
-The primary entities that need to communicate are Validator Nodes (VN), <a href="Glossary.html#base-node">Base Node</a>s (BN), <a href="Glossary.html#wallet">Wallet</a>s (W) and <a href="Glossary.html#token-wallet">Token Wallet</a>s (TW).
+The primary entities that need to communicate are Validator Nodes (VN), <a href="Glossary.html#base-node">Base Node</a>s (BN), and <a href="Glossary.html#wallet">Wallet</a>s (W).
 Here are some examples of different communication tasks that need to be performed by these entities on the Tari Communication network:</p>
 <ul>
 <li>Base Nodes on the Base Layer need to propagate completed blocks and transactions to other Base Nodes using Gossip protocol based broadcasting.</li>
-<li>Validator Nodes need to efficiently discover other Validator Nodes in the process of forming Validator Node committees. </li>
 <li>Wallets need to communicate and negotiate with other Wallets to create transactions. They also need the ability to submit transactions to the <a href="Glossary.html#mempool">mempool</a> of Base Nodes.</li>
-<li>Token Wallets need to communicate with Validator Node <a href="Glossary.html#committee">committee</a>s and other Token Wallets to construct and send DAN instructions.</li>
+<li>Validator Nodes need to communicate with other Validator Nodes to perform consensus. Note that in future, the Validator Nodes may run on a different network.</li>
 </ul>
 <p>Here is an overview communication matrix that show which source entities SHOULD initiate communication with destination entities on the Tari Communication network:</p>
-<table><thead><tr><th>        \Destination<br>Source</th><th>Validator Node</th><th>Base Node</th><th>Wallet</th><th>Token Wallet</th></tr></thead><tbody>
-<tr><td>Validator Node</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
-<tr><td>Base Node</td><td>No</td><td>Yes</td><td>No</td><td>No</td></tr>
-<tr><td>Wallet</td><td>No</td><td>Yes</td><td>Yes</td><td>No</td></tr>
-<tr><td>Token Wallet</td><td>Yes</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+<table><thead><tr><th>Destination (across) <br>Source (down)</th><th>Validator Node</th><th>Base Node</th><th>Wallet</th></tr></thead><tbody>
+<tr><td>Validator Node</td><td>Yes</td><td>No</td><td>No</td></tr>
+<tr><td>Base Node</td><td>No</td><td>Yes</td><td>No</td></tr>
+<tr><td>Wallet</td><td>No</td><td>Yes</td><td>Yes</td></tr>
 </tbody></table>
 <h4 id="communication-nodes-and-communication-clients"><a class="header" href="#communication-nodes-and-communication-clients">Communication Nodes and Communication Clients</a></h4>
-<p>To simplify the description of the Tari communication network, the different entities with similar behaviour were grouped into two groups: Communication Nodes and Communication Clients.
-Validator Nodes and Base Nodes are Communication Nodes (CN).
-Wallets and Token Wallets are Communication Clients (CC).
-CNs form the core communication infrastructure of the Tari communication network and are responsible for maintaining the Tari communication network by receiving, forwarding and distributing joining requests, discovery requests, data messages and routing information.
+<p>To simplify the description of the Tari communication network, the different entities with similar behaviour were grouped into two groups: Communication Nodes and Communication Clients.</p>
+<ul>
+<li>Validator Nodes and Base Nodes are Communication Nodes (CN).</li>
+<li>Wallets are Communication Clients (CC).</li>
+</ul>
+<p>CNs form the core communication infrastructure of the Tari communication network and are responsible for maintaining the Tari communication network by receiving, forwarding and distributing joining requests, discovery requests, data messages and routing information.
 CCs are different from CNs in that they do not maintain the network and they are not responsible for propagating any joining requests, discovery requests, data messages and routing information.
 They do make use of the network to submit their own joining requests and perform discovery request of other specific CNs and CCs when they need to communicate with them.
 Once a CC has discovered the CC or CN they want to communicate with, they will establish a direct P2P channel with them.
@@ -2336,16 +2335,11 @@ The Tari communication network is unaware of this direct P2P communication once 
 <tr><td>Validator Node</td><td>Communication Node</td></tr>
 <tr><td>Base Node</td><td>Communication Node</td></tr>
 <tr><td>Wallet</td><td>Communication Client</td></tr>
-<tr><td>Token Wallet</td><td>Communication Client</td></tr>
 </tbody></table>
 <h4 id="unique-identification-of-communication-nodes-and-communication-clients"><a class="header" href="#unique-identification-of-communication-nodes-and-communication-clients">Unique identification of Communication Nodes and Communication Clients</a></h4>
 <p>In the Tari communication network, each CN or CC makes use of a node ID to determine their position in the network.
-This node ID is either assigned based on registration on the Base Layer or can be derived from the CNs or CCs identification public key.
-The method used to obtain a node ID will either enhance or limit the trustworthiness of that entity when propagating messages through them on the Tari communication network.
-When performing the broadcasting of data messages or propagating discovery requests, nodes with registration assigned node IDs are considered more trustworthy compared to nodes with derived node IDs. </p>
-<p>Obtaining a node ID from registration on the Base Layer is important as it will limit the potential of some parties performing <a href="https://eprint.iacr.org/2015/263.pdf">Eclipse attacks</a> on the network.
-Registration makes it more difficult for <a href="Glossary.html#bad-actor">Bad Actor</a>s to position themselves in ideal patterns on the network to perform disruptive operations and actions. 
-In sensitive situations or situations where the Kademlia-style directed propagation of messages are vulnerable, gossip protocol-based broadcasting of messages can be performed as a less efficient, but safer alternative to ensure that the message will successfully reach the rest of the network.</p>
+This node ID can be derived from the CNs or CCs identification public key.
+The method used to obtain a node ID will either enhance or limit the trustworthiness of that entity when propagating messages through them on the Tari communication network.</p>
 <p>The similarity or distance between different node IDs can be calculated by performing the <a href="https://en.wikipedia.org/wiki/Hamming_distance">Hamming distance</a> between the bits of the two node ID numbers.
 The Hamming distance can be implemented as an Exclusive OR (XOR) between the bits of the numbers and the summation of the resulting true bits.
 CCs and/or CNs that have similar node IDs, that produce a small Hamming distance, are located in similar regions of the Tari communication network.
@@ -2353,35 +2347,24 @@ This does not mean that their geographic locations are near each other, but rath
 A thresholding scheme can be applied to the Hamming distance to ensure that only neighboring CNs with similar node IDs are allowed to share and propagate specific information.
 As an example, only routing table information that contains similar node IDs to the requesting CCs or CNs node ID should be shared with them.
 Limiting the sharing of routing table information makes it more difficult to map the entire Tari communication network.</p>
-<p>The recommended method of node ID assignment for each Tari communication network entity type MUST be implemented as follows:</p>
-<table><thead><tr><th>Entity Type</th><th>Communication Node Type</th><th>Node ID Assignment</th></tr></thead><tbody>
-<tr><td>Validator Node</td><td>Communication Node</td><td>Registration</td></tr>
-<tr><td>Base Node</td><td>Communication Node</td><td>Derived</td></tr>
-<tr><td>Wallet</td><td>Communication Client</td><td>Derived</td></tr>
-<tr><td>Token Wallet</td><td>Communication Client</td><td>Derived</td></tr>
-</tbody></table>
-<p>Note that <a href="Glossary.html#mining-server">Mining Server</a>s and <a href="Glossary.html#mining-worker">Mining Worker</a>s are excluded from the Tari communication network.
-A Mining Worker will have a local or remote P2P connection with a Mining Server.
-A Mining Server will have a local or remote P2P connection with a Base Node.
+<p>Note that <a href="Glossary.html#mining-worker">Mining Worker</a>s are excluded from the Tari communication network.
+A Mining Server will have a local or remote connection with a Base Node.
 They do not need to make use of the communication network and they are not responsible for propagating any messages on the network.
 The parent Base Node will perform any communication tasks on the Tari communication network on their behalf.</p>
 <h4 id="online-communication-address-peer-address-and-routing-table"><a class="header" href="#online-communication-address-peer-address-and-routing-table">Online Communication Address, Peer Address and Routing Table</a></h4>
 <p>Each CC and CN on the Tari communication network will have identification cryptographic keys, a node ID and an online communication address.
-The online communication address SHOULD be either an IPv4, IPv6, URL, Tor (Base32) or I2P (Base32) address and can be stored using the network address type as follows:</p>
+The online communication address SHOULD be either an IPv4, IPv6, Or Tor (Base32) address and can be stored using the network address type as follows:</p>
 <table><thead><tr><th align="left">Description</th><th align="left">Data type</th><th align="left">Comments</th></tr></thead><tbody>
-<tr><td align="left">address type</td><td align="left">uint4</td><td align="left">Specify if IPv4/IPv6/Url/Tor/I2P</td></tr>
-<tr><td align="left">address</td><td align="left">char array</td><td align="left">IPv4, IPv6, URL, Tor (Base32), I2P (Base32) address</td></tr>
+<tr><td align="left">address type</td><td align="left">uint4</td><td align="left">Specify if IPv4/IPv6/Tor</td></tr>
+<tr><td align="left">address</td><td align="left">char array</td><td align="left">IPv4, IPv6, Tor (Base32) address</td></tr>
 <tr><td align="left">port</td><td align="left">uint16</td><td align="left">port number</td></tr>
 </tbody></table>
-<p>The address type is used to determine how to interpret the address characters. An I2P address can be interpreted as &quot;{52
-address characters}.b32.i2p&quot;. The Tor address should be interpreted as &quot;http://{16_or_52_address_chars}.onion/&quot;. The
-IPv4 and IPv6 address can be stored in the address field without modification. URL addresses can be used for nodes with
-dynamic IP addresses.</p>
-<p>A Tor or I2P address can be used when anonymity is important for a CC or CN.
-The IPv4, IPv6 and URL address types do not provide any privacy features but do provide increased bandwidth. </p>
-<p>Each CC or CN has a local routing table that contains the online communication addresses of all CCs and CNs on the Tari communication network known to that CC or CN.
+<p>Tari uses the <a href="https://multiformats.io/multiaddr/">Multiaddr</a> format for addresses. </p>
+<p>A Tor address can be used when anonymity is important for a CC or CN.
+The IPv4 and IPv6 address types do not provide any privacy features but do provide increased bandwidth. </p>
+<p>Each CC or CN has a local lookup table that contains the online communication addresses of all CCs and CNs on the Tari communication network known to that CC or CN.
 When a CC or CN wants to join the Tari communication network, the online communication address of at least one other CN that is part of the network needs to be known.
-The online communication address of the initial CN can either be manually provided or a bootstrapped list of &quot;reliable&quot; and persistent CNs can be provided with the Validator Node, Base Node, Wallet or Token Wallet software.
+The online communication address of the initial CN can either be manually provided or a bootstrapped list of &quot;reliable&quot; and persistent CNs can be provided with the Validator Node, Base Node or Wallet software.
 The new CC or CN can then request additional peer contact information of other CNs from the initial peers to extend their own routing table.</p>
 <p>The routing table consists of a list of peer addresses that link node IDs, public identification keys and online communication addresses of each known CC and CN.</p>
 <p>The Peer Address stored in the routing table MAY be implemented as follows:</p>
@@ -2437,8 +2420,6 @@ The communication channel can then be closed as soon as the communication task h
 <p>CNs consisting of VNs and BNs typically attempt to maintain communication channels with a large number of peers.
 The distribution of peers (VNs vs BNs) that a single CN keeps communication channels open with can change depending on the type of node.
 A CN that is also a BN should maintain more peer connections with other BNs, but should also have some connections with other VNs.</p>
-<p>Having some connections with VNs are important as BNs have derived node IDs and not registered node IDs such as VNs, making it possible for the CN to be separated from the main network and become victim to an <a href="https://www.radixdlt.com/post/what-is-an-eclipse-attack">Eclipse attack</a>.
-Having some connections with VNs will make it more difficult to separate the CN from the network and will ensure successful propagation of transactions and completed blocks from that CN. </p>
 <p>A CN that is also a VN should maintain more peer connections with other VNs, but also have some connections with BNs.
 CNs that are part of Validator Node committees should attempt to maintain permanent connections with the other members of the committee to ensure that quick consensus can be achieved.</p>
 <p>To maintain connections with peers, the following process can be performed.
@@ -2449,23 +2430,14 @@ The CN can decide how the peer connections should be selected from the routing t
 <li>automatically selecting a random subset or</li>
 <li>selecting a subset of neighbouring nodes with similar node IDs. </li>
 </ul>
-<p>Maintaining communication channels is important and the following process can be followed in an attempt to keep peer connections alive:
-For an existing peer connection.
-When more than 30 minutes have passed since the last communication with that peer, then a heartbeat message should be sent to the peer in an attempt to keep the connection with the peer alive.
-If the peer connection was not established for a specific purpose, such as with the connections between committee members, then a new replacement peer can be selected from the local routing table.
-A new connection can then be established and maintained between the current node and the newly selected node.
-If that specific connection is important, such as with the connections between committee members, then the current CN or CC must wait and attempt to create a new connection with that same peer.
-If more than 90 minutes have passed since the last successful communication with the peer node, a new discovery request can be sent on the Tari communication network in an attempt to locate that peer again.
-Losing of a peer might happen in cases where the CN or CC went temporarily offline and their dynamic communication address changed, requiring the discovery process to be performed again before a direct P2P communication channel can be established.</p>
 <h4 id="functionality-required-of-communication-nodes"><a class="header" href="#functionality-required-of-communication-nodes">Functionality Required of Communication Nodes</a></h4>
 <ul>
 <li>It MUST select a cryptographic key pair used for identification on the Tari Communication network.</li>
 <li>A CN MAY request the peer addresses of CNs with similar node IDs from other CNs to extend their local routing table. </li>
-<li>If a CN is a VN, then a node ID MUST be obtained by registering on the Base layer.</li>
 <li>If a CN is a BN, then a node ID MUST be derived from the nodes identification public key.</li>
 <li>A new CN MUST submit a joining request to the Tari communication network so that the nodes peer address can be added to the routing table of neighbouring peers in the network.</li>
 <li>If a CN receives a new joining request with a similar node ID (within a network selected threshold), then the peer address specified in the joining request MUST be added to its local routing table.</li>
-<li>When a CN receives an encrypted message, the node MUST attempt to open the message.</li>
+<li>When a CN receives an encrypted message, the node MUST attempt to open the message. It MUST authenticate the encryption before trying to decrypt it.</li>
 <li>When a CN receives an encrypted message that the node is unable to open, and the destination node ID is known then the CN MUST forward it to all connected peers that have node IDs that are closer to the destination.</li>
 <li>When a CN receives an encrypted message that the node is unable to open and the destination node is unknown then the CN MUST forward the message to all connected peers.</li>
 <li>A CN MUST have the ability to verify the content of unencrypted messages to limit the propagation of spam messages.</li>
@@ -2492,6 +2464,10 @@ Losing of a peer might happen in cases where the CN or CC went temporarily offli
 <li>Peers from the CCs routing table that have been unreachable for a number of attempts SHOULD be removed from the its routing table.</li>
 <li>A CC MUST calculate the similarity between different node IDs by calculating the Hamming distance between the bits of the two node ID numbers.</li>
 </ul>
+<h1 id="change-log-7"><a class="header" href="#change-log-7">Change Log</a></h1>
+<table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
+<tr><td align="left">11 Nov 2022</td><td align="left">Update, removed registration of Validator Nodes</td><td align="left">Stringhandler</td></tr>
+</tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0171messageserialization"><a class="header" href="#rfc-0171messageserialization">RFC-0171/MessageSerialization</a></h1>
 <h2 id="message-serialization"><a class="header" href="#message-serialization">Message Serialization</a></h2>
 <p><img src="theme/images/status-stable.svg" alt="status: stable" /></p>
@@ -2712,7 +2688,7 @@ it is proposed that a <code>MessageFormat</code> trait be defined:</p>
 <p>This trait will have default implementations to cover most use cases (e.g. a simple call through to <code>serde_json</code>). Serde
 also offers significant ability to tweak how a given struct will be serialized through the use of
 <a href="https://serde.rs/attributes.html">attributes</a>.</p>
-<h1 id="change-log-7"><a class="header" href="#change-log-7">Change Log</a></h1>
+<h1 id="change-log-8"><a class="header" href="#change-log-8">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">29 Mar 2019</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">24 Jul 2019</td><td align="left">Technical editing</td><td align="left">anselld</td></tr>
@@ -3336,7 +3312,7 @@ the connection is bound, a dedicated &quot;secure connection negotiation socket&
 <li>Details of distributed message storage.</li>
 <li>Which <a href="RFC-0172_PeerToPeerMessagingProtocol.html#netaddress">NetAddress</a> to use if a peer has many.</li>
 </ul>
-<h1 id="change-log-8"><a class="header" href="#change-log-8">Change Log</a></h1>
+<h1 id="change-log-9"><a class="header" href="#change-log-9">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">13 Jun 2022</td><td align="left">Moved from tari repo</td><td align="left">sdbondi</td></tr>
 <tr><td align="left">9 Nov 2022</td><td align="left">Removed I2P and ZeroMQ</td><td align="left">stringhandler</td></tr>
@@ -3461,7 +3437,7 @@ used in the construction and validation of this block. Consensus rules versions 
 and as such will be represented with a single incremented integer. This coupled with the internal list of fork versions,
 that includes the height at which they came into effect, will be used to validate whether the consensus rules specified 
 in the header are valid for that block's height.</p>
-<h1 id="change-log-9"><a class="header" href="#change-log-9">Change Log</a></h1>
+<h1 id="change-log-10"><a class="header" href="#change-log-10">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">26 Oct 2022</td><td align="left">Stabilise RFC</td><td align="left">CjS77</td></tr>
 </tbody></table>
@@ -4321,7 +4297,7 @@ validation.</p>
 <li><a href="https://github.com/SWvheerden">@SWvheerden</a></li>
 </ul>
 <p>Thanks to David Burkett for proposing a method to prevent cut-through and willingness to discuss ideas.</p>
-<h1 id="change-log-10"><a class="header" href="#change-log-10">Change Log</a></h1>
+<h1 id="change-log-11"><a class="header" href="#change-log-11">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Aug 2020</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">11 Feb 2021</td><td align="left">Major update</td><td align="left">CjS77, SWvheerden, philipr-za</td></tr>
@@ -4824,7 +4800,7 @@ or Bob can spend the output.</p>
 <h3 id="credits-2"><a class="header" href="#credits-2">Credits</a></h3>
 <p>Thanks to <a href="https://github.com/philipr-za">@philipr-za</a> and <a href="https://github.com/SWvheerden">@SWvheerden</a> for their input
 and contributions to this RFC.</p>
-<h1 id="change-log-11"><a class="header" href="#change-log-11">Change Log</a></h1>
+<h1 id="change-log-12"><a class="header" href="#change-log-12">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Aug 2020</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">11 Feb 2021</td><td align="left">Tari script proposal v3</td><td align="left">CjS77</td></tr>
@@ -5357,7 +5333,7 @@ one-time private key \( c + a \).</li>
 <li>Stealth addresses were included in the Tari Console Wallet as of version v0.35.0 (2022-08-11).</li>
 <li>The FFI (used in Aurora) uses stealth addresses by default as of libwallet-v0.35.0 (2022-08-11).</li>
 </ul>
-<h1 id="change-log-12"><a class="header" href="#change-log-12">Change Log</a></h1>
+<h1 id="change-log-13"><a class="header" href="#change-log-13">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">01 Jun 2022</td><td align="left">First draft</td><td align="left">philip-za</td></tr>
 <tr><td align="left">26 Oct 2022</td><td align="left">Stabilise RFC</td><td align="left">CjS77</td></tr>
@@ -5675,7 +5651,7 @@ xor(
 <li><code>filter_script_match(&lt;pattern&gt;)</code></li>
 <li><code>filter_covenant_match(&lt;pattern&gt;)</code></li>
 </ul>
-<h1 id="change-log-13"><a class="header" href="#change-log-13">Change Log</a></h1>
+<h1 id="change-log-14"><a class="header" href="#change-log-14">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Oct 2021</td><td align="left">First draft</td><td align="left">sbondi</td></tr>
 <tr><td align="left">08 Oct 2022</td><td align="left">Stable update</td><td align="left">brianp</td></tr>
@@ -5818,7 +5794,7 @@ with every instruction to provide a constant source of demand for Thaums in the 
 <p>There is no peg out back to the base layer for Thaums. The reason for this is explained in <a href="RFC-0320_TurbineModel.html">RFC-0320</a>. Thaum holders wishing to convert back to Tari will be able to 
 perform a submarine swap with a Tari seller. We also anticipate that exchanges will list the Thaum-Tari pair to 
 enable easy conversion of Thaums back to Tari.</p>
-<h1 id="change-log-14"><a class="header" href="#change-log-14">Change Log</a></h1>
+<h1 id="change-log-15"><a class="header" href="#change-log-15">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">1 Nov 2022</td><td align="left">High-level overview</td><td align="left">CjS77</td></tr>
 <tr><td align="left">26 Oct 2022</td><td align="left">First outline</td><td align="left">SWvHeerden</td></tr>
@@ -6085,7 +6061,7 @@ Should <code>VNRegistrationValidityPeriod</code> elapse without a renewed regist
 This means that a validator may be assigned a different <code>VN_Shard_Key</code> after each <code>VNRegistrationValidityPeriod</code>, 
 sooner than <code>VNShardShuffleInterval</code>. The validator has nothing to gain from this, on the contrary, they will have 
 to re-sync their state and spend time not participating in the network, losing out on fees.</p>
-<h1 id="change-log-15"><a class="header" href="#change-log-15">Change Log</a></h1>
+<h1 id="change-log-16"><a class="header" href="#change-log-16">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">12 Oct 2022</td><td align="left">First outline</td><td align="left">SWvHeerden</td></tr>
 <tr><td align="left">08 Nov 2022</td><td align="left">Updates</td><td align="left">sdbondi</td></tr>
@@ -6212,7 +6188,7 @@ occasionally dropping below parity and possibly remaining there for some time. A
 Tari-Thaum pair matures, this event will immediately create a bid on Thaums, since -- in the absence of catastrophic 
 failure -- speculators know that the Thaum price will eventually return to parity, causing upward pressure to come into 
 play quickly and efficiently.</p>
-<h1 id="change-log-16"><a class="header" href="#change-log-16">Change Log</a></h1>
+<h1 id="change-log-17"><a class="header" href="#change-log-17">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">1 Nov 2022</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 </tbody></table>
@@ -6324,7 +6300,7 @@ to track the spent TXO set's commitment and the UTXO set.</p>
 </ul>
 </li>
 </ul>
-<h1 id="change-log-17"><a class="header" href="#change-log-17">Change Log</a></h1>
+<h1 id="change-log-18"><a class="header" href="#change-log-18">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">2022-10-19</td><td align="left">Minor editorial changes</td><td align="left">CjS77</td></tr>
 <tr><td align="left">2022-10-10</td><td align="left">First outline</td><td align="left">SWvheerden</td></tr>
@@ -6635,7 +6611,7 @@ ELSE
 ENDIF
 </code></pre>
 <p>A more detailed analysis of the execution of this kind of script can be found at <a href="RFC-0202_TariScriptOpcodes.html#time-locked-contract">Time-locked Contact</a></p>
-<h1 id="change-log-18"><a class="header" href="#change-log-18">Change Log</a></h1>
+<h1 id="change-log-19"><a class="header" href="#change-log-19">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">14 Apr 2019</td><td align="left">First draft</td><td align="left">SWvheerden</td></tr>
 <tr><td align="left">19 Dec 2021</td><td align="left">TariScript updates</td><td align="left">philipr</td></tr>
@@ -6790,7 +6766,7 @@ assigned greek lowercase letters in most cases. Some terms used here are noted d
 <tr><td align="left">Pre-image</td><td>\( \preimage \)</td><td>The random byte data used for the pre-image of the hash</td></tr>
 <tr><td align="left"></td><td></td><td></td></tr>
 </tbody></table>
-<h2 id="change-log-19"><a class="header" href="#change-log-19">Change Log</a></h2>
+<h2 id="change-log-20"><a class="header" href="#change-log-20">Change Log</a></h2>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Oct 2022</td><td align="left">First outline</td><td align="left">SWvHeerden</td></tr>
 </tbody></table>
@@ -8592,7 +8568,7 @@ deployed as part of the Tari network.</p>
 <p>Github: <a href="https://github.com/tari-project/tari-crypto">tari-project/tari-crypto</a></p>
 <p>Tari Crypto was refactored into its own <a href="https://crates.io/crates/tari_crypto">crate</a>, for ease of use and integration across different projects.
 It includes all cryptographic services, including a Curve25519 implementation.</p>
-<h1 id="change-log-20"><a class="header" href="#change-log-20">Change Log</a></h1>
+<h1 id="change-log-21"><a class="header" href="#change-log-21">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Description</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">21 Dec 2018</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">14 Jan 2022</td><td align="left">Deprecated in favour of README</td><td align="left">CjS77</td></tr>
@@ -10358,7 +10334,7 @@ chain.</li>
 <li>Contract B is a trusted party from the PoV of Bob / A (e.g. Bob &amp; B collude to lie about account updates in order to
 defraud A)</li>
 </ul>
-<h1 id="change-log-21"><a class="header" href="#change-log-21">Change Log</a></h1>
+<h1 id="change-log-22"><a class="header" href="#change-log-22">Change Log</a></h1>
 <ul>
 <li><strong>06-04-2022</strong>: First draft</li>
 </ul>
@@ -11275,7 +11251,7 @@ technological merits of the potential system outlined herein.</p>
 <h2 id="goals-51"><a class="header" href="#goals-51">Goals</a></h2>
 <h2 id="related-requests-for-comment-43"><a class="header" href="#related-requests-for-comment-43">Related Requests for Comment</a></h2>
 <h2 id="description-40"><a class="header" href="#description-40">Description</a></h2>
-<h1 id="change-log-22"><a class="header" href="#change-log-22">Change Log</a></h1>
+<h1 id="change-log-23"><a class="header" href="#change-log-23">Change Log</a></h1>
 <ul>
 <li><strong>dd-mm-yyyy</strong>: Summary of changes</li>
 </ul>
