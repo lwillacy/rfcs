@@ -134,8 +134,8 @@
                     <main>
                         <h1 id="rfc-0120consensus"><a class="header" href="#rfc-0120consensus">RFC-0120/Consensus</a></h1>
 <h2 id="base-layer-consensus"><a class="header" href="#base-layer-consensus">Base Layer Consensus</a></h2>
-<p><img src="theme/images/status-draft.svg" alt="status: draft" /></p>
-<p><strong>Maintainer(s)</strong>: <a href="https://github.com/CjS77">Cayle Sharrock</a>, <a href="https://github.com/SWvheerden">S W van heerden</a> and <a href="https://github.com/sdbondi">Stanley Bondi</a></p>
+<p><img src="theme/images/status-stable.svg" alt="status: stable" /></p>
+<p><strong>Maintainer(s)</strong>: <a href="https://github.com/CjS77">Cayle Sharrock</a>, <a href="https://github.com/sdbondi">Stanley Bondi</a> and <a href="https://github.com/SWvheerden">SW van heerden</a></p>
 <h1 id="licence"><a class="header" href="#licence">Licence</a></h1>
 <p><a href="https://opensource.org/licenses/BSD-3-Clause">The 3-Clause BSD Licence</a>.</p>
 <p>Copyright 2019 The Tari Development Community</p>
@@ -172,6 +172,7 @@ technological merits of the potential system outlined herein.</p>
 <h2 id="related-requests-for-comment"><a class="header" href="#related-requests-for-comment">Related Requests for Comment</a></h2>
 <ul>
 <li><a href="RFC-0100_BaseLayer.html">RFC-0100: Base Layer</a></li>
+<li><a href="RFC-0122_Burning.html">RFC-0122: Burn outputs</a></li>
 <li><a href="RFCD-0130_Mining.html">RFC-0130: Mining</a></li>
 <li><a href="RFC-0140_Syncing_and_seeding.html">RFC-0140: SyncAndSeeding</a></li>
 </ul>
@@ -196,28 +197,40 @@ technological merits of the potential system outlined herein.</p>
 <li>
 <p>each <a href="Glossary.html#transaction">transaction input</a> MUST: </p>
 <ul>
-<li>spend an existing valid <a href="Glossary.html#unspent-transaction-outputs">UTXO</a> </li>
-<li>have a maturity greater than the current block height</li>
+<li>be of an allowed <a href="Glossary.html#transaction">transaction input</a> version</li>
+<li>spend an existing valid <a href="Glossary.html#unspent-transaction-outputs">UTXO</a> with a maturity less than the current block height</li>
+<li>satisfy the <a href="RFC-0250_Covenants.html">covenant</a> attached to the <a href="Glossary.html#unspent-transaction-outputs">UTXO</a></li>
+<li>have a valid <a href="Glossary.html#script-signature">script signature</a></li>
 <li>be in a canonical order (see <a href="#transaction-ordering" title="Canonical Transaction Ordering">Transaction ordering</a>)</li>
 </ul>
 </li>
 <li>
 <p>each <a href="Glossary.html#unspent-transaction-outputs">transaction output</a> MUST:</p>
 <ul>
-<li>have a unique hash (<code>version || features || commitment || script || covenant || encrypted_values</code>)</li>
+<li>be of an allowed <a href="Glossary.html#unspent-transaction-outputs">transaction output</a> version</li>
+<li>have a unique domain separated hash (<code>version || features || commitment || script || covenant || encrypted_values</code>) with the domain (<code>transaction_output</code>)</li>
 <li>have a unique commitment in the current <a href="Glossary.html#unspent-transaction-outputs">UTXO</a> set</li>
 <li>be in a canonical order (see <a href="#transaction-ordering" title="Canonical Transaction Ordering">Transaction ordering</a>)</li>
 <li>have a valid <a href="Glossary.html#range-proof">range proof</a></li>
 <li>have a valid <a href="Glossary.html#metadata-signature">metadata signature</a></li>
-<li>have a valid script offset (\gamma), as per <a href="./RFC-0201_TariScript.html">RFC-0201_TariScript</a>.</li>
+<li>contain only allowed opcodes in the script</li>
 </ul>
 </li>
 <li>
-<p>each [transaction kernel] MUST </p>
+<p>each <a href="Glossary.html#transaction-kernel">transaction kernel</a> MUST </p>
 <ul>
-<li>have a valid kernel signature</li>
+<li>have a valid kernel excess signature</li>
 <li>have a unique excess</li>
 </ul>
+</li>
+<li>
+<p>have a valid total script offset, \( \gamma \), see <a href="Glossary.html#script-offset">script-offset</a>.</p>
+</li>
+<li>
+<p>the number of <code>BURNED</code> outputs MUST equal the number of <code>BURNED_KERNEL</code> kernels exactly,</p>
+</li>
+<li>
+<p>the commitment values of each burnt output MUST match the commitment value of each corresponding <code>BURNED_KERNEL</code> exactly.</p>
 </li>
 <li>
 <p>the transaction commitments and kernels MUST balance, as follows:</p>
@@ -266,7 +279,7 @@ plus the total transaction fees within the block</li>
 <ul>
 <li>The nonce and <a href="#pow">PoW</a> must be valid for the <a href="Glossary.html#block-header">block header</a>.
 <ul>
-<li>The achieved difficulty MUST be greater than or equal to the <a href="#target-difficulty" title="Target Difficulty">target difficulty</a>.</li>
+<li>The [achieved difficulty] MUST be greater than or equal to the <a href="#target-difficulty" title="Target Difficulty">target difficulty</a>.</li>
 </ul>
 </li>
 <li>The <a href="#ftl" title="Future Time Limit">FTL</a> and <a href="#mtp" title="Median Time Passed">MTP</a> rules, detailed below.</li>
@@ -279,7 +292,7 @@ sent it.</p>
 <p>The version MUST conform to the following:</p>
 <ul>
 <li>It is represented as an unsigned 16-bit integer.</li>
-<li>Version numbers MUST be incremented whenever there is a change in the blockchain schema starting from 1.</li>
+<li>Version numbers MUST be incremented whenever there is a change in the blockchain schema starting from 0.</li>
 </ul>
 <h4 id="height"><a class="header" href="#height">Height</a></h4>
 <p>A counter indicating how many blocks have passed since the genesis block (inclusive).</p>
@@ -294,7 +307,7 @@ sent it.</p>
 <p>The prev_hash MUST conform to the following:</p>
 <ul>
 <li>represented as an array of unsigned 8-bit integers (bytes) in little-endian format.</li>
-<li>MUST be a hash of the entire contents of the previous block's header.</li>
+<li>MUST be a hash of the entire contents of the previous block's header using the domain (<code>block_header</code>).</li>
 </ul>
 <h4 id="timestamp"><a class="header" href="#timestamp">Timestamp</a></h4>
 <p>This is the timestamp at which the block was mined.</p>
@@ -364,14 +377,6 @@ Hash ( <code>RangeProof</code> || <code>metadata commitment signature</code>), i
 <ul>
 <li>Must be transmitted as an array of unsigned 8-bit integers (bytes) in little-endian format</li>
 </ul>
-<h4 id="total_difficulty"><a class="header" href="#total_difficulty">Total_difficulty</a></h4>
-<p>This is the total accumulated difficulty of the mined chained.</p>
-<p>The total_difficulty MUST conform to the following:</p>
-<ul>
-<li>Must be transmitted as an unsigned 64-bit integer.</li>
-<li>MUST be larger than the previous block's <code>total_difficulty</code>.</li>
-<li>meet the difficulty target for the block as determined by the consensus difficulty algorithm.</li>
-</ul>
 <h4 id="nonce"><a class="header" href="#nonce">Nonce</a></h4>
 <p>This is the nonce used in solving the Proof of Work.</p>
 <p>The nonce MUST conform to the following:</p>
@@ -412,7 +417,7 @@ $$</p>
 $$</p>
 <p>It is important to note that the two proof of work algorithms are calculated <em>independently</em>. i.e., if the current block uses <em>SHA3</em> proof of work, the block window and solve times only include <em>SHA3</em> blocks and vice versa.</p>
 <h3 id="ftl"><a class="header" href="#ftl">FTL</a></h3>
-<p>The Future Time Limit. This is how far into the future a time is accepted as a valid time. Any time that is more than the FTL is rejected until such a time that it is not less than the FTL.
+<p>The Future Time Limit. This is how far into the future a time is accepted as a valid time. Any time that is more than the FTL is rejected until such a time that it is not more than the FTL.
 The FTL is calculated as (T*N)/20 with T and N defined as:
 T: Target time - This is the ideal time that should pass between blocks that have been mined.
 N: Block window - This is the number of blocks used when calculating difficulty adjustments.</p>
@@ -434,8 +439,14 @@ This value is used to compare chain tips to determine the strongest chain.</p>
 final Merkle root. Input, output, and kernel ordering within a block is, therefore, part of the consensus. </p>
 <p>The block MUST be transmitted in canonical ordering. The advantage of this approach is that sorting does not need to be 
 done by the whole network, and verification of sorting is exceptionally cheap.</p>
-<p>Transaction outputs are sorted lexicographically by the byte representation of their Pedersen commitment i.e. <code>\\(k \cdot G + v \cdot H\\)</code>.
-Transaction inputs are sorted lexicographically by the <a href="RFC-0121_ConsensusEncoding.html#transaction-output">hash of the output</a> that is spent by the input.</p>
+<p>Transaction outputs are sorted lexicographically by the byte representation of their Pedersen commitment i.e. ( \(k \cdot G + v \cdot H\) ).</p>
+<p>Transaction kernels are sorted lexicographically by the excess signature byte representation.
+Transaction inputs are sorted lexicographically by the <a href="RFC-0121_ConsensusEncoding.html#transaction-output">hash of the output</a> that is spent by the input.
+Transaction kernels are sorted lexicographically by the excess signature byte representation.</p>
+<h1 id="change-log"><a class="header" href="#change-log">Change Log</a></h1>
+<table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
+<tr><td align="left">11 Oct 2022</td><td align="left">First stable</td><td align="left">SWvHeerden</td></tr>
+</tbody></table>
 
                     </main>
 

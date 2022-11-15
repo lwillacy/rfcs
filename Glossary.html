@@ -253,6 +253,11 @@ verified transactions from the mempool to build up transaction <a href="#block" 
 signed with a combination of the homomorphic commitment private values \( (v_i \, , \, k_i )\), the spending key
 known only to the receiver, and sender offset private key \(k_{Oi}\) known only to the sender. This prevents
 malleability of the UTXO metadata.</p>
+<h2 id="script-signature"><a class="header" href="#script-signature">Script Signature</a></h2>
+<p>The script signature is an aggregated Commitment Signature (&quot;ComSig&quot;) signature, attached to a transaction input and
+signed with a combination of the homomorphic commitment private values \( (v_i \, , \, k_i )\), the spending key
+known only to the sender, and script private key \(k_{Si}\) known only to the sender. This ensures that the script is valid
+and that the input data has not changed.</p>
 <h2 id="mimblewimble"><a class="header" href="#mimblewimble">Mimblewimble</a></h2>
 <p>Mimblewimble is a privacy-centric cryptocurrency protocol. It was
 <a href="https://download.wpsoftware.net/bitcoin/wizardry/mimblewimble.txt">dropped</a> in the Bitcoin Developers chatroom by an
@@ -355,6 +360,9 @@ network conditions etc.</p>
 <p>Tari uses a scripting system for transactions, not unlike <a href="https://en.bitcoin.it/wiki/Script">Bitcoin's scripting system</a>,
 called TariScript. It is also simple, stack-based, processed from left to right, not Turing-complete, with no loops. It
 is a list of instructions linked in a non malleable way to each output, specifying its conditions of spending.</p>
+<h2 id="total-accumulated-difficulty"><a class="header" href="#total-accumulated-difficulty">Total Accumulated difficulty</a></h2>
+<p>The Accumulated difficulty of the chain is used to compare chain tips. Every block has a total accumulated difficulty that is calculated as 
+the sum of all achieved difficulties of Sha3 blocks multiplied by he sum of all achieved difficulties of RandomX blocks. This is represented as an u128.</p>
 <h2 id="transaction"><a class="header" href="#transaction">Transaction</a></h2>
 <p>Transactions are activities recorded on the Tari <a href="#blockchain" title="The linked sequence of Tari blocks on the Tari base layer">blockchain</a> running on the <a href="#base-layer" title="The Tari layer handling payments and secured by proof of work">base layer</a>. Transactions always involve a
 transfer of <a href="#tari-coin" title="The base layer token">Tari coin</a>s. A <a href="#mimblewimble">mimblewimble</a> transaction body consists of one or more blinded inputs and outputs.</p>
@@ -377,6 +385,9 @@ UTXOs represents all the Tari currently in circulation. In addition, the sum of 
 <a href="#block-reward" title="The amount of Tari created in every block">block reward</a>s for all blocks up to the current block height.</p>
 <p>UTXO values are hidden by their <a href="#commitment">commitment</a>s. Only the owner of the UTXO and (presumably) the creator of the UTXO
 (either a <a href="#coinbase-transaction">Coinbase transaction</a> or previous spender) know the value of the UTXO.</p>
+<h2 id="transaction-kernel"><a class="header" href="#transaction-kernel">Transaction Kernel</a></h2>
+<p>A piece of data that is always kept as part of the blockchain and never pruned away. This contains the excess signature and
+serves as proof that the parties transacting know the blinding factors of their <a href="#commitment">commitment</a>s used in the transaction.</p>
 <h2 id="validator-node"><a class="header" href="#validator-node">Validator Node</a></h2>
 <p>Validator nodes (VNs) make up the Tari second layer, or <a href="#digital-asset-network" title="The Tari second layer. All digital asset interactions are managed here.">Digital Asset Network</a>. VNs are responsible for creating and
 updating <a href="#digital-asset" title="Sets of Native digital tokens, both fungible and non-fungible that are created by
