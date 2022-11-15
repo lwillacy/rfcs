@@ -1774,6 +1774,13 @@ after the block is older than the <a href="Glossary.html#pruning-horizon">prunin
 If the Base Node is running in archive mode, it MUST NOT prune. </p>
 <p>When running in pruning mode, <a href="Glossary.html#base-node">Base Node</a>s MUST remove all spent outputs that are older than the 
 <a href="Glossary.html#pruning-horizon">pruning horizon</a> in their current stored <a href="Glossary.html#unspent-transaction-outputs">UTXO</a> set when a new block is received from another <a href="Glossary.html#base-node">Base Node</a>.</p>
+<h1 id="change-log-6"><a class="header" href="#change-log-6">Change Log</a></h1>
+<table><thead><tr><th>Date</th><th>Change</th><th>Author</th></tr></thead><tbody>
+<tr><td>07 Feb 2019</td><td>First draft</td><td>SWvheerden</td></tr>
+<tr><td>13 Jul 2021</td><td>Update to better reflect the current implementation</td><td>philipr-za</td></tr>
+<tr><td>30 Sep 2022</td><td>Rename title for clarity</td><td>stringhandler</td></tr>
+<tr><td>10 Nov 2022</td><td>Minor update to reflect implementation</td><td>mrnaveira</td></tr>
+</tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0150wallets"><a class="header" href="#rfc-0150wallets">RFC-0150/Wallets</a></h1>
 <h2 id="base-layer-wallet-module"><a class="header" href="#base-layer-wallet-module">Base Layer Wallet Module</a></h2>
 <p><img src="https://github.com/tari-project/tari/raw/master/RFC/src/theme/images/status-draft.svg" alt="status: draft" /></p>
@@ -1988,7 +1995,7 @@ Côte d'Ivoire flags look very similar, and both should be excluded.</li>
 Namely, if an emoji ID is presented with a different network identifier, and if there is a transmission error, it is possible for the result to decode in a seemingly valid way with a valid checksum after unmasking.
 If both conditions occur randomly, the likelihood of this occurring is <code>n / 256</code> for <code>n</code> possible network identifiers.</p>
 <p>Since emoji ID will typically be copied digitally and therefore not particularly subject to transmission errors, so it seems unlikely for these conditions to coincide in practice.</p>
-<h2 id="change-log-6"><a class="header" href="#change-log-6">Change Log</a></h2>
+<h2 id="change-log-7"><a class="header" href="#change-log-7">Change Log</a></h2>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">2022-11-10</td><td align="left">Initial stable</td><td align="left">SWvHeerden</td></tr>
 <tr><td align="left">2022-11-11</td><td align="left">Algorithm improvements</td><td align="left">AaronFeickert</td></tr>
@@ -2464,7 +2471,7 @@ The CN can decide how the peer connections should be selected from the routing t
 <li>Peers from the CCs routing table that have been unreachable for a number of attempts SHOULD be removed from the its routing table.</li>
 <li>A CC MUST calculate the similarity between different node IDs by calculating the Hamming distance between the bits of the two node ID numbers.</li>
 </ul>
-<h1 id="change-log-7"><a class="header" href="#change-log-7">Change Log</a></h1>
+<h1 id="change-log-8"><a class="header" href="#change-log-8">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">11 Nov 2022</td><td align="left">Update, removed registration of Validator Nodes</td><td align="left">Stringhandler</td></tr>
 </tbody></table>
@@ -2688,7 +2695,7 @@ it is proposed that a <code>MessageFormat</code> trait be defined:</p>
 <p>This trait will have default implementations to cover most use cases (e.g. a simple call through to <code>serde_json</code>). Serde
 also offers significant ability to tweak how a given struct will be serialized through the use of
 <a href="https://serde.rs/attributes.html">attributes</a>.</p>
-<h1 id="change-log-8"><a class="header" href="#change-log-8">Change Log</a></h1>
+<h1 id="change-log-9"><a class="header" href="#change-log-9">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">29 Mar 2019</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">24 Jul 2019</td><td align="left">Technical editing</td><td align="left">anselld</td></tr>
@@ -3312,7 +3319,7 @@ the connection is bound, a dedicated &quot;secure connection negotiation socket&
 <li>Details of distributed message storage.</li>
 <li>Which <a href="RFC-0172_PeerToPeerMessagingProtocol.html#netaddress">NetAddress</a> to use if a peer has many.</li>
 </ul>
-<h1 id="change-log-9"><a class="header" href="#change-log-9">Change Log</a></h1>
+<h1 id="change-log-10"><a class="header" href="#change-log-10">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">13 Jun 2022</td><td align="left">Moved from tari repo</td><td align="left">sdbondi</td></tr>
 <tr><td align="left">9 Nov 2022</td><td align="left">Removed I2P and ZeroMQ</td><td align="left">stringhandler</td></tr>
@@ -3437,7 +3444,7 @@ used in the construction and validation of this block. Consensus rules versions 
 and as such will be represented with a single incremented integer. This coupled with the internal list of fork versions,
 that includes the height at which they came into effect, will be used to validate whether the consensus rules specified 
 in the header are valid for that block's height.</p>
-<h1 id="change-log-10"><a class="header" href="#change-log-10">Change Log</a></h1>
+<h1 id="change-log-11"><a class="header" href="#change-log-11">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">26 Oct 2022</td><td align="left">Stabilise RFC</td><td align="left">CjS77</td></tr>
 </tbody></table>
@@ -4297,7 +4304,7 @@ validation.</p>
 <li><a href="https://github.com/SWvheerden">@SWvheerden</a></li>
 </ul>
 <p>Thanks to David Burkett for proposing a method to prevent cut-through and willingness to discuss ideas.</p>
-<h1 id="change-log-11"><a class="header" href="#change-log-11">Change Log</a></h1>
+<h1 id="change-log-12"><a class="header" href="#change-log-12">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Aug 2020</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">11 Feb 2021</td><td align="left">Major update</td><td align="left">CjS77, SWvheerden, philipr-za</td></tr>
@@ -4800,7 +4807,7 @@ or Bob can spend the output.</p>
 <h3 id="credits-2"><a class="header" href="#credits-2">Credits</a></h3>
 <p>Thanks to <a href="https://github.com/philipr-za">@philipr-za</a> and <a href="https://github.com/SWvheerden">@SWvheerden</a> for their input
 and contributions to this RFC.</p>
-<h1 id="change-log-12"><a class="header" href="#change-log-12">Change Log</a></h1>
+<h1 id="change-log-13"><a class="header" href="#change-log-13">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Aug 2020</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">11 Feb 2021</td><td align="left">Tari script proposal v3</td><td align="left">CjS77</td></tr>
@@ -5333,7 +5340,7 @@ one-time private key \( c + a \).</li>
 <li>Stealth addresses were included in the Tari Console Wallet as of version v0.35.0 (2022-08-11).</li>
 <li>The FFI (used in Aurora) uses stealth addresses by default as of libwallet-v0.35.0 (2022-08-11).</li>
 </ul>
-<h1 id="change-log-13"><a class="header" href="#change-log-13">Change Log</a></h1>
+<h1 id="change-log-14"><a class="header" href="#change-log-14">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">01 Jun 2022</td><td align="left">First draft</td><td align="left">philip-za</td></tr>
 <tr><td align="left">26 Oct 2022</td><td align="left">Stabilise RFC</td><td align="left">CjS77</td></tr>
@@ -5651,7 +5658,7 @@ xor(
 <li><code>filter_script_match(&lt;pattern&gt;)</code></li>
 <li><code>filter_covenant_match(&lt;pattern&gt;)</code></li>
 </ul>
-<h1 id="change-log-14"><a class="header" href="#change-log-14">Change Log</a></h1>
+<h1 id="change-log-15"><a class="header" href="#change-log-15">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Oct 2021</td><td align="left">First draft</td><td align="left">sbondi</td></tr>
 <tr><td align="left">08 Oct 2022</td><td align="left">Stable update</td><td align="left">brianp</td></tr>
@@ -5794,7 +5801,7 @@ with every instruction to provide a constant source of demand for Thaums in the 
 <p>There is no peg out back to the base layer for Thaums. The reason for this is explained in <a href="RFC-0320_TurbineModel.html">RFC-0320</a>. Thaum holders wishing to convert back to Tari will be able to 
 perform a submarine swap with a Tari seller. We also anticipate that exchanges will list the Thaum-Tari pair to 
 enable easy conversion of Thaums back to Tari.</p>
-<h1 id="change-log-15"><a class="header" href="#change-log-15">Change Log</a></h1>
+<h1 id="change-log-16"><a class="header" href="#change-log-16">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">1 Nov 2022</td><td align="left">High-level overview</td><td align="left">CjS77</td></tr>
 <tr><td align="left">26 Oct 2022</td><td align="left">First outline</td><td align="left">SWvHeerden</td></tr>
@@ -6061,7 +6068,7 @@ Should <code>VNRegistrationValidityPeriod</code> elapse without a renewed regist
 This means that a validator may be assigned a different <code>VN_Shard_Key</code> after each <code>VNRegistrationValidityPeriod</code>, 
 sooner than <code>VNShardShuffleInterval</code>. The validator has nothing to gain from this, on the contrary, they will have 
 to re-sync their state and spend time not participating in the network, losing out on fees.</p>
-<h1 id="change-log-16"><a class="header" href="#change-log-16">Change Log</a></h1>
+<h1 id="change-log-17"><a class="header" href="#change-log-17">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">12 Oct 2022</td><td align="left">First outline</td><td align="left">SWvHeerden</td></tr>
 <tr><td align="left">08 Nov 2022</td><td align="left">Updates</td><td align="left">sdbondi</td></tr>
@@ -6188,7 +6195,7 @@ occasionally dropping below parity and possibly remaining there for some time. A
 Tari-Thaum pair matures, this event will immediately create a bid on Thaums, since -- in the absence of catastrophic 
 failure -- speculators know that the Thaum price will eventually return to parity, causing upward pressure to come into 
 play quickly and efficiently.</p>
-<h1 id="change-log-17"><a class="header" href="#change-log-17">Change Log</a></h1>
+<h1 id="change-log-18"><a class="header" href="#change-log-18">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">1 Nov 2022</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 </tbody></table>
@@ -6300,7 +6307,7 @@ to track the spent TXO set's commitment and the UTXO set.</p>
 </ul>
 </li>
 </ul>
-<h1 id="change-log-18"><a class="header" href="#change-log-18">Change Log</a></h1>
+<h1 id="change-log-19"><a class="header" href="#change-log-19">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">2022-10-19</td><td align="left">Minor editorial changes</td><td align="left">CjS77</td></tr>
 <tr><td align="left">2022-10-10</td><td align="left">First outline</td><td align="left">SWvheerden</td></tr>
@@ -6611,7 +6618,7 @@ ELSE
 ENDIF
 </code></pre>
 <p>A more detailed analysis of the execution of this kind of script can be found at <a href="RFC-0202_TariScriptOpcodes.html#time-locked-contract">Time-locked Contact</a></p>
-<h1 id="change-log-19"><a class="header" href="#change-log-19">Change Log</a></h1>
+<h1 id="change-log-20"><a class="header" href="#change-log-20">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">14 Apr 2019</td><td align="left">First draft</td><td align="left">SWvheerden</td></tr>
 <tr><td align="left">19 Dec 2021</td><td align="left">TariScript updates</td><td align="left">philipr</td></tr>
@@ -6766,7 +6773,7 @@ assigned greek lowercase letters in most cases. Some terms used here are noted d
 <tr><td align="left">Pre-image</td><td>\( \preimage \)</td><td>The random byte data used for the pre-image of the hash</td></tr>
 <tr><td align="left"></td><td></td><td></td></tr>
 </tbody></table>
-<h2 id="change-log-20"><a class="header" href="#change-log-20">Change Log</a></h2>
+<h2 id="change-log-21"><a class="header" href="#change-log-21">Change Log</a></h2>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Oct 2022</td><td align="left">First outline</td><td align="left">SWvHeerden</td></tr>
 </tbody></table>
@@ -8568,7 +8575,7 @@ deployed as part of the Tari network.</p>
 <p>Github: <a href="https://github.com/tari-project/tari-crypto">tari-project/tari-crypto</a></p>
 <p>Tari Crypto was refactored into its own <a href="https://crates.io/crates/tari_crypto">crate</a>, for ease of use and integration across different projects.
 It includes all cryptographic services, including a Curve25519 implementation.</p>
-<h1 id="change-log-21"><a class="header" href="#change-log-21">Change Log</a></h1>
+<h1 id="change-log-22"><a class="header" href="#change-log-22">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Description</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">21 Dec 2018</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">14 Jan 2022</td><td align="left">Deprecated in favour of README</td><td align="left">CjS77</td></tr>
@@ -10334,7 +10341,7 @@ chain.</li>
 <li>Contract B is a trusted party from the PoV of Bob / A (e.g. Bob &amp; B collude to lie about account updates in order to
 defraud A)</li>
 </ul>
-<h1 id="change-log-22"><a class="header" href="#change-log-22">Change Log</a></h1>
+<h1 id="change-log-23"><a class="header" href="#change-log-23">Change Log</a></h1>
 <ul>
 <li><strong>06-04-2022</strong>: First draft</li>
 </ul>
@@ -11251,7 +11258,7 @@ technological merits of the potential system outlined herein.</p>
 <h2 id="goals-51"><a class="header" href="#goals-51">Goals</a></h2>
 <h2 id="related-requests-for-comment-43"><a class="header" href="#related-requests-for-comment-43">Related Requests for Comment</a></h2>
 <h2 id="description-40"><a class="header" href="#description-40">Description</a></h2>
-<h1 id="change-log-23"><a class="header" href="#change-log-23">Change Log</a></h1>
+<h1 id="change-log-24"><a class="header" href="#change-log-24">Change Log</a></h1>
 <ul>
 <li><strong>dd-mm-yyyy</strong>: Summary of changes</li>
 </ul>
