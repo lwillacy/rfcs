@@ -4332,7 +4332,7 @@ validation.</p>
 </tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0202tariscriptopcodes"><a class="header" href="#rfc-0202tariscriptopcodes">RFC-0202/TariScriptOpcodes</a></h1>
 <h2 id="tariscript-opcodes"><a class="header" href="#tariscript-opcodes">TariScript Opcodes</a></h2>
-<p><img src="theme/images/status-draft.svg" alt="status: draft" /></p>
+<p><img src="theme/images/status-stable.svg" alt="status: stable" /></p>
 <p><strong>Maintainer(s)</strong>: <a href="https://github.com/CjS77">Cayle Sharrock</a></p>
 <h1 id="licence-17"><a class="header" href="#licence-17">Licence</a></h1>
 <p><a href="https://opensource.org/licenses/BSD-3-Clause">The 3-Clause BSD Licence</a>.</p>
@@ -4384,8 +4384,8 @@ operating on the stack contents.</li>
 <li>After the script completes, it is successful if and only if it has not aborted, and there is exactly a single element
 on the stack. The script fails if the stack is empty, or contains more than one element, or aborts early.</li>
 <li>It is not Turing complete, so there are no loops or timing functions.</li>
-<li>The opcodes enforce type safety. e.g. A public key cannot be added to an integer scalar. Errors of this kind MUST cause
-the script to fail. The Rust implementation of <a href="Glossary.html#tariscript">TariScript</a> automatically applies the type safety rules.</li>
+<li>The opcodes enforce type safety. e.g. A public key cannot be added to an integer scalar. Errors of this kind MUST 
+cause the script to fail. The Rust implementation of <a href="Glossary.html#tariscript">TariScript</a> automatically applies the type safety rules.</li>
 </ul>
 <h3 id="failure-modes"><a class="header" href="#failure-modes">Failure modes</a></h3>
 <p>Bitcoin transactions can &quot;fail&quot; in two main ways: Either there is a genuine error in the locking or unlocking script;
@@ -4394,7 +4394,7 @@ only accept a small subset of valid transaction scripts that are deemed <a href=
 a non-standard Bitcoin transaction, one has to submit it directly to a miner that accepts non-standard transactions.</p>
 <p>It's interesting to note that only 0.02% of transactions
 mined in Bitcoin before block 550,000 were non-standard, and it appears that the vast majority of these were in fact
-unintentional, leading to loss of funds <a href="https://www.frontiersin.org/articles/10.3389/fbloc.2019.00007/full">(1)</a>.</p>
+unintentional, leading to loss of funds (see <a href="https://www.frontiersin.org/articles/10.3389/fbloc.2019.00007/full">Non-standard transaction</a>).</p>
 <p>The present RFC proposes that TariScript not identify a subset of transactions as &quot;standard&quot;. However, some transactions
 might be invalid in and of- themselves (e.g. invalid signature, invalid script), while others may be invalid because of
 the execution context (e.g. a lock time has not expired).</p>
@@ -4409,6 +4409,14 @@ is the <em>wallets'</em> responsibility to wait until transactions are valid bef
 <li>The maximum length of a script's input is 1,024 bytes.</li>
 <li>The maximum stack height is 255.</li>
 </ul>
+<h3 id="opcode-versions"><a class="header" href="#opcode-versions">Opcode versions</a></h3>
+<p>Base layer core consensus constants are linked to block height for each network, be it testnet, stagenet or mainnet, 
+and are backwards compatible, meaning a base node running updated consensus constants will also be able to validate the 
+blockchain for the previous version up to its last effective block height.</p>
+<p>Opcode versioning is contained within the consensus constants and is used to determine which opcodes are effective 
+from which block height. As an example, <code>OpcodeVersion::V0</code> could be effective from the genesis block, 
+<code>OpcodeVersion::V1</code> may contain two additional opcodes and could be effective from height 1234, whereas 
+<code>OpcodeVersion::V2</code> may deprecate three other opcodes and be effective from height 21743.</p>
 <h2 id="opcodes"><a class="header" href="#opcodes">Opcodes</a></h2>
 <p><a href="Glossary.html#tariscript">TariScript</a> opcodes range from 0 to 255 and are represented as a single unsigned byte. The opcode set is
 limited to allow for the applications specified in this RFC, but can be expanded in the future.</p>
@@ -4416,231 +4424,260 @@ limited to allow for the applications specified in this RFC, but can be expanded
 <p>All these opcodes test the current block height (or, if running the script as part of a transaction
 validation, the next earliest block height) against a given value.</p>
 <h5 id="checkheightverifyheight"><a class="header" href="#checkheightverifyheight">CheckHeightVerify(height)</a></h5>
-<p>Compare the current block height to <code>height</code>.</p>
-<p>Fails with <code>VERIFY_FAILED</code> if the block height &lt; <code>height</code>.</p>
-<h5 id="checkheightheight"><a class="header" href="#checkheightheight">CheckHeight(height)</a></h5>
-<p>Pushes the value of (the current height - <code>height</code>) to the stack. In other words,
-the top of the stack will hold the height difference between <code>height</code> and the current height. If the chain has
-progressed beyond height, the value is positive; and negative if the chain has yet to reach <code>height</code>.</p>
-<p>Fails with <code>STACK_OVERFLOW</code> if the stack would exceed the max stack height.</p>
-<h5 id="compareheightverify"><a class="header" href="#compareheightverify">CompareHeightVerify</a></h5>
-<p>The same as <a href="RFC-0202_TariScriptOpcodes.html#checkheightverifyheight"><code>CheckHeightVerify</code></a>, except that the height to compare against the block height
-is popped off the stack instead of being hardcoded in the script. Pops the top of the stack as <code>height</code> and compares
-it to the current block height.</p>
+<p>Pops the top of the stack as <code>height</code>. Compare the current block height to <code>height</code>. </p>
 <ul>
-<li>Fails with <code>INVALID_INPUT</code> if there is not a valid integer value on top of the stack.</li>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
-<li>Fails with <code>VERIFY_FAILED</code> if the block height &lt; <code>height</code>.</li>
+<li>Fails with <code>IncompatibleTypes</code> if u64 is not a valid 64-bit unsigned integer. </li>
+<li>Fails with <code>VerifyFailed</code> if the block height &lt; <code>height</code>.</li>
+</ul>
+<h5 id="checkheightheight"><a class="header" href="#checkheightheight">CheckHeight(height)</a></h5>
+<p>Pops the top of the stack as <code>height</code>. Pushes the value of (the current tip height - <code>height</code>) to the stack. In
+other words, the top of the stack will hold the height difference between <code>height</code> and the current height.
+If the chain has progressed beyond <code>height</code>, the value is positive; and negative if the chain has yet to
+reach <code>height</code>. </p>
+<ul>
+<li>Fails with <code>IncompatibleTypes</code> if u64 is not a valid 64-bit unsigned integer. </li>
+<li>Fails with <code>StackOverflow</code> if the stack would exceed the max stack height.</li>
+</ul>
+<h5 id="compareheightverify"><a class="header" href="#compareheightverify">CompareHeightVerify</a></h5>
+<p>Pops the top of the stack as <code>height</code> and compares it to the current block height. </p>
+<ul>
+<li>Fails with <code>InvalidInput</code> if there is not a valid integer value on top of the stack. </li>
+<li>Fails with <code>StackUnderflow</code> if the stack is empty.</li>
+<li>Fails with <code>VerifyFailed</code> if the block height &lt; <code>height</code>.</li>
 </ul>
 <h5 id="compareheight"><a class="header" href="#compareheight">CompareHeight</a></h5>
-<p>The same as <a href="RFC-0202_TariScriptOpcodes.html#checkheightheight"><code>CheckHeight</code></a> except that the height to compare against the block height
-is popped off the stack instead of being hardcoded in the script.</p>
 <p>Pops the top of the stack as <code>height</code>, then pushes the value of (<code>height</code> - the current height) to the stack.
-In other words, this opcode replaces the top of the stack with the difference between that value and the current height.</p>
+In other words, this opcode replaces the top of the stack with the difference between <code>height</code> and the
+current height. </p>
 <ul>
-<li>Fails with <code>INVALID_INPUT</code> if there is not a valid integer value on top of the stack.</li>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
+<li>Fails with <code>InvalidInput</code> if there is not a valid integer value on top of the stack. </li>
+<li>Fails with <code>StackUnderflow</code> if the stack is empty.</li>
 </ul>
 <h3 id="stack-manipulation"><a class="header" href="#stack-manipulation">Stack manipulation</a></h3>
 <h5 id="noop"><a class="header" href="#noop">NoOp</a></h5>
-<p>Does nothing. Never fails.</p>
+<p>No op. Does nothing. Never fails.</p>
 <h5 id="pushzero"><a class="header" href="#pushzero">PushZero</a></h5>
-<p>Pushes a zero onto the stack. This is a very common opcode and has the same effect as <code>PushInt(0)</code> but is more compact.
-<code>PushZero</code> can also be interpreted as <code>PushFalse</code> (although no such opcode exists).</p>
+<p>Pushes a zero onto the stack. This is a very common opcode and has the same effect as <code>PushInt(0)</code> but is more
+compact. <code>PushZero</code> can also be interpreted as <code>PushFalse</code>, although no such opcode exists. </p>
 <ul>
-<li>Fails with <code>STACK_OVERFLOW</code> if the stack would exceed the max stack height.</li>
+<li>Fails with <code>StackOverflow</code> if the stack would exceed the max stack height.</li>
 </ul>
 <h5 id="pushone"><a class="header" href="#pushone">PushOne</a></h5>
-<p>Pushes a one onto the stack. This is a very common opcode and has the same effect as <code>PushInt(1)</code> but is more compact.
-<code>PushOne</code> can also be interpreted as <code>PushTrue</code>, although no such opcode exists.</p>
+<p>Pushes a one onto the stack. This is a very common opcode and has the same effect as <code>PushInt(1)</code> but is more
+compact. <code>PushOne</code> can also be interpreted as <code>PushTrue</code>, although no such opcode exists. </p>
 <ul>
-<li>Fails with <code>STACK_OVERFLOW</code> if the stack would exceed the max stack height.</li>
+<li>Fails with <code>StackOverflow</code> if the stack would exceed the max stack height.</li>
 </ul>
 <h5 id="pushhashhashvalue"><a class="header" href="#pushhashhashvalue">PushHash(HashValue)</a></h5>
-<p>Push the associated 32-byte value onto the stack.</p>
+<p>Pushes the associated 32-byte value onto the stack. </p>
 <ul>
-<li>Fails with <code>INVALID_SCRIPT_DATA</code> if HashValue is not a valid 32 byte sequence</li>
-<li>Fails with <code>STACK_OVERFLOW</code> if the stack would exceed the max stack height.</li>
+<li>Fails with <code>IncompatibleTypes</code> if HashValue is not a valid 32 byte sequence. </li>
+<li>Fails with <code>StackOverflow</code> if the stack would exceed the max stack height.</li>
 </ul>
-<h5 id="pushinti64"><a class="header" href="#pushinti64">PushInt(i64)</a></h5>
-<p>Push the associated 64-bit signed integer onto the stack</p>
+<h5 id="pushintval"><a class="header" href="#pushintval">PushInt(val)</a></h5>
+<p>Pushes the associated 64-bit signed integer (<code>val</code>) onto the stack. </p>
 <ul>
-<li>Fails with <code>INVALID_SCRIPT_DATA</code> if <code>i64</code> is not a valid integer.</li>
-<li>Fails with <code>STACK_OVERFLOW</code> if the stack would exceed the max stack height.</li>
+<li>Fails with <code>IncompatibleTypes</code> if <code>val</code> is not a valid 64-bit signed integer. </li>
+<li>Fails with <code>StackOverflow</code> if the stack would exceed the max stack height.</li>
 </ul>
 <h5 id="pushpubkeypublickey"><a class="header" href="#pushpubkeypublickey">PushPubKey(PublicKey)</a></h5>
-<p>Push the associated 32-byte value onto the stack. It will be interpreted as a public key or a commitment.</p>
+<p>Pushes the associated 32-byte value onto the stack. It will be interpreted as a public key or a commitment.</p>
 <ul>
-<li>Fails with <code>INVALID_SCRIPT_DATA</code> if HashValue is not a valid 32 byte sequence</li>
-<li>Fails with <code>STACK_OVERFLOW</code> if the stack would exceed the max stack height.</li>
+<li>Fails with <code>IncompatibleTypes</code> if PublicKey is not a valid 32 byte RistrettoPublicKey sequence. </li>
+<li>Fails with <code>StackOverflow</code> if the stack would exceed the max stack height.</li>
 </ul>
 <h5 id="drop"><a class="header" href="#drop">Drop</a></h5>
-<p>Drops the top stack item.</p>
+<p>Drops the top stack item. </p>
 <ul>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
+<li>Fails with <code>StackUnderflow</code> if the stack is empty.</li>
 </ul>
 <h5 id="dup"><a class="header" href="#dup">Dup</a></h5>
-<p>Duplicates the top stack item.</p>
+<p>Duplicates the top stack item. </p>
 <ul>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
-<li>Fails with <code>STACK_OVERFLOW</code> if the stack would exceed the max stack height.</li>
+<li>Fails with <code>StackUnderflow</code> if the stack is empty. </li>
+<li>Fails with <code>StackOverflow</code> if the stack would exceed the max stack height.</li>
 </ul>
 <h5 id="revrot"><a class="header" href="#revrot">RevRot</a></h5>
-<p>Reverse rotation. The top stack item moves into 3rd place, e.g. <code>abc =&gt; bca</code>.</p>
+<p>Reverse rotation. The top stack item moves into 3rd place, e.g. abc =&gt; bca. </p>
 <ul>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack has fewer than three items.</li>
+<li>Fails with <code>StackUnderflow</code> if the stack has fewer than three items.</li>
 </ul>
 <h3 id="math-operations"><a class="header" href="#math-operations">Math operations</a></h3>
 <h4 id="gezero"><a class="header" href="#gezero">GeZero</a></h4>
-<p>Pops the top stack element as <code>val</code>. If <code>val</code> is greater than or equal to zero, push a 1 to the stack, otherwise push 0.</p>
+<p>Pops the top stack element as <code>val</code>. If <code>val</code> is greater than or equal to zero, push a 1 to the stack,
+otherwise push 0. </p>
 <ul>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
-<li>Fails with <code>INVALID_INPUT</code> if <code>val</code> is not an integer.</li>
+<li>Fails with <code>StackUnderflow</code> if the stack is empty. </li>
+<li>Fails with <code>InvalidInput</code> if <code>val</code> is not an integer.</li>
 </ul>
 <h4 id="gtzero"><a class="header" href="#gtzero">GtZero</a></h4>
-<p>Pops the top stack element as <code>val</code>. If <code>val</code> is strictly greater than zero, push a 1 to the stack, otherwise push 0.</p>
+<p>Pops the top stack element as <code>val</code>. If <code>val</code> is strictly greater than zero, push a 1 to the stack, otherwise push 0. </p>
 <ul>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
-<li>Fails with <code>INVALID_INPUT</code> if the item is not an integer.</li>
+<li>Fails with <code>StackUnderflow</code> if the stack is empty. </li>
+<li>Fails with <code>InvalidInput</code> if the item is not an integer.</li>
 </ul>
 <h4 id="lezero"><a class="header" href="#lezero">LeZero</a></h4>
-<p>Pops the top stack element as <code>val</code>. If <code>val</code> is less than or equal to zero, push a 1 to the stack, otherwise push 0.</p>
+<p>Pops the top stack element as <code>val</code>. If <code>val</code> is less than or equal to zero, push a 1 to the stack, otherwise push 0. </p>
 <ul>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
-<li>Fails with <code>INVALID_INPUT</code> if the item is not an integer.</li>
+<li>Fails with <code>StackUnderflow</code> if the stack is empty. </li>
+<li>Fails with <code>InvalidInput</code> if the item is not an integer.</li>
 </ul>
 <h4 id="ltzero"><a class="header" href="#ltzero">LtZero</a></h4>
-<p>Pops the top stack element as <code>val</code>. If <code>val</code> is strictly less than zero, push a 1 to the stack, otherwise push 0.</p>
+<p>Pops the top stack element as <code>val</code>. If <code>val</code> is strictly less than zero, push a 1 to the stack, otherwise push 0. </p>
 <ul>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
-<li>Fails with <code>INVALID_INPUT</code> if the items is not an integer.</li>
+<li>Fails with <code>StackUnderflow</code> if the stack is empty. </li>
+<li>Fails with <code>InvalidInput</code> if the items is not an integer.</li>
 </ul>
 <h5 id="add"><a class="header" href="#add">Add</a></h5>
-<p>Pop two items and push their sum</p>
+<p>Pops two items from the stack and pushes their sum to the stack. </p>
 <ul>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack has fewer than two items.</li>
-<li>Fails with <code>INVALID_INPUT</code> if the items cannot be added to each other (e.g. an integer and public key).</li>
+<li>Fails with <code>StackUnderflow</code> if the stack has fewer than two items. </li>
+<li>Fails with <code>InvalidInput</code> if the items cannot be added to each other (e.g. an integer and public key).</li>
 </ul>
 <h5 id="sub"><a class="header" href="#sub">Sub</a></h5>
-<p>Pop two items and push the second minus the top</p>
+<p>Pops two items from the stack and pushes the second minus the top to the stack. </p>
 <ul>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack has fewer than two items.</li>
-<li>Fails with <code>INVALID_INPUT</code> if the items cannot be subtracted from each other (e.g. an integer and public key).</li>
+<li>Fails with <code>StackUnderflow</code> if the stack has fewer than two items. </li>
+<li>Fails with <code>InvalidInput</code> if the items cannot be subtracted from each other (e.g. an integer and public key).</li>
 </ul>
 <h5 id="equal"><a class="header" href="#equal">Equal</a></h5>
-<p>Pops the top two items, and pushes 1 to the stack if the inputs are exactly equal, 0 otherwise. 0 is also pushed if the
-values cannot be compared (e.g. integer and pubkey).</p>
+<p>Pops the top two items from the stack, and pushes 1 to the stack if the inputs are exactly equal, 0 otherwise.
+A 0 is also pushed if the values cannot be compared (e.g. integer and pubkey). </p>
 <ul>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack has fewer than two items.</li>
+<li>Fails with <code>StackUnderflow</code> if the stack has fewer than two items.</li>
 </ul>
 <h5 id="equalverify"><a class="header" href="#equalverify">EqualVerify</a></h5>
-<p>Pops the top two items, and compares their values.</p>
+<p>Pops the top two items from the stack, and compares their values. </p>
 <ul>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack has fewer than two items.</li>
-<li>Fails with <code>VERIFY_FAILED</code> if the top two stack elements are not equal.</li>
+<li>Fails with <code>StackUnderflow</code> if the stack has fewer than two items. </li>
+<li>Fails with <code>VerifyFailed</code> if the top two stack elements are not equal.</li>
 </ul>
 <h3 id="boolean-logic"><a class="header" href="#boolean-logic">Boolean logic</a></h3>
 <h4 id="orn"><a class="header" href="#orn">Or(n)</a></h4>
-<p><code>n</code> + 1 items are popped from the stack. If the last item popped matches at least one of the first <code>n</code> items popped,
-push 1 onto the stack. Push 0 otherwise.</p>
+<p>Pops <code>n</code> + 1 items from the stack. If the last item matches at least one of the first <code>n</code>
+items, push 1 onto the stack, otherwise push 0 onto the stack. </p>
 <ul>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack has fewer than <code>n</code> + 1 items.</li>
+<li>Fails with <code>StackUnderflow</code> if the stack has fewer than <code>n</code> + 1 items. </li>
+<li>Fails with <code>InvalidInput</code> if <code>n</code> is not a valid 8-bit unsigned integer.</li>
 </ul>
 <h4 id="orverifyn"><a class="header" href="#orverifyn">OrVerify(n)</a></h4>
-<p><code>n</code> + 1 items are popped from the stack. If the last item popped matches at least one of the first <code>n</code> items popped,
-continue. Fail with <code>VERIFY_FAILED</code> otherwise.</p>
+<p>Pops <code>n</code> + 1 items from the stack. If the last item matches at least one of the first n items,
+continue. </p>
 <ul>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack has fewer than <code>n</code> + 1 items.</li>
+<li>Fails with <code>StackUnderflow</code> if the stack has fewer than <code>n</code> + 1 items. </li>
+<li>Fails with <code>VerifyFailed</code> the last item does not match at least one of the first <code>n</code> items. </li>
+<li>Fails with <code>InvalidInput</code> if <code>n</code> is not a valid 8-bit unsigned integer.</li>
 </ul>
 <h3 id="cryptographic-operations"><a class="header" href="#cryptographic-operations">Cryptographic operations</a></h3>
 <h5 id="hashblake256"><a class="header" href="#hashblake256">HashBlake256</a></h5>
-<p>Pop the top element, hash it with the Blake256 hash function and push the result to the stack.</p>
+<p>Pops the top element, hash it with the Blake256 hash function and push the result to the stack. </p>
 <ul>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
+<li>Fails with <code>StackUnderflow</code> if the stack is empty. </li>
+<li>Fails with <code>InvalidInput</code> if the input is not a valid 32 byte hash value.</li>
 </ul>
 <h5 id="hashsha256"><a class="header" href="#hashsha256">HashSha256</a></h5>
-<p>Pop the top element, hash it with the SHA256 hash function and push the result to the stack.</p>
+<p>Pops the top element, hash it with the SHA256 hash function and push the result to the stack. </p>
 <ul>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
+<li>Fails with <code>StackUnderflow</code> if the stack is empty. </li>
+<li>Fails with <code>InvalidInput</code> if the input is not a valid 32 byte hash value.</li>
 </ul>
 <h5 id="hashsha3"><a class="header" href="#hashsha3">HashSha3</a></h5>
-<p>Pop the top element, hash it with the SHA-3 hash function and push the result to the stack.</p>
+<p>Pops the top element, hash it with the SHA-3 hash function and push the result to the stack. </p>
 <ul>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
+<li>Fails with <code>StackUnderflow</code> if the stack is empty. </li>
+<li>Fails with <code>InvalidInput</code> if the input is not a valid 32 byte hash value.</li>
 </ul>
-<h5 id="checksigmsg"><a class="header" href="#checksigmsg">CheckSig(Msg)</a></h5>
-<p>Pop the public key and then the signature. If the signature signs the 32-byte message, push 1 to the stack, otherwise
-push 0.</p>
+<h5 id="checksigmessage"><a class="header" href="#checksigmessage">CheckSig(Message)</a></h5>
+<p>Pops the public key and then the signature from the stack. If signature validation using the 32-byte message
+and public key succeeds , push 1 to the stack, otherwise push 0. </p>
 <ul>
-<li>Fails with <code>INVALID_SCRIPT_DATA</code> if the <code>Msg</code> is not a valid 32-byte value.</li>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack has fewer than 2 items.</li>
-<li>Fails with <code>INVALID_INPUT</code> if the top stack element is not a PublicKey or Commitment</li>
-<li>Fails with <code>INVALID_INPUT</code> if the second stack element is not a Signature</li>
+<li>Fails with <code>IncompatibleTypes</code> if Message is not a valid 32-byte sequence. </li>
+<li>Fails with <code>StackUnderflow</code> if the stack has fewer than 2 items. </li>
+<li>Fails with <code>InvalidInput</code> if the top stack element is not a PublicKey. </li>
+<li>Fails with <code>InvalidInput</code> if the second stack element is not a Signature.</li>
 </ul>
-<h5 id="checksigverifymsg"><a class="header" href="#checksigverifymsg">CheckSigVerify(Msg)</a></h5>
-<p>Identical to <a href="RFC-0202_TariScriptOpcodes.html#checksigmsg"><code>CheckSig</code></a>, except that nothing is pushed to the stack if the signature is valid, and the
-operation fails with <code>VERIFY_FAILED</code> if the signature is invalid.</p>
-<h5 id="checkmultisigm-n-public-keys-msg"><a class="header" href="#checkmultisigm-n-public-keys-msg">CheckMultiSig(m, n, public keys, Msg)</a></h5>
-<p>Pop $m$ signatures from the stack. If $m$ signatures out of the provided $n$ public keys sign the 32-byte message,
-push 1 to the stack, otherwise push 0.</p>
+<h5 id="checksigverifymessage"><a class="header" href="#checksigverifymessage">CheckSigVerify(Message)</a></h5>
+<p>Identical to <a href="RFC-0202_TariScriptOpcodes.html#checksigmsg"><code>CheckSig</code></a>, except that nothing is pushed to the stack if the signature is valid.</p>
+<p>In addition to the failures mentioned:</p>
 <ul>
-<li>Fails with <code>INVALID_SCRIPT_DATA</code> if the <code>Msg</code> is not a valid 32-byte value.</li>
-<li>Fails with <code>INVALID_SCRIPT_DATA</code> if $m$ or $n$ are zero.</li>
-<li>Fails with <code>INVALID_SCRIPT_DATA</code> if $m$ or $n$ are greater than <code>MAX_MULTISIG_LIMIT (32)</code>.</li>
-<li>Fails with <code>INVALID_SCRIPT_DATA</code> if $m &gt; n$ </li>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack has fewer than $m$ items.</li>
-<li>Fails with <code>INVALID_INPUT</code> if $m$ stack elements are not a <code>Signature</code>.</li>
+<li>Fails with <code>VerifyFailed</code> if the signature is invalid.</li>
 </ul>
-<h5 id="checkmultisigverifym-n-public-keys-msg"><a class="header" href="#checkmultisigverifym-n-public-keys-msg">CheckMultiSigVerify(m, n, public keys, Msg)</a></h5>
-<p>Identical to <a href="RFC-0202_TariScriptOpcodes.html#checkmultisigmsg"><code>CheckMultiSig</code></a>, except that nothing is pushed to the stack if the signatures are valid, and the
-operation fails with <code>VERIFY_FAILED</code> if the signatures are invalid.</p>
+<h5 id="checkmultisigm-n-vecpublickey-message"><a class="header" href="#checkmultisigm-n-vecpublickey-message">CheckMultiSig(m, n, Vec<PublicKey>, Message)</a></h5>
+<p>Pops exactly <code>m</code> signatures from the stack. The multiple signature validation will not succeed if the <code>m</code>
+signatures are not unique or if Vec<RistrettoPublicKey> contains a duplicate public key. Each signature is
+validated using the 32-byte message and a public key that match. If signature validation for m unique
+signatures succeeds, push 1 to the stack, otherwise push 0.</p>
+<ul>
+<li>Fails with <code>IncompatibleTypes</code> if either <code>m</code> or <code>n</code> is not a valid 8-bit unsigned integer, if Vec<RistrettoPublicKey> 
+contains an invalid public key or if Message is not a valid 32-byte sequence.</li>
+<li>Fails with <code>ValueExceedsBounds</code> if <code>m</code> == 0 or if <code>n</code> == 0 or if <code>m</code> &gt; <code>n</code> or if <code>n</code> &gt; <code>MAX_MULTISIG_LIMIT</code>
+(32) or if the number of public keys provided != <code>n</code>.</li>
+<li>Fails with <code>StackUnderflow</code> if the stack has fewer than m items.</li>
+<li>Fails with <code>IncompatibleTypes</code> if any of the m signatures from the stack is not a valid signature.</li>
+<li>Fails with <code>InvalidInput</code> if each of the top m elements is not a Signature.</li>
+</ul>
+<h5 id="checkmultisigverifym-n-vecpublickey-message"><a class="header" href="#checkmultisigverifym-n-vecpublickey-message">CheckMultiSigVerify(m, n, Vec<PublicKey>, Message)</a></h5>
+<p>Identical to <a href="RFC-0202_TariScriptOpcodes.html#checkmultisigm-n-public-keys-msg"><code>CheckMultiSig</code></a>, except that nothing is pushed to the stack if the 
+multiple signature validation is either valid or invalid. </p>
+<p>In addition to the failures mentioned:</p>
+<ul>
+<li>Fails with <code>VerifyFailed</code> if any signature is invalid.</li>
+</ul>
 <h5 id="checkmultisigverifyaggregatepubkeym-n-public-keys-msg"><a class="header" href="#checkmultisigverifyaggregatepubkeym-n-public-keys-msg">CheckMultiSigVerifyAggregatePubKey(m, n, public keys, Msg)</a></h5>
-<p>Pop m signatures from the stack. If m signatures out of the provided n public keys sign the 32-byte message,
-push the aggregate of the public keys to the stack, otherwise fails with VERIFY_FAILED.</p>
-<h5 id="toristrettopoint"><a class="header" href="#toristrettopoint">ToRistrettoPoint,</a></h5>
-<p>Pops the top element which must be a valid Ristretto scalar, calculates the corresponding Ristretto point, and pushes this to the stack.</p>
+<p>Identical to <a href="RFC-0202_TariScriptOpcodes.html#checkmultisigm-n-public-keys-msg"><code>CheckMultiSig</code></a>, except that the aggregate of the public keys is 
+pushed to the stack if multiple signature validation succeeds. </p>
+<p>In addition to the failures mentioned:</p>
 <ul>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
-<li>Fails with <code>INVALID_INPUT</code> if the top stack element is not a scalar.</li>
+<li>Fails with <code>VerifyFailed</code> if any signature is invalid.</li>
+</ul>
+<h5 id="toristrettopoint"><a class="header" href="#toristrettopoint">ToRistrettoPoint,</a></h5>
+<p>Pops the top element from the stack, either a scalar or a hash, calculates the corresponding Ristretto point,
+and pushes the result to the stack. </p>
+<ul>
+<li>Fails with <code>StackUnderflow</code> if the stack is empty. </li>
+<li>Fails with <code>IncompatibleTypes</code> if the stack item is not a valid 32 byte sequence.</li>
 </ul>
 <h3 id="miscellaneous"><a class="header" href="#miscellaneous">Miscellaneous</a></h3>
 <h5 id="return"><a class="header" href="#return">Return</a></h5>
-<p>Always fails with <code>VERIFY_FAILED</code>.</p>
-<h5 id="if-then-else"><a class="header" href="#if-then-else">If-then-else</a></h5>
-<p>The if-then-else clause is marked with the <code>IFTHEN</code> opcode.
-When the <code>IFTHEN</code> opcode is reached, the top element of the stack is popped into <code>pred</code>.
-If <code>pred</code> is 1, the instructions between <code>IFTHEN</code> and <code>ELSE</code> are executed. The instructions from <code>ELSE</code> to <code>ENDIF</code> are
-then popped without being executed.</p>
-<p>If <code>pred</code> is 0, instructions are popped until <code>ELSE</code> or <code>ENDIF</code> is encountered.
-If <code>ELSE</code> is encountered, instructions are executed until <code>ENDIF</code> is reached.
-<code>ENDIF</code> is a marker opcode and a no-op.</p>
+<p>This opcode does nothing except that it always fails.</p>
 <ul>
-<li>Fails with <code>STACK_UNDERFLOW</code> if the stack is empty.</li>
-<li>If <code>pred</code> is anything other than 0 or 1, the script fails with <code>INVALID_INPUT</code>.</li>
-<li>If any instruction during execution of the clause causes a failure, the script fails with that failure code.</li>
+<li>Fails with <code>Return</code>.</li>
 </ul>
+<h5 id="if-then-else"><a class="header" href="#if-then-else">If-then-else</a></h5>
+<p>Pops the top element of the stack into <code>pred</code>. If <code>pred</code> is 1, the instructions between <code>IfThen</code> and <code>Else</code> are
+executed. If <code>pred</code> is 0, instructions are popped until <code>Else</code> or <code>EndIf</code> is encountered. If <code>Else</code> is
+encountered, instructions are executed until <code>EndIf</code> is reached. <code>EndIf</code> is a marker opcode and a no-op.</p>
+<ul>
+<li>Fails with <code>StackUnderflow</code> if the stack is empty.</li>
+<li>Fails with <code>InvalidInput</code> if pred is anything other than 0 or 1.</li>
+<li>Fails with the corresponding failure code if any instruction during execution of the clause causes a failure.</li>
+</ul>
+<h5 id="else"><a class="header" href="#else">Else</a></h5>
+<p>Marks the beginning of the <code>Else</code> branch.</p>
+<h5 id="endif"><a class="header" href="#endif">EndIf</a></h5>
+<p>Marks the end of the <code>IfThen</code> statement.</p>
 <h2 id="serialisation-1"><a class="header" href="#serialisation-1">Serialisation</a></h2>
 <p>TariScript and the execution stack are serialised into byte strings using a simple linear parser. Since all opcodes are
 a single byte, it's very easy to read and write script byte strings. If an opcode has a parameter associated with it,
 e.g. <code>PushHash</code> then it is equally known how many bytes following the opcode will contain the parameter.</p>
 <p>The script input data is serialised in an analogous manner. The first byte in a stream indicates the type of data in the
 bytes that follow. The length of each type is fixed and known <em>a priori</em>. The next <em>n</em> bytes read represent the data type.</p>
-<p>As input data elements are read in, they are pushed onto the stack. This means that the <em>last</em> input element will typically
-be operated on <em>first</em>!</p>
+<p>As input data elements are read in, they are pushed onto the stack. This means that the <em>last</em> input element will 
+typically be operated on <em>first</em>!</p>
 <p>The types of input parameters that are accepted are:</p>
 <table><thead><tr><th align="left">Type</th><th align="left">Range / Value</th></tr></thead><tbody>
-<tr><td align="left">Integer</td><td align="left">64-bit signed integer</td></tr>
+<tr><td align="left">Number</td><td align="left">64-bit signed integer</td></tr>
 <tr><td align="left">Hash</td><td align="left">32-byte hash value</td></tr>
+<tr><td align="left">Scalar</td><td align="left">32-byte scalar value</td></tr>
+<tr><td align="left">Commitment</td><td align="left">32-byte homomorphic commitment (Pedersen commitment )</td></tr>
 <tr><td align="left">PublicKey</td><td align="left">32-byte Ristretto public key</td></tr>
-<tr><td align="left">Signature</td><td align="left">32-byte nonce + 32-byte signature</td></tr>
-<tr><td align="left">Data</td><td align="left">single byte, n, indicating length of data, followed by n bytes of data</td></tr>
-<tr><td align="left">RistrettoScalar</td><td align="left">32-byte Ristretto secret key</td></tr>
+<tr><td align="left">Signature</td><td align="left">64-byte Ristretto Schnorr signature (32-byte nonce + 32-byte signature)</td></tr>
 </tbody></table>
 <h2 id="example-scripts"><a class="header" href="#example-scripts">Example scripts</a></h2>
 <h3 id="anyone-can-spend"><a class="header" href="#anyone-can-spend">Anyone can spend</a></h3>
-<p>The simplest script is an empty script, or a script with a single <code>NoOp</code> opcode. When faced with this script, the spender
-can supply any pubkey in her script input for which she knows the private key. The script will execute, leaving that
-public key as the result, and the transaction script validation will pass.</p>
+<p>The simplest script is an empty script, or a script with a single <code>NoOp</code> opcode. When faced with this script, the 
+spender can supply any pubkey in her script input for which she knows the private key. The script will execute, leaving 
+that public key as the result, and the transaction script validation will pass.</p>
 <h3 id="one-sided-transactions"><a class="header" href="#one-sided-transactions">One-sided transactions</a></h3>
 <p>One-sided transactions lock the input to a predetermined public key provided by the recipient; essentially the same
 method that Bitcoin uses. The simplest form of this is to simply post the new owner's public key as the script:</p>
@@ -4758,8 +4795,8 @@ time:</p>
 <tr><td align="left">Alice or Bob's pubkey</td></tr>
 <tr><td align="left">Alice or Bob's pubkey</td></tr>
 </tbody></table>
-<p><code>OrVerify(2)</code> compares the 3rd element, Alice's pubkey, with the 2 top items that were popped. There is a match, so the script
-continues.</p>
+<p><code>OrVerify(2)</code> compares the 3rd element, Alice's pubkey, with the 2 top items that were popped. There is a match, so the 
+script continues.</p>
 <table><thead><tr><th align="left">Stack</th></tr></thead><tbody>
 <tr><td align="left">Alice or Bob's pubkey</td></tr>
 </tbody></table>
@@ -4767,18 +4804,19 @@ continues.</p>
 or Bob can spend the output.</p>
 <h3 id="error-codes"><a class="header" href="#error-codes">Error codes</a></h3>
 <table><thead><tr><th align="left">Code</th><th align="left">Description</th></tr></thead><tbody>
-<tr><td align="left"><code>RETURN</code></td><td align="left">The serialised script exceeds 1024 bytes.</td></tr>
-<tr><td align="left"><code>STACK_OVERFLOW</code></td><td align="left">The stack exceeded 255 elements during script execution</td></tr>
-<tr><td align="left"><code>STACK_UNDERFLOW</code></td><td align="left">Attempt to pop more items than remain on the stack during script execution</td></tr>
-<tr><td align="left"><code>NON_UNIT_LENGTH_STACK</code></td><td align="left">The stack did not exactly 1 element after script execution</td></tr>
-<tr><td align="left"><code>INCOMPATIBLE_TYPES</code></td><td align="left">An operand was applied to incompatible types</td></tr>
-<tr><td align="left"><code>VALUE_EXCEEDS_BOUNDS</code></td><td align="left">A script opcode resulted in a value that exceeded the maximum or minimum value</td></tr>
-<tr><td align="left"><code>INVALID_OPCODE</code></td><td align="left">The script cannot be deserialised due to an invalid opcode</td></tr>
-<tr><td align="left"><code>MISSING_OPCODE</code></td><td align="left">The script is missing closing opcodes (Else or EndIf)</td></tr>
-<tr><td align="left"><code>INVALID_SIGNATURE</code></td><td align="left">The script contained an invalid signature</td></tr>
-<tr><td align="left"><code>INVALID_INPUT</code></td><td align="left">Invalid or incompatible data was popped off the stack as input into an operation</td></tr>
-<tr><td align="left"><code>INVALID_SCRIPT_DATA</code></td><td align="left">An opcode parameter is invalid or of the wrong type</td></tr>
-<tr><td align="left"><code>VERIFY_FAILED</code></td><td align="left">A script condition (typically a <code>nnnVerify</code> opcode) failed</td></tr>
+<tr><td align="left"><code>Return</code></td><td align="left">The script failed with an explicit Return</td></tr>
+<tr><td align="left"><code>StackOverflow</code></td><td align="left">The stack exceeded 255 elements during script execution</td></tr>
+<tr><td align="left"><code>NonUnitLengthStack</code></td><td align="left">The script completed execution with a stack size other than one</td></tr>
+<tr><td align="left"><code>StackUnderflow</code></td><td align="left">Tried to pop an element off an empty stack</td></tr>
+<tr><td align="left"><code>IncompatibleTypes</code></td><td align="left">An operand was applied to incompatible types</td></tr>
+<tr><td align="left"><code>ValueExceedsBounds</code></td><td align="left">A script opcode resulted in a value that exceeded the maximum or minimum value</td></tr>
+<tr><td align="left"><code>InvalidOpcode</code></td><td align="left">The script encountered an invalid opcode</td></tr>
+<tr><td align="left"><code>MissingOpcode</code></td><td align="left">The script is missing closing opcodes (Else or EndIf)</td></tr>
+<tr><td align="left"><code>InvalidSignature</code></td><td align="left">The script contained an invalid signature</td></tr>
+<tr><td align="left"><code>InvalidInput</code></td><td align="left">The serialised stack contained invalid input</td></tr>
+<tr><td align="left"><code>InvalidData</code></td><td align="left">The script contained invalid data</td></tr>
+<tr><td align="left"><code>VerifyFailed</code></td><td align="left">A verification opcode failed, aborting the script immediately</td></tr>
+<tr><td align="left"><code>InvalidDigest</code></td><td align="left"><code>as_hash</code> requires a Digest function that returns at least 32 bytes</td></tr>
 </tbody></table>
 <h3 id="credits-2"><a class="header" href="#credits-2">Credits</a></h3>
 <p>Thanks to <a href="https://github.com/philipr-za">@philipr-za</a> and <a href="https://github.com/SWvheerden">@SWvheerden</a> for their input
@@ -4786,8 +4824,15 @@ and contributions to this RFC.</p>
 <h1 id="change-log-11"><a class="header" href="#change-log-11">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Aug 2020</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
-<tr><td align="left">8 Mar 2021</td><td align="left">Minor update</td><td align="left">philip-za</td></tr>
+<tr><td align="left">11 Feb 2021</td><td align="left">Tari script proposal v3</td><td align="left">CjS77</td></tr>
+<tr><td align="left">16 Feb 2021</td><td align="left">Update TariScript OpCodes</td><td align="left">CjS77</td></tr>
+<tr><td align="left">08 Mar 2021</td><td align="left">Update RFC docs</td><td align="left">delta1</td></tr>
+<tr><td align="left">12 Nov 2021</td><td align="left">Add CheckMultiSig/Verify</td><td align="left">delta1</td></tr>
+<tr><td align="left">30 Jun 2021</td><td align="left">Add missing OP_CHECKMULTISIG/VERIFY and update error codes</td><td align="left">sdbondi</td></tr>
+<tr><td align="left">11 Jan 2022</td><td align="left">Add ToRistrettoPoint opcode to TariScript</td><td align="left">SWvheerden</td></tr>
+<tr><td align="left">27 Sep 2022</td><td align="left">Add aggregate signatures to transaction inputs and outputs</td><td align="left">hansieodendaal</td></tr>
 <tr><td align="left">28 Sep 2022</td><td align="left">Minor update to reflect implementation</td><td align="left">sdbondi</td></tr>
+<tr><td align="left">11 Nov 2022</td><td align="left">Update for code review/audit</td><td align="left">hansieodendaal</td></tr>
 </tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0204tariscriptexamples"><a class="header" href="#rfc-0204tariscriptexamples">RFC-0204/TariScriptExamples</a></h1>
 <h2 id="tariscript-examples"><a class="header" href="#tariscript-examples">TariScript Examples</a></h2>
