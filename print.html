@@ -2002,7 +2002,7 @@ If both conditions occur randomly, the likelihood of this occurring is <code>n /
 </tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0160blockserialization"><a class="header" href="#rfc-0160blockserialization">RFC-0160/BlockSerialization</a></h1>
 <h2 id="tari-block-binary-serialization"><a class="header" href="#tari-block-binary-serialization">Tari Block Binary Serialization</a></h2>
-<p><img src="https://github.com/tari-project/tari/raw/master/RFC/src/theme/images/status-draft.svg" alt="status: draft" /></p>
+<p><img src="theme/images/status-stable.svg" alt="status: stable" /></p>
 <p><strong>Maintainer(s)</strong>: <a href="https://github.com/delta1">Byron Hambly</a></p>
 <h1 id="licence-11"><a class="header" href="#licence-11">Licence</a></h1>
 <p><a href="https://opensource.org/licenses/BSD-3-Clause">The 3-Clause BSD Licence</a>.</p>
@@ -2047,20 +2047,28 @@ technological merits of the potential system outlined herein.</p>
 <li><a href="RFC-0131_Mining.html">RFC-0131: Full-node Mining on Tari Base Layer</a></li>
 </ul>
 <h2 id="specification"><a class="header" href="#specification">Specification</a></h2>
-<p>By reviewing the <a href="RFC-0160_BlockSerialization.html#tari-block-and-mining-template-data-types">block and mining template fields</a> below, we have the following underlying data types for serialization:</p>
+<p>By reviewing the <a href="RFC-0160_BlockSerialization.html#tari-block-and-mining-template---data-types">block and mining template fields</a> below, we have the 
+following underlying data types for serialization:</p>
 <ol>
 <li><code>bool</code></li>
 <li><code>u8</code></li>
 <li><code>u16</code></li>
-<li><code>u32</code></li>
-<li><code>Vec&lt;u8&gt;</code></li>
+<li><code>u64</code></li>
+<li><code>i64</code></li>
+<li><code>array</code> of type <code>[u8; n]</code></li>
+<li><code>Vec&lt;T&gt;</code> where <code>T</code> is <code>u8</code>, <code>enum</code> or <code>array</code></li>
 </ol>
-<p>For 1. to 4. and all numbers, <a href="https://developers.google.com/protocol-buffers/docs/encoding#varints">Base 128 Varint</a> encoding MUST be used.</p>
+<p>For 1. to 5. and all numbers, <a href="https://developers.google.com/protocol-buffers/docs/encoding#varints">Base 128 Varint</a> encoding MUST be used.</p>
 <p>From the Protocol Buffers documentation:</p>
 <blockquote>
-<p>Varints are a method of serializing integers using one or more bytes. Smaller numbers take a smaller number of bytes. Each byte in a varint, except the last byte, has the most significant bit (msb) set – this indicates that there are further bytes to come. The lower 7 bits of each byte are used to store the two's complement representation of the number in groups of 7 bits, least significant group first.</p>
+<p>Varints are a method of serializing integers using one or more bytes. Smaller numbers take a smaller number of bytes. 
+Each byte in a varint, except the last byte, has the most significant bit (msb) set – this indicates that there are 
+further bytes to come. The lower 7 bits of each byte are used to store the two's complement representation of the 
+number in groups of 7 bits, least significant group first.</p>
 </blockquote>
-<p>For 5., the dynamically sized <code>Vec</code> array type, the encoded array MUST be preceded by a number indicating the length of the array. This length MUST also be encoded as a varint. By prepending the length of the array, the decoder knows how many elements to decode as part of the sequence.</p>
+<p>For 6. to 7., the dynamically sized <code>array</code> and <code>Vec</code> type, the encoded array MUST be preceded by a number indicating the 
+length of the array. This length MUST also be encoded as a varint. By prepending the length of the array, the decoder 
+knows how many elements to decode as part of the sequence.</p>
 <h2 id="block-field-ordering"><a class="header" href="#block-field-ordering">Block field ordering</a></h2>
 <p>Using this varint encoding, all fields of the complete block MUST be encoded in the following order:</p>
 <ol>
@@ -2081,39 +2089,68 @@ technological merits of the potential system outlined herein.</p>
 <li>Proof of work supplemental data</li>
 <li>Transaction inputs - for each input:
 <ul>
-<li>Flags</li>
+<li>Version </li>
+<li>Spent output - for each output:
+<ul>
+<li>Version</li>
+<li>Features
+<ul>
+<li>Version</li>
 <li>Maturity</li>
+<li>Output type</li>
+<li>Sidechain features</li>
+<li>Metadata</li>
+</ul>
+</li>
 <li>Commitment</li>
 <li>Script</li>
-<li>Input data</li>
+<li>Sender offset public key</li>
+<li>Covenant</li>
+<li>Encrypted value</li>
+<li>Minimum value promise</li>
+</ul>
+</li>
+<li>Input data (<a href="https://doc.rust-lang.org/rust-by-example/std/vec.html">vector</a> of Stack items)</li>
 <li>Script signature</li>
-<li>Sender Offset</li>
 </ul>
 </li>
 <li>Transaction outputs - for each output:
 <ul>
-<li>Flags</li>
+<li>Version</li>
+<li>Features
+<ul>
+<li>Version</li>
 <li>Maturity</li>
+<li>Output type</li>
+<li>Sidechain features</li>
+<li>Metadata</li>
+</ul>
+</li>
 <li>Commitment</li>
 <li>Range proof</li>
 <li>Script</li>
-<li>Sender Offset</li>
-<li>Signature</li>
+<li>Sender offset public key</li>
+<li>Metadata signature</li>
+<li>Covenant</li>
+<li>Encrypted value</li>
+<li>Minimum value promise</li>
 </ul>
 </li>
 <li>Transaction kernels - for each kernel:
 <ul>
+<li>Version</li>
 <li>Features</li>
 <li>Fee</li>
 <li>Lock height</li>
 <li>Excess</li>
 <li>Excess signature public nonce</li>
 <li>Excess signature</li>
+<li>Burn commitment</li>
 </ul>
 </li>
 </ol>
 <h2 id="mining-template-field-ordering"><a class="header" href="#mining-template-field-ordering">Mining template field ordering</a></h2>
-<p>The <a href="RFC-0160_BlockSerialization.html#mining-template-header">new block template</a> is provided to miners to complete. Its fields MUST also be encoded using varints, in the following order:</p>
+<p>The <a href="RFC-0160_BlockSerialization.html#new-block-template">new block template</a> is provided to miners to complete. Its fields MUST also be encoded using varints, in the following order:</p>
 <ol>
 <li>Version</li>
 <li>Height</li>
@@ -2122,45 +2159,92 @@ technological merits of the potential system outlined herein.</p>
 <li>Total script offset</li>
 <li>Proof of work algorithm</li>
 <li>Proof of work supplemental data</li>
-<li>Target difficulty</li>
-<li>Reward</li>
-<li>Total fees</li>
 <li>Transaction inputs - for each input:
 <ul>
-<li>Flags</li>
+<li>Version</li>
+<li>Spent output - for each output:
+<ul>
+<li>Version</li>
+<li>Features
+<ul>
+<li>Version</li>
 <li>Maturity</li>
+<li>Output type</li>
+<li>Sidechain features</li>
+<li>Metadata</li>
+</ul>
+</li>
 <li>Commitment</li>
 <li>Script</li>
-<li>Input data</li>
+<li>Sender offset public key</li>
+<li>Covenant</li>
+<li>Encrypted value</li>
+<li>Minimum value promise</li>
+</ul>
+</li>
+<li>Input data (<a href="https://doc.rust-lang.org/rust-by-example/std/vec.html">vector</a> of Stack items)</li>
 <li>Script signature</li>
-<li>Sender Offset</li>
 </ul>
 </li>
 <li>Transaction outputs - for each output:
 <ul>
-<li>Flags</li>
+<li>Version</li>
+<li>Features
+<ul>
+<li>Version</li>
 <li>Maturity</li>
+<li>Output type</li>
+<li>Sidechain features</li>
+<li>Metadata</li>
+</ul>
+</li>
 <li>Commitment</li>
 <li>Range proof</li>
 <li>Script</li>
-<li>Sender Offset</li>
-<li>Signature</li>
+<li>Sender offset public key</li>
+<li>Metadata signature</li>
+<li>Covenant</li>
+<li>Encrypted value</li>
+<li>Minimum value promise</li>
 </ul>
 </li>
 <li>Transaction kernels - for each kernel:
 <ul>
+<li>Version</li>
 <li>Features</li>
 <li>Fee</li>
 <li>Lock height</li>
 <li>Excess</li>
 <li>Excess signature public nonce</li>
 <li>Excess signature</li>
+<li>Burn commitment</li>
 </ul>
 </li>
+<li>Target difficulty</li>
+<li>Reward</li>
+<li>Total fees</li>
 </ol>
+<h2 id="value-encryption"><a class="header" href="#value-encryption">Value encryption</a></h2>
+<p>The value of the value commitment MUST be encrypted using <a href="https://en.wikipedia.org/wiki/ChaCha20-Poly1305">ChaCha20Poly1305</a>
+Authenticated Encryption with Additional Data (AEAD). The AEAD key MUST be 32 bytes in size and produced using a
+<a href="RFC-0160_BlockSerialization.html#hash-domains">domain separated hash</a> of the private key and commitment.</p>
+<h2 id="hash-domains"><a class="header" href="#hash-domains">Hash domains</a></h2>
+<p>To use a single hash function for producing a sampling of multiple independent hash functions, it's common to employ 
+domain separation. Tari uses the <a href="https://github.com/tari-project/tari-crypto/blob/main/src/hashing.rs">hashing API</a> 
+within the tari codebase to achieve proper hash domain separation.</p>
+<p>The following functional areas MUST each use a separate hash domain that is unique in the tari codebase:</p>
+<ul>
+<li>kernel Merkle Mointain Range;</li>
+<li>witness MMR;</li>
+<li>output MMR;</li>
+<li>input MMR;</li>
+<li>value encryption.</li>
+</ul>
+<p>To achieve interoperability with other blockchains like Bitcoin and Monero, for example an atomic swap, TariScript MUST 
+NOT make use of hash domains.</p>
 <h2 id="tari-block-and-mining-template---data-types"><a class="header" href="#tari-block-and-mining-template---data-types">Tari Block and Mining Template - Data Types</a></h2>
-<p>A Tari block is comprised of the <a href="Glossary.html#block-header">block header</a> and <a href="Glossary.html#block-body">aggregate body</a>.</p>
-<p>Here we describe the respective Rust types of these fields in the <a href="https://github.com/tari-project/tari/blob/development/base_layer/core/src/blocks/block.rs#L68">tari codebase</a>, and their underlying data types:</p>
+<p>A <a href="https://github.com/tari-project/tari/blob/development/base_layer/core/src/blocks/block.rs">Tari block</a> is composed of the <a href="Glossary.html#block-header">block header</a> and <a href="Glossary.html#block-body">aggregate body</a>.</p>
+<p>Here we describe the respective Rust types of these fields in the tari codebase, and their underlying data types:</p>
 <h3 id="block-header-1"><a class="header" href="#block-header-1">Block Header</a></h3>
 <table><thead><tr><th>Field</th><th>Abstract Type</th><th>Data Type</th><th>Description</th></tr></thead><tbody>
 <tr><td>Version</td><td><code>u16</code></td><td><code>u16</code></td><td>The Tari protocol version number, used for soft/hard forks</td></tr>
@@ -2176,12 +2260,17 @@ technological merits of the potential system outlined herein.</p>
 <tr><td>Total Kernel Offset</td><td><code>BlindingFactor</code></td><td><code>[u8;32]</code></td><td>Sum of kernel offsets for all transaction kernels in this block</td></tr>
 <tr><td>Total Script Offset</td><td><code>BlindingFactor</code></td><td><code>[u8;32]</code></td><td>Sum of script offsets for all transaction kernels in this block</td></tr>
 <tr><td>Nonce</td><td><code>u64</code></td><td><code>u64</code></td><td>Nonce increment used to mine this block</td></tr>
-<tr><td>Proof of Work Algorithm</td><td><code>PowAlgorithm</code></td><td><code>u8</code></td><td>Proof of Work Algorithm used to mine this block (Monero or SHA3 )</td></tr>
-<tr><td>Proof of Work Data</td><td><code>Vec&lt;u8&gt;</code></td><td><code>Vec&lt;u8&gt;</code></td><td>Supplemental proof of work data. For Sha3 this would be empty, but for a Monero block we need the Monero header and RandomX seed hash.</td></tr>
+<tr><td>Pow</td><td><code>ProofOfWork</code></td><td>See <a href="RFC-0160_BlockSerialization.html#proof-of-work">Proof Of Work</a></td><td>Proof of Work information</td></tr>
 </tbody></table>
 <p><code>[u8;32]</code> indicates an array of 32 unsigned 8-bit integers</p>
+<h4 id="proof-of-work-1"><a class="header" href="#proof-of-work-1">Proof Of Work</a></h4>
+<table><thead><tr><th>Field</th><th>Abstract Type</th><th>Data Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>Proof of Work Algorithm</td><td><code>PowAlgorithm</code></td><td><code>u8</code></td><td>The algorithm used to mine this block ((Monero or SHA3))</td></tr>
+<tr><td>Proof of Work Data</td><td><code>Vec&lt;u8&gt;</code></td><td><code>u8</code></td><td>Supplemental proof of work data. For example for Sha3, this would be empty (only the block header is required), but for Monero merge mining we need the Monero block header and RandomX seed hash</td></tr>
+</tbody></table>
 <h3 id="block-body"><a class="header" href="#block-body">Block Body</a></h3>
 <table><thead><tr><th>Field</th><th>Abstract Type</th><th>Data Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>Sorted</td><td><code>bool</code></td><td><code>bool</code></td><td>True if sorted</td></tr>
 <tr><td>Transaction Inputs</td><td><code>Vec&lt;TransactionInput&gt;</code></td><td><code>TransactionInput</code></td><td>List of inputs spent</td></tr>
 <tr><td>Transaction Outputs</td><td><code>Vec&lt;TransactionOutput&gt;</code></td><td><code>TransactionOutput</code></td><td>List of outputs produced</td></tr>
 <tr><td>Transaction Kernels</td><td><code>Vec&lt;TransactionKernel&gt;</code></td><td><code>TransactionKernel</code></td><td>Kernels contain the excesses and their signatures for the transactions</td></tr>
@@ -2189,69 +2278,134 @@ technological merits of the potential system outlined herein.</p>
 <p>A further breakdown of the body fields is described below:</p>
 <h4 id="transactioninput"><a class="header" href="#transactioninput">TransactionInput</a></h4>
 <table><thead><tr><th>Field</th><th>Abstract Type</th><th>Data Type</th><th>Description</th></tr></thead><tbody>
-<tr><td>Features</td><td><code>OutputFeatures</code></td><td>See <a href="RFC-0160_BlockSerialization.html#OutputFeatures">OutputFeatures</a></td><td>The features of the output being spent. We will check maturity for all outputs.</td></tr>
+<tr><td>Version</td><td><code>TransactionInputVersion</code></td><td><code>u16</code></td><td>The features of the output being spent. We will check maturity for all outputs.</td></tr>
+<tr><td>Spent Output</td><td><code>SpentOutput</code></td><td>See <a href="RFC-0160_BlockSerialization.html#spentoutput">SpentOutput</a></td><td>Either the hash of TransactionOutput that this Input is spending or its data</td></tr>
+<tr><td>Input Data</td><td><code>ExecutionStack</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The script input data, maximum size is 512</td></tr>
+<tr><td>Script Signature</td><td><code>CommitmentAndPublicKeySignature</code></td><td>See <a href="RFC-0160_BlockSerialization.html#commitmentandpublickeysignature">CommitmentAndPublicKeySignature</a></td><td>A signature signing the script and all other transaction input metadata with the script private key</td></tr>
+</tbody></table>
+<h5 id="spentoutput"><a class="header" href="#spentoutput">SpentOutput</a></h5>
+<table><thead><tr><th>Field</th><th>Abstract Type</th><th>Data Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>OutputHash</td><td><code>HashOutput</code></td><td><code>[u8;32]</code></td><td>The features of the output being spent. We will check maturity for all outputs.</td></tr>
+<tr><td>Version</td><td><code>TransactionOutputVersion</code></td><td><code>u8</code></td><td>The TransactionOutput version</td></tr>
+<tr><td>Features</td><td><code>OutputFeatures</code></td><td>See <a href="RFC-0160_BlockSerialization.html#outputfeatures">OutputFeatures</a></td><td>Options for the output's structure or use</td></tr>
 <tr><td>Commitment</td><td><code>PedersenCommitment</code></td><td><code>[u8;32]</code></td><td>The commitment referencing the output being spent.</td></tr>
 <tr><td>Script</td><td><code>TariScript</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The serialised script, maximum size is 512</td></tr>
-<tr><td>Input Data</td><td><code>ExecutionStack</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The script input data, maximum size is 512</td></tr>
-<tr><td>Script Signature</td><td><code>ComSignature</code></td><td>See <a href="RFC-0160_BlockSerialization.html#ComSignature">ComSignature</a></td><td>A signature with $k_s$, signing the script, input data, and mined height</td></tr>
-<tr><td>Sender Offset</td><td><code>PublicKey</code></td><td><code>[u8;32]</code></td><td>The offset public key, $K_O$</td></tr>
+<tr><td>Sender Offset Public Key</td><td><code>CommitmentAndPublicKeySignature</code></td><td><code>[u8;32]</code></td><td>The Tari script sender offset public key</td></tr>
+<tr><td>Covenant</td><td><code>Vec&lt;CovenantToken&gt;</code></td><td>See <a href="RFC-0160_BlockSerialization.html#covenanttoken">CovenantToken</a></td><td>A future-based contract detailing input and output metadata</td></tr>
+<tr><td>Encrypted Value</td><td><code>EncryptedValue</code></td><td><code>[u8;24]</code></td><td>The encrypted value of the value commitment</td></tr>
+<tr><td>Minimum Value Promise</td><td><code>MicroTari</code></td><td><code>u64</code> <em>(See <a href="RFC-0160_BlockSerialization.html#value-encryption">Value encryption</a>)</em></td><td>The minimum value promise embedded in the range proof</td></tr>
 </tbody></table>
-<h5 id="outputfeatures"><a class="header" href="#outputfeatures">OutputFeatures</a></h5>
+<h5 id="commitmentandpublickeysignature"><a class="header" href="#commitmentandpublickeysignature">CommitmentAndPublicKeySignature</a></h5>
 <table><thead><tr><th>Field</th><th>Abstract Type</th><th>Data Type</th><th>Description</th></tr></thead><tbody>
-<tr><td>Flags</td><td><code>OutputFlags</code></td><td><code>u8</code></td><td>Feature flags that differentiate the output, for example to specify a coinbase output</td></tr>
-<tr><td>Maturity</td><td><code>u64</code></td><td><code>u64</code></td><td>The block height at which the output can be spent</td></tr>
+<tr><td>Public Nonce</td><td><code>PedersenCommitment</code></td><td><code>[u8;32]</code></td><td>The public (Pedersen) commitment nonce created with the two random nonces</td></tr>
+<tr><td><code>u</code></td><td><code>SecretKey</code></td><td><code>[u8;32]</code></td><td>The first publicly known private key of the signature signing with the value</td></tr>
+<tr><td><code>v</code></td><td><code>SecretKey</code></td><td><code>[u8;32]</code></td><td>The second publicly known private key of the signature signing with the blinding factor</td></tr>
+<tr><td>Public Key</td><td><code>PedersenCommitment</code></td><td><code>[u8;32]</code></td><td>The public nonce of the Schnorr signature</td></tr>
+<tr><td><code>a</code></td><td><code>SecretKey</code></td><td><code>[u8;32]</code></td><td>The publicly known private key of the Schnorr signature</td></tr>
 </tbody></table>
-<h5 id="comsignature"><a class="header" href="#comsignature">ComSignature</a></h5>
-<table><thead><tr><th>Field</th><th>Abstract Type</th><th>Data Type</th><th>Description</th></tr></thead><tbody>
-<tr><td>Public Nonce</td><td><code>PedersenCommitment</code></td><td><code>[u8;32]</code></td><td>public (Pedersen) commitment nonce created with the two random nonces</td></tr>
-<tr><td><code>u</code></td><td><code>SecretKey</code></td><td><code>[u8;32]</code></td><td>the first publicly known private key of the signature signing with the value</td></tr>
-<tr><td><code>v</code></td><td><code>SecretKey</code></td><td><code>[u8;32]</code></td><td>the second publicly known private key of the signature signing with the blinding factor</td></tr>
-</tbody></table>
-<p>Find out more about Commitment signatures:</p>
+<p>Find out more about CommitmentAndPublicKey signatures:</p>
 <ul>
 <li><a href="https://eprint.iacr.org/2020/061.pdf">Simple Schnorr Signature with Pedersen Commitment as Key</a></li>
-<li><a href="https://documents.uow.edu.au/%7Ewsusilo/ZCMS_IJNS08.pdf">A New and Efficient Signature on Commitment Values</a>.</li>
+<li><a href="https://documents.uow.edu.au/%7Ewsusilo/ZCMS_IJNS08.pdf">A New and Efficient Signature on Commitment Values</a></li>
+<li><a href="https://github.com/tari-project/tari-crypto/blob/main/src/signatures/commitment_and_public_key_signature.rs">Tari Commitment and Public Key Signature</a></li>
 </ul>
+<h5 id="outputfeatures"><a class="header" href="#outputfeatures">OutputFeatures</a></h5>
+<table><thead><tr><th>Field</th><th>Abstract Type</th><th>Data Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>Version</td><td><code>OutputFeaturesVersion</code></td><td><code>u8</code></td><td>The OutputFeatures version</td></tr>
+<tr><td>Output Type</td><td><code>OutputType</code></td><td><code>u8</code></td><td>The type of output</td></tr>
+<tr><td>Maturity</td><td><code>u64</code></td><td><code>u64</code></td><td>The block height at which the output can be spent</td></tr>
+<tr><td>Metadata</td><td><code>Vec&lt;u8&gt;</code></td><td><code>u8</code></td><td>The block height at which the output can be spent</td></tr>
+<tr><td>Side-chain Features</td><td><code>SideChainFeatures</code></td><td><em>none</em></td><td><em>Not implemented</em></td></tr>
+</tbody></table>
+<h5 id="covenanttoken"><a class="header" href="#covenanttoken">CovenantToken</a></h5>
+<table><thead><tr><th>Field</th><th>Abstract Type</th><th>Data Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>Filter</td><td><code>CovenantFilter</code></td><td>See <a href="RFC-0160_BlockSerialization.html#covenantfilter">CovenantFilter</a></td><td>The covenant filter</td></tr>
+<tr><td>Arg</td><td><code>CovenantArg</code></td><td>See <a href="RFC-0160_BlockSerialization.html#covenantarg">CovenantArg</a></td><td>The covenant argument(s)</td></tr>
+</tbody></table>
+<h5 id="covenantfilter"><a class="header" href="#covenantfilter">CovenantFilter</a></h5>
+<table><thead><tr><th>Field</th><th>Abstract Type</th><th>Data Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>Identity</td><td><code>IdentityFilter</code></td><td><em>none</em></td><td>The Identity</td></tr>
+<tr><td>And</td><td><code>AndFilter</code></td><td><em>none</em></td><td>And operation</td></tr>
+<tr><td>Or</td><td><code>OrFilter</code></td><td><em>none</em></td><td>Or operation</td></tr>
+<tr><td>Xor</td><td><code>XorFilter</code></td><td><em>none</em></td><td>Xor operation</td></tr>
+<tr><td>Not</td><td><code>NotFilter</code></td><td><em>none</em></td><td>Not operation</td></tr>
+<tr><td>Output Hash Equal</td><td><code>OutputHashEqFilter</code></td><td><em>none</em></td><td>Output hash to be equal to</td></tr>
+<tr><td>Fields Preserved</td><td><code>FieldsPreservedFilter</code></td><td><em>none</em></td><td>Fields to be preserved</td></tr>
+<tr><td>Field Equal</td><td><code>FieldEqFilter</code></td><td><em>none</em></td><td>Field to be equal to</td></tr>
+<tr><td>Fields Hashed Equal</td><td><code>FieldsHashedEqFilter</code></td><td><em>none</em></td><td>Fields hashed to be equal to</td></tr>
+<tr><td>Absolute Height</td><td><code>AbsoluteHeightFilter</code></td><td><em>none</em></td><td>Absolute height</td></tr>
+</tbody></table>
+<h5 id="covenantarg"><a class="header" href="#covenantarg">CovenantArg</a></h5>
+<table><thead><tr><th>Field</th><th>Abstract Type</th><th>Data Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>Hash</td><td><code>FixedHash</code></td><td><code>[u8;32]</code></td><td>Future hash value</td></tr>
+<tr><td>PublicKey</td><td><code>PublicKey</code></td><td><code>[u8;32]</code></td><td>Future public key</td></tr>
+<tr><td>Commitment</td><td><code>PedersenCommitment</code></td><td><code>[u8;32]</code></td><td>Future commitment referencing the output being spent.</td></tr>
+<tr><td>Tari Script</td><td><code>TariScript</code></td><td><code>Vec&lt;u8&gt;</code></td><td>Future serialised script, maximum size is 512</td></tr>
+<tr><td>Covenant</td><td><code>Vec&lt;CovenantToken&gt;</code></td><td>See <a href="RFC-0160_BlockSerialization.html#covenanttoken">CovenantToken</a></td><td>Future covenant</td></tr>
+<tr><td>Output Type</td><td><code>OutputType</code></td><td><code>u8</code></td><td>Future type of output</td></tr>
+<tr><td>Uint</td><td><code>Uint</code></td><td><code>u64</code></td><td>Future value</td></tr>
+<tr><td>Output Field</td><td><code>OutputField</code></td><td>See <a href="RFC-0160_BlockSerialization.html#outputfield">OutputField</a></td><td>Future set of output fields</td></tr>
+<tr><td>OutputFields</td><td><code>Vec&lt;OutputField&gt;</code></td><td>See <a href="RFC-0160_BlockSerialization.html#outputfield">OutputField</a></td><td>Future set of output fields</td></tr>
+<tr><td>Bytes</td><td><code>Vec&lt;u8&gt;</code></td><td><code>u8</code></td><td>Future raw data</td></tr>
+</tbody></table>
+<h5 id="outputfield"><a class="header" href="#outputfield">OutputField</a></h5>
+<table><thead><tr><th>Field</th><th>Abstract Type</th><th>Data Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>Commitment</td><td><code>u8</code></td><td><code>u8</code></td><td>Commitment byte code</td></tr>
+<tr><td>Script</td><td><code>u8</code></td><td><code>u8</code></td><td>Script byte code</td></tr>
+<tr><td>Sender Offset Public Key</td><td><code>u8</code></td><td><code>u8</code></td><td>SenderOffsetPublicKey byte code</td></tr>
+<tr><td>Covenant</td><td><code>u8</code></td><td><code>u8</code></td><td>Covenant byte code</td></tr>
+<tr><td>Features</td><td><code>u8</code></td><td><code>u8</code></td><td>Features byte code</td></tr>
+<tr><td>Features Output Type</td><td><code>u8</code></td><td><code>u8</code></td><td>FeaturesOutputType byte code</td></tr>
+<tr><td>Features Maturity</td><td><code>u8</code></td><td><code>u8</code></td><td>FeaturesMaturity byte code</td></tr>
+<tr><td>Features Metadata</td><td><code>u8</code></td><td><code>u8</code></td><td>FeaturesMetadata byte code</td></tr>
+<tr><td>Features Side Chain Features</td><td><code>u8</code></td><td><code>u8</code></td><td>FeaturesSideChainFeatures byte code</td></tr>
+</tbody></table>
 <h4 id="transactionoutput"><a class="header" href="#transactionoutput">TransactionOutput</a></h4>
 <table><thead><tr><th>Field</th><th>Abstract Type</th><th>Data Type</th><th>Description</th></tr></thead><tbody>
-<tr><td>Features</td><td><code>OutputFeatures</code></td><td>See <a href="RFC-0160_BlockSerialization.html#OutputFeatures">OutputFeatures</a></td><td>Options for the output's structure or use</td></tr>
+<tr><td>Version</td><td><code>TransactionOutputVersion</code></td><td><code>u8</code></td><td>The TransactionOutput version</td></tr>
+<tr><td>Features</td><td><code>OutputFeatures</code></td><td>See <a href="RFC-0160_BlockSerialization.html#outputfeatures">OutputFeatures</a></td><td>Options for the output's structure or use</td></tr>
 <tr><td>Commitment</td><td><code>PedersenCommitment</code></td><td><code>[u8;32]</code></td><td>The homomorphic commitment representing the output amount</td></tr>
-<tr><td>Range Proof</td><td><code>RangeProof</code></td><td><code>Vec&lt;u8&gt;</code></td><td>A proof that the commitment is in the right range</td></tr>
+<tr><td>Proof</td><td><code>RangeProof</code></td><td><code>Vec&lt;u8&gt;</code></td><td>A proof that the commitment is in the right range</td></tr>
 <tr><td>Script</td><td><code>TariScript</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The script that will be executed when spending this output</td></tr>
-<tr><td>Sender Offset</td><td><code>PublicKey</code></td><td><code>[u8;32]</code></td><td>Tari script offset pubkey, K_O</td></tr>
-<tr><td>Signature</td><td><code>ComSignature</code></td><td>See <a href="RFC-0160_BlockSerialization.html#ComSignature">ComSignature</a></td><td>UTXO signature with the script offset private key, k_O</td></tr>
+<tr><td>Sender Offset Public Key</td><td><code>PublicKey</code></td><td><code>[u8;32]</code></td><td>The Tari script sender offset public key</td></tr>
+<tr><td>Metadata Signature</td><td><code>CommitmentAndPublicKeySignature</code></td><td>See <a href="RFC-0160_BlockSerialization.html#commitmentandpublickeysignature">CommitmentAndPublicKeySignature</a></td><td>A signature signing all transaction output metadata with the script offset private key and spending key</td></tr>
+<tr><td>Covenant</td><td><code>Vec&lt;CovenantToken&gt;</code></td><td>See <a href="RFC-0160_BlockSerialization.html#covenanttoken">CovenantToken</a></td><td>A future-based contract detailing input and output metadata</td></tr>
+<tr><td>Encrypted Value</td><td><code>EncryptedValue</code></td><td><code>[u8;24]</code></td><td>The encrypted value of the value commitment</td></tr>
+<tr><td>Minimum Value Promise</td><td><code>MicroTari</code></td><td><code>u64</code> <em>(See <a href="RFC-0160_BlockSerialization.html#value-encryption">Value encryption</a>)</em></td><td>The minimum value promise embedded in the range proof</td></tr>
 </tbody></table>
 <h4 id="transactionkernel"><a class="header" href="#transactionkernel">TransactionKernel</a></h4>
 <table><thead><tr><th>Field</th><th>Abstract Type</th><th>Data Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>Version</td><td><code>TransactionKernelVersion</code></td><td><code>u8</code></td><td>The TransactionKernel version</td></tr>
 <tr><td>Features</td><td><code>KernelFeatures</code></td><td><code>u8</code></td><td>Options for a kernel's structure or use</td></tr>
 <tr><td>Fee</td><td><code>MicroTari</code></td><td><code>u64</code></td><td>Fee originally included in the transaction this proof is for.</td></tr>
 <tr><td>Lock Height</td><td><code>u64</code></td><td><code>u64</code></td><td>This kernel is not valid earlier than this height. The max maturity of all inputs to this transaction</td></tr>
-<tr><td>Excess</td><td><code>PedersenCommitment</code></td><td><code>[u8;32]</code></td><td>Remainder of the sum of all transaction commitments (minus an offset). If the transaction is well-formed, amounts plus fee will sum to zero, and the excess is a valid public key.</td></tr>
-<tr><td>Excess Signature</td><td><code>RistrettoSchnorr</code></td><td>See <a href="RFC-0160_BlockSerialization.html#RistrettoSchnorr">RistrettoSchnorr</a></td><td>An aggregated signature of the metadata in this kernel, signed by the individual excess values and the offset excess of the sender.</td></tr>
+<tr><td>Excess</td><td><code>PedersenCommitment</code></td><td><code>[u8;32]</code></td><td>Remainder of the sum of all transaction commitments (minus an offset). If the transaction is well-formed, amounts plus fee will sum to zero, and the excess is a valid public key</td></tr>
+<tr><td>Excess Signature</td><td><code>RistrettoSchnorr</code></td><td>See <a href="RFC-0160_BlockSerialization.html#ristrettoschnorr">RistrettoSchnorr</a></td><td>An aggregated signature of the metadata in this kernel, signed by the individual excess values and the offset excess of the sender</td></tr>
+<tr><td>Burn Commitment</td><td><code>PedersenCommitment</code></td><td><code>[u8;32]</code></td><td>This is an optional field that must be set if the transaction contains a burned output</td></tr>
 </tbody></table>
 <h4 id="ristrettoschnorr"><a class="header" href="#ristrettoschnorr">RistrettoSchnorr</a></h4>
 <table><thead><tr><th>Field</th><th>Abstract Type</th><th>Data Type</th><th>Description</th></tr></thead><tbody>
 <tr><td>Public nonce</td><td><code>PublicKey</code></td><td><code>[u8;32]</code></td><td>The public nonce of the Schnorr signature</td></tr>
 <tr><td>Signature</td><td><code>SecretKey</code></td><td><code>[u8;32]</code></td><td>The signature of the Schnorr signature</td></tr>
 </tbody></table>
-<h3 id="mining-template-header"><a class="header" href="#mining-template-header">Mining Template Header</a></h3>
+<h3 id="new-block-template"><a class="header" href="#new-block-template">New Block Template</a></h3>
+<p>The new block template is used in constructing a new partial block, allowing a miner to add the coinbase UTXO and as
+a final step for the Base node to add the MMR roots to the header.</p>
 <table><thead><tr><th>Field</th><th>Abstract Type</th><th>Data Type</th><th>Description</th></tr></thead><tbody>
-<tr><td>Version</td><td><code>u16</code></td><td><code>u16</code></td><td>The Tari protocol version number, used for soft/hard forks</td></tr>
-<tr><td>Height</td><td><code>u64</code></td><td><code>u64</code></td><td>Height of this block since the genesis block</td></tr>
-<tr><td>Previous Hash</td><td><code>BlockHash</code></td><td><code>[u8;32]</code></td><td>Hash of the previous block in the chain</td></tr>
-<tr><td>Total Kernel Offset</td><td><code>BlindingFactor</code></td><td><code>[u8;32]</code></td><td>Sum of kernel offsets for all transaction kernels in this block</td></tr>
-<tr><td>Total Script Offset</td><td><code>BlindingFactor</code></td><td><code>[u8;32]</code></td><td>Sum of script offsets for all transaction kernels in this block</td></tr>
-<tr><td>Proof of Work Algorithm</td><td><code>PowAlgorithm</code></td><td><code>u8</code></td><td>Proof of Work Algorithm used to mine this block (Monero or SHA3 )</td></tr>
-<tr><td>Proof of Work Data</td><td><code>Vec&lt;u8&gt;</code></td><td><code>Vec&lt;u8&gt;</code></td><td>Supplemental proof of work data. For Sha3 this would be empty, but for a Monero block we need the Monero header and RandomX seed hash.</td></tr>
+<tr><td>Header</td><td><code>NewBlockHeaderTemplate</code></td><td>See <a href="RFC-0160_BlockSerialization.html#new-block-header-template">New Block Header Template</a></td><td>The Tari protocol version number, used for soft/hard forks</td></tr>
+<tr><td>Body</td><td><code>AggregateBody</code></td><td>See <a href="RFC-0160_BlockSerialization.html#block-body">Block Body</a></td><td>Height of this block since the genesis block</td></tr>
 <tr><td>Target Difficulty</td><td><code>Difficulty</code></td><td><code>u64</code></td><td>The minimum difficulty required to satisfy the Proof of Work for the block</td></tr>
 <tr><td>Reward</td><td><code>MicroTari</code></td><td><code>u64</code></td><td>The value of the emission for the coinbase output for the block</td></tr>
 <tr><td>Total Fees</td><td><code>MicroTari</code></td><td><code>u64</code></td><td>The sum of all transaction fees in this block</td></tr>
 </tbody></table>
-<h3 id="mining-template-body"><a class="header" href="#mining-template-body">Mining Template Body</a></h3>
+<h4 id="new-block-header-template"><a class="header" href="#new-block-header-template">New Block Header Template</a></h4>
 <table><thead><tr><th>Field</th><th>Abstract Type</th><th>Data Type</th><th>Description</th></tr></thead><tbody>
-<tr><td>Transaction Inputs</td><td><code>Vec&lt;TransactionInput&gt;</code></td><td><code>TransactionInput</code></td><td>List of inputs spent</td></tr>
-<tr><td>Transaction Outputs</td><td><code>Vec&lt;TransactionOutput&gt;</code></td><td><code>TransactionOutput</code></td><td>List of outputs produced</td></tr>
-<tr><td>Transaction Kernels</td><td><code>Vec&lt;TransactionKernel&gt;</code></td><td><code>TransactionKernel</code></td><td>Kernels contain the excesses and their signatures for the transactions</td></tr>
+<tr><td>Version</td><td><code>u16</code></td><td><code>u16</code></td><td>The Tari protocol version number, used for soft/hard forks</td></tr>
+<tr><td>Height</td><td><code>u64</code></td><td><code>u64</code></td><td>Height of this block since the genesis block</td></tr>
+<tr><td>Previous Hash</td><td><code>BlockHash</code></td><td><code>[u8;32]</code></td><td>Hash of the previous block in the chain</td></tr>
+<tr><td>Total Kernel Offset</td><td><code>BlindingFactor</code></td><td><code>[u8;32]</code></td><td>Total accumulated sum of kernel offsets since genesis block. We can derive the kernel offset sum for <em>this</em> block from the total kernel offset of the previous block header.</td></tr>
+<tr><td>Total Script Offset</td><td><code>BlindingFactor</code></td><td><code>[u8;32]</code></td><td>Sum of script offsets for all transaction kernels in this block</td></tr>
+<tr><td>Pow</td><td><code>ProofOfWork</code></td><td>See <a href="RFC-0160_BlockSerialization.html#proof-of-work">Proof Of Work</a></td><td>Proof of Work information</td></tr>
 </tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0170networkcommunicationprotocol"><a class="header" href="#rfc-0170networkcommunicationprotocol">RFC-0170/NetworkCommunicationProtocol</a></h1>
 <h2 id="the-tari-communication-network-and-network-communication-protocol"><a class="header" href="#the-tari-communication-network-and-network-communication-protocol">The Tari Communication Network and Network Communication Protocol</a></h2>
