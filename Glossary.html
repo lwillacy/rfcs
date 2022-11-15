@@ -199,6 +199,11 @@ on a given Digital Asset.</p>
 <p>A commitment is a cryptographic primitive that allows one to commit to a chosen value while keeping it hidden from
 others, with the ability to reveal the committed value later. Commitments are designed so that one cannot change the
 value or statement after they have committed to it.</p>
+<h2 id="commitment-and-public-key-signature"><a class="header" href="#commitment-and-public-key-signature">Commitment and Public Key Signature</a></h2>
+<p>A mathematical assertion of knowledge of the opening of a <a href="#commitment">commitment</a> and the private key corresponding to a public key, and
+which is bound to a message to produce a signature. In the context of Tari protocols, it is used to construct a
+<a href="#metadata-signature">metadata signature</a> and script signature for transactions.</p>
+<p>Specifically, it is a Schnorr-type conjunction proof that uses the Fiat-Shamir technique for message binding.</p>
 <h2 id="communication-node"><a class="header" href="#communication-node">Communication Node</a></h2>
 <p>A Communication Node is either a Validator Node or Base Node that is part of the Tari communication network. It
 maintains the network and is responsible for forwarding and propagating joining requests, discovery requests and data
@@ -249,7 +254,7 @@ asset issuers on the Tari 2nd layer">digital asset</a>.</p>
 unconfirmed transactions that have not yet been included in the longest proof-of-work chain. Miners usually draw
 verified transactions from the mempool to build up transaction <a href="#block" title="A collection of transactions and associated metadata recorded as a single entity in the Tari blockchain">block</a>s.</p>
 <h2 id="metadata-signature"><a class="header" href="#metadata-signature">Metadata Signature</a></h2>
-<p>The metadata signature is an aggregated Commitment Signature (&quot;ComSig&quot;) signature, attached to a transaction output and
+<p>The metadata signature is a <a href="#commitment-and-public-key-signature">commitment and public key signature</a>, attached to a transaction output and
 signed with a combination of the homomorphic commitment private values \( (v_i \, , \, k_i )\), the spending key
 known only to the receiver, and sender offset private key \(k_{Oi}\) known only to the sender. This prevents
 malleability of the UTXO metadata.</p>
@@ -330,7 +335,7 @@ the script public key.</p>
 \( K_{Oi} \) provided for the a transaction's inputs and outputs are correct.</p>
 <h2 id="sender-offset-keypair"><a class="header" href="#sender-offset-keypair">Sender Offset Keypair</a></h2>
 <p>The sender offset private - public keypair, (\( k_{Oi} \),\( K_{Oi} \)), is used by the sender of an output to
-lock all its metadata by virtue of a [sender metadata signature].</p>
+lock all its metadata by virtue of a <a href="#metadata-signature">metadata signature</a>.</p>
 <h2 id="spending-key"><a class="header" href="#spending-key">Spending Key</a></h2>
 <p>A private spending key is a private key that permits spending of a <a href="#unspent-transaction-outputs">UTXO</a>. It is also sometimes referred to as a
 Blinding Factor, since is Tari (and Mimblewimble) outputs, the value of a UTXO is <em>blinded</em> by the spending key:</p>

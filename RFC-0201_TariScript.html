@@ -194,9 +194,9 @@ It should also be fairly clear that vanilla Mimblewimble does not have the featu
 <li>Multiparty side-chain peg outs and peg-ins</li>
 <li>Generalised smart contracts</li>
 </ul>
-<p>Extensions to <a href="Glossary.html">Mimblewimble</a> have been proposed for most of these features, for example, David Burkett's one-sided payment
+<p>Extensions to <a href="Glossary.html#mimblewimble">Mimblewimble</a> have been proposed for most of these features, for example, David Burkett's one-sided payment
 proposal for LiteCoin (<a href="https://github.com/DavidBurkett/lips/blob/master/lip-0004.mediawiki">LIP-004</a>) and this project's <a href="RFC-0230_HTLC.html">HTLC RFC</a>.</p>
-<p>Some smart contract features are possible, or partly possible in vanilla <a href="Glossary.html">Mimblewimble</a> using <a href="https://tlu.tarilabs.com/cryptography/scriptless-scripts/introduction-to-scriptless-scripts.html">Scriptless script</a>, such as</p>
+<p>Some smart contract features are possible, or partly possible in vanilla <a href="Glossary.html#mimblewimble">Mimblewimble</a> using <a href="https://tlu.tarilabs.com/cryptography/scriptless-scripts/introduction-to-scriptless-scripts.html">Scriptless script</a>, such as</p>
 <ul>
 <li>Atomic swaps </li>
 <li>Hash time-locked contracts</li>
@@ -205,7 +205,7 @@ proposal for LiteCoin (<a href="https://github.com/DavidBurkett/lips/blob/master
 use cases will collapse and can be achieved under a single set of (relatively minor) modifications and additions to the
 current Tari and Mimblewimble protocol.</p>
 <h2 id="scripting-on-mimblewimble"><a class="header" href="#scripting-on-mimblewimble">Scripting on Mimblewimble</a></h2>
-<p>Other than Beam, none of existing <a href="Glossary.html">Mimblewimble</a> projects have not employed a scripting language. </p>
+<p>Other than Beam, none of existing <a href="Glossary.html#mimblewimble">Mimblewimble</a> projects have not employed a scripting language. </p>
 <p><a href="https://github.com/mimblewimble/grin">Grin</a> styles itself as a &quot;Minimal implementation of the Mimblewimble protocol&quot;,
 so one might infer that this status is unlikely to change soon.</p>
 <p>Beam <a href="https://github.com/BeamMW/beam/wiki/Beam-Smart-Contracts">does have a smart contract</a>
@@ -339,13 +339,12 @@ C_i = v_i \cdot H  + k_i \cdot G
 \end{aligned}
 \tag{1}
 $$</p>
-<p>The <a href="Glossary.html#metadata-signature">metadata signature</a> is a combined commitment and public key signature signed with the private values of the commitment \( (v_i \, , \, k_i )\)
+<p>The <a href="Glossary.html#metadata-signature">metadata signature</a> is a <a href="Glossary.html#commitment-and-public-key-signature">commitment and public key signature</a> signed with the private values of the commitment \( (v_i \, , \, k_i )\)
 known by the receiver, and sender 
 offset private key \(k_{Oi}\), only known by the sender.
 The signature challenge consists of all the transaction output metadata, effectively forming a contract between the 
 sender and receiver, making all those values non-malleable and ensuring only the sender and receiver can enter into 
-this contract. (See <a href="https://github.com/tari-project/tari-crypto/pull/131">this PR</a> for more details on this representation
-proof.)</p>
+this contract.</p>
 <p>Note that:</p>
 <ul>
 <li>The UTXO has a positive value \( v \) like any normal UTXO.</li>
@@ -382,7 +381,7 @@ checked again when spending inputs, so it is dropped. </p>
     sender_offset_public_key: PublicKey
 }
 </code></pre>
-<p>The <code>script_signature</code> is signed with a <a href="https://github.com/tari-project/tari-crypto/pull/131">commitment and public key representation proof</a> using a combination of the output commitment 
+<p>The <code>script_signature</code> is a <a href="Glossary.html#commitment-and-public-key-signature">commitment and public key signature</a> using a combination of the output commitment 
 private values \( (v_i \, , \, k_i )\) and <a href="Glossary.html#script-keypair">script private key</a> \(k_{Si}\) to prove ownership thereof. It 
 signs the script, the script input, <a href="Glossary.html#script-keypair">script public key</a> and the commitment.</p>
 <p>The script public key \(K_{Si}\) needed for the script signature verification is not stored with the TransactionInput, 
