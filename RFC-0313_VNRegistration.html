@@ -202,25 +202,24 @@ and spans all blocks from the start of the epoch up to but excluding the start o
 <tr><td align="left"><code>VNRegDepositAmount</code></td><td align="left">TBD Tari</td><td align="left">The minimum amount that must be spent to create a valid <code>ValidatorNodeRegistration</code> <a href="Glossary.html#unspent-transaction-outputs">UTXO</a></td></tr>
 <tr><td align="left"><code>VNRegLockHeight</code></td><td align="left">10 Epochs</td><td align="left">The lock height that must be set on every <code>ValidatorNodeRegistration</code> <a href="Glossary.html#unspent-transaction-outputs">UTXO</a></td></tr>
 <tr><td align="left"><code>VNShardShuffleInterval</code></td><td align="left">100 Epochs</td><td align="left">The interval that a validator node shard key is shuffled</td></tr>
-<tr><td align="left"><code>VNRegActivationDelay</code></td><td align="left">2 Epochs</td><td align="left">The number of epochs to delay for before activating a new VN</td></tr>
 </tbody></table>
 <p><em>Validator node consensus constants:</em></p>
 <table><thead><tr><th align="left">Name</th><th align="left">Value</th><th align="left">Description</th></tr></thead><tbody>
 <tr><td align="left"><code>VNConfirmationPeriod</code></td><td align="left">1000 Blocks</td><td align="left"></td></tr>
 </tbody></table>
 <h2 id="validator-registration"><a class="header" href="#validator-registration">Validator Registration</a></h2>
-<p>A validator node operator wishing to participate in <a href="RFC-0303_DanOverview.html">DAN</a> consensus MUST generate a [Ristretto] keypair <code>&lt;VN_Public_Key, VN_Secret_Key&gt;</code> that serves as a stable <a href="RFC-0303_DanOverview.html">DAN</a> identity and a signing key for L2 consensus messages.
+<p>A validator node operator wishing to participate in <a href="RFC-0303_DanOverview.html">DAN</a> consensus MUST generate a <a href="https://ristretto.group/">Ristretto</a> keypair <code>&lt;VN_Public_Key, VN_Secret_Key&gt;</code> that serves as a stable <a href="RFC-0303_DanOverview.html">DAN</a> identity and a signing key for L2 consensus messages.
 The <code>VN_Public_Key</code> MUST be registered on the base layer by submitting a <code>ValidatorNodeRegistration</code> <a href="Glossary.html#unspent-transaction-outputs">UTXO</a> which allows the validator to participate in <a href="RFC-0303_DanOverview.html">DAN</a> consensus for <code>VNRegistrationValidityPeriod</code>.</p>
 <p>The published <code>ValidatorNodeRegistration</code> <a href="Glossary.html#unspent-transaction-outputs">UTXO</a> has these requirements:</p>
 <ol>
-<li>MUST contain a valid [Schnorr signature] that proves knowledge of the <code>VN_Secret_Key</code> 
+<li>MUST contain a valid <a href="https://tlu.tarilabs.com/cryptography/introduction-schnorr-signatures">Schnorr signature</a> that proves knowledge of the <code>VN_Secret_Key</code> 
 <ul>
 <li>The signature challenge is defined as $e = H(P \mathbin\Vert R \mathbin\Vert m)$</li>
 <li>$R$ is a public nonce, $P$ is the public <code>VN_Public_Key</code> </li>
 <li>$m$ is the <a href="Glossary.html#unspent-transaction-outputs">UTXO</a> commitment</li>
 </ul>
 </li>
-<li>the <a href="Glossary.html#unspent-transaction-outputs">UTXO</a>'s <code>minimum_value</code> must be at least <code>VNRegDepositAmount</code> to mitigate spam/[Sybil] attacks,</li>
+<li>the <a href="Glossary.html#unspent-transaction-outputs">UTXO</a>'s <code>minimum_value</code> must be at least <code>VNRegDepositAmount</code> to mitigate spam/Sybil attacks,</li>
 <li>the <a href="Glossary.html#unspent-transaction-outputs">UTXO</a> lock-height must be set to <code>VNRegLockHeight</code>.</li>
 <li>A script which burns the validator node registration funds if the validator does not reclaim it for a long period after the lock height expires.</li>
 </ol>
@@ -246,22 +245,23 @@ in the next epoch.</p>
 <li>The <code>VN_Registration_Signature</code> MUST be valid for the given <code>VN_Public_Key</code> and challenge</li>
 <li>The <code>minimum_value</code> field MUST be at least <code>VNRegDepositAmount</code>. The existing <code>minumum_value</code> validation ensures the committed value is correct.</li>
 </ol>
-<p>Additionally, we introduce a new [block header] field <code>validator_node_mr</code> that contains a Merkle root committing to all validator 
+<p>Additionally, we introduce a new <a href="Glossary.html#block-header">block header</a> field <code>validator_node_mr</code> that contains a Merkle root committing to all validator 
 <code>Vn_Shard_Key</code>s in the current epoch.
 The <code>validator_node_mr</code> needs to be recalculated at every <code>EpochSize</code> blocks to account for departing and arriving nodes.
 The <code>validator_node_mr</code> MUST remain unchanged for blocks between epochs, that is, blocks that are not multiples of <code>EpochSize</code>.</p>
 <blockquote>
-<p>A validator generates a [Merkle proof] that proves its <code>VN_Shard_Key</code> is included in the validator set for any given epoch. This proof is provided in [Quorum Certificate]s.</p>
+<p>A validator generates a Merkle proof that proves its <code>VN_Shard_Key</code> is included in the validator set for any given epoch. This proof is provided in layer 2 Quorum Certificates.</p>
 </blockquote>
 <p>The <code>validator_node_mr</code> is calculated for each block as follows:</p>
-<pre><code class="language-rust ignore">if block_height % EpochSize == 0 {
-    let vn_set = get_vn_set(chain_db, consensus_constants, current_epoch);
-    calculate_validate_node_mr(vn_set)
-} else {
-    let previous_block_header = get_previous_block_header(chain_db, block_height);
-    previous_block_header.validator_node_mr
-}
-</code></pre>
+<ol>
+<li>if the current block height is a multiple of <code>EpochSize</code>
+<ul>
+<li>then fetch the VN set for the epoch</li>
+<li>build a merkle tree from the VN set, each node is $H(P_i \mathbin\Vert S_i)$</li>
+</ul>
+</li>
+<li>otherwise, fetch the previous block's <code>validator_node_mr</code> and return it</li>
+</ol>
 <h2 id="epoch-transitions"><a class="header" href="#epoch-transitions">Epoch transitions</a></h2>
 <p>The <a href="RFC-0303_DanOverview.html">DAN</a> BFT consensus protocol relies on a shared and consistent &quot;source of truth&quot; from the <a href="Glossary.html#base-layer">base layer</a> chain that defines
 the current epoch and validator set as well as <a href="./RFCD-0306_DANTemplateRegistration.html">templates</a>.</p>
@@ -309,31 +309,36 @@ V_n - Validator registrations
 <li>it is assumed at this point that almost all (at least $2f + 1$) nodes will accept epoch 12</li>
 </ul>
 <h4 id="validator-node-set-definition"><a class="header" href="#validator-node-set-definition">Validator Node Set Definition</a></h4>
-<p>The function $\text{get_vn_set}(\epsilon_n) \rightarrow \vec{S}$ that returns an ordered vector $\vec{S}$ of <code>VN_Shard_Key</code>s that are registered for the epoch $\epsilon_n$.
+<p>The function $\text{get_vn_set}(\epsilon_\text{start}, \epsilon_\text{end}) \rightarrow \vec{S}$ that returns an ordered vector $\vec{S}$ of <code>VN_Shard_Key</code>s that are registered for the epoch $\epsilon_n$.
 As all <a href="Glossary.html#unspent-transaction-outputs">UTXO</a>s are already ordered in the base layer, we can rely on deterministic ordering based on order the registration <a href="Glossary.html#unspent-transaction-outputs">UTXO</a>s are placed in the blockchain.</p>
-<p>The function $\text{get_vn_set}$ is defined as follows:</p>
-<pre><code class="language-rust ignore">fn get_vn_set(chain_db, current_epoch) -&gt; Vec&lt;VN_Shard_Key&gt; {
-   let cursor = chain_db.vn_reg_index.seek_gte(current_epoch - VNRegistrationValidityPeriod)
-   while let Some((epoch, (_, vn_shard_key))) = cursor.next() {
-      if epoch == current_epoch {
-         break;
-      }
-      vn_set.push(vn_shard_key);
-   }
-   vn_set
-}
-</code></pre>
-<p>The following additional indexes are recommended to allow efficient retrieval of the VN set and to produce a valid <code>validator_node_mr</code>:</p>
+<h5 id="data-indexes"><a class="header" href="#data-indexes">Data Indexes</a></h5>
+<p>The following additional indexes are recommended to allow efficient retrieval of the VN set, shard key mappings and to produce a valid <code>validator_node_mr</code>:</p>
 <ul>
-<li>$I_\epsilon = \{ \epsilon_i \rightarrow (V_i, S_i) \}$</li>
-<li>$I_V = \{ V_i \rightarrow (\epsilon_i, S_i) \}$</li>
+<li>$I_\text{primary} = \{ (h_i, V_i, C_i) \rightarrow (V_i, S_i) \}$ </li>
+<li>$I_\text{shard} = \{ (V_i, h_i, C_i) \rightarrow S_i \}$</li>
+<li>$C_i$ is the $i$th <a href="Glossary.html#unspent-transaction-outputs">UTXO</a> commitment </li>
 </ul>
-<p>Database index $I_\epsilon$ that maintains a mapping from the next epoch after the registration to all the 
-<code>&lt;VN_Public_Key, VN_Shard_Key&gt;</code> tuples for all <code>ValidatorNodeRegistration</code> <a href="Glossary.html#unspent-transaction-outputs">UTXO</a>s.</p>
-<p>The index entry is removed whenever the <code>ValidatorNodeRegistration</code> <a href="Glossary.html#unspent-transaction-outputs">UTXO</a> is spent or expires.
-The index replaces the previous <code>ValidatorNodeRegistration</code> <a href="Glossary.html#unspent-transaction-outputs">UTXO</a> if the validator creates a new one.</p>
+<p>Database index $I_\text{primary}$ that maintains a mapping from the next epoch after the registration to all the 
+<code>&lt;VN_Public_Key, VN_Shard_Key&gt;</code> tuples for all <code>ValidatorNodeRegistration</code> <a href="Glossary.html#unspent-transaction-outputs">UTXO</a>s. This allows efficient retrieval 
+from a particular height onwards, optionally for a particular validator node public key.</p>
+<p>The index entry is <em>not</em> removed whenever the <code>ValidatorNodeRegistration</code> <a href="Glossary.html#unspent-transaction-outputs">UTXO</a> is spent or expires. This is to allow
+state to be rewound for reorgs.
+If a validator adds two or more validator registration <a href="Glossary.html#unspent-transaction-outputs">UTXOS</a> in the same block, the index will order them by commitment, that is, 
+the same canonical ordering as the Tari block body. The <code>get_vn_set</code> function MUST return the last registration 
+public key and shard key tuple only, according to this canonical ordering.</p>
+<h4 id="algorithm"><a class="header" href="#algorithm">Algorithm</a></h4>
+<p>The function $\text{get_vn_set}$ is defined as follows:</p>
+<ol>
+<li>Iterate on index $I_\text{primary}$, starting from where the key is between (inclusive) the equivalent block height for 
+$\epsilon_\text{start}$ and $\epsilon_\text{end}$:
+<ul>
+<li>Add to the set, and</li>
+<li>if the validator node public key is already in the set, remove the previous entry.</li>
+</ul>
+</li>
+</ol>
 <p>For this example, we say that there have been no registrations prior to <code>V_1</code>; we define 
-<code>VNRegistrationValidityPeriod = 2 epochs</code> and <code>VNRegActivationDelay = 0 epochs</code>.</p>
+<code>VNRegistrationValidityPeriod = 2 epochs</code>.</p>
 <pre><code class="language-text">                                    (a)            (b)            (c)
                                      |              |              |                      {noisy}
 ------ | --x------------ | --x------------ | --x------------ | --x------------ | --- .... ------&gt; tip
@@ -368,22 +373,32 @@ current epoch. </p>
 <p>Over time, an adversary may gain excessive control over a particular shard space. To mitigate this, we introduce a shuffling mechanism that
 periodically and randomly reassigns <code>VN_Shard_Key</code>s within the network.</p>
 <p>We define the function $\text{generate_shard_key}(P_n, \eta) \rightarrow S$ that generates the <code>VN_Shard_Key</code> from the inputs.
-$S = H(P_n \mathbin\Vert \eta)$ where $H$ is a domain-separated [Blake256] hash function, $P_n$ is the public <code>VN_Public_Key</code> and $\eta$ is some entropy.</p>
+$S = H_\text{shard}(P_n \mathbin\Vert \eta)$ where $H_\text{shard}$ is a domain-separated <a href="https://github.com/tari-project/tari-crypto/blob/fa042e498be144d8d2af7b96efe805c5af0b2d4f/src/hash/blake2.rs">Blake256</a> hash function, $P_n$ is the public <code>VN_Public_Key</code> and $\eta$ is some entropy.</p>
 <p>And we define the function $\text{derive_shard_key}(S_{n-1}, P_n, \epsilon_n, \hat{B}) \rightarrow S$ that deterministically derives the <code>VN_Shard_Key</code> for
 epoch $\epsilon_n$ from the public <code>VN_Public_Key</code> $P_n$, $\hat{B}$ the block hash at height $\epsilon_n * \text{EpochSize} - 1$ (the block before the epoch block).</p>
-<pre><code class="language-rust ignore">fn derive_shard_key(prev_shard_key: Option&lt;ShardId&gt;, vn_key: U256, epoch: u64, interval: u64, prev_block_hash: U256) -&gt; ShardId {
-    match prev_shard_key {
-        Some(prev_shard_key) =&gt; {
-           if (vn_key + epoch) % interval == 0 {
-              generate_shard_key(vn_key, prev_block_hash)
-           } else {
-              prev_shard_key
-           }
-       },
-       None =&gt; generate_shard_key(vn_key, prev_block_hash)
-   }
-}
-</code></pre>
+<p>The function $\text{derive_shard_key}$ is defined as follows:</p>
+<ol>
+<li>Given:
+<ul>
+<li>$S_{n-1}$ the previous <code>VN_Shard_Key</code> </li>
+<li>$V$ the <code>VN_Public_Key</code></li>
+<li>$\epsilon_n$ the epoch number to generate a <code>VN_Shard_Key</code> for</li>
+<li>$\hat{B}$ the previous block hash </li>
+</ul>
+</li>
+<li>If the previous shard key $S_{n-1}$ is not null, 
+<ul>
+<li>Check $(V + \epsilon_n) \bmod \text{ShufflePeriod} == 0$.</li>
+<li>If true, generate a new shard key using $\text{generate_shard_key}(V, \hat{B})$.</li>
+<li>If false, return $S_{n-1}$.</li>
+</ul>
+</li>
+<li>If the previous shard key $S_{n-1}$ is null, 
+<ul>
+<li>generate a new shard key using $\text{generate_shard_key}(V, \hat{B})$.</li>
+</ul>
+</li>
+</ol>
 <p>Only a random fraction of validators will be re-assigned shard keys per epoch and that fraction will not be shuffled again
 for <code>VNShardShuffleInterval</code> epochs. Although the exact number of validators that shuffle per epoch varies, on average 
 the <code>VNShardShuffleInterval</code> should aim to shuffle around 5% of the network at every epoch. This is to ensure that the
@@ -398,6 +413,7 @@ to re-sync their state and spend time not participating in the network, losing o
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">12 Oct 2022</td><td align="left">First outline</td><td align="left">SWvHeerden</td></tr>
 <tr><td align="left">08 Nov 2022</td><td align="left">Updates</td><td align="left">sdbondi</td></tr>
+<tr><td align="left">18 Nov 2022</td><td align="left">Implementation updates</td><td align="left">sdbondi</td></tr>
 </tbody></table>
 
                     </main>
