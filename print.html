@@ -6169,7 +6169,7 @@ the effects of weak <em>safety</em> guarantees (namely, reorgs) on the <a href="
 </ol>
 <p>We define the following validator variables:</p>
 <table><thead><tr><th align="left">Symbol</th><th align="left">Name</th><th align="left">Description</th></tr></thead><tbody>
-<tr><td align="left">$P_i$</td><td align="left"><code>VN_Public_Key</code></td><td align="left">The $i$th public validator node key</td></tr>
+<tr><td align="left">$V_i$</td><td align="left"><code>VN_Public_Key</code></td><td align="left">The $i$th public validator node key</td></tr>
 <tr><td align="left">$S_i$</td><td align="left"><code>VN_Shard_Key</code></td><td align="left">The $i$th 256-bit VN shard key.</td></tr>
 <tr><td align="left">$\epsilon_i$</td><td align="left"><code>Epoch</code></td><td align="left">The $i$th epoch. An epoch is <code>EpochLength</code> blocks.</td></tr>
 </tbody></table>
@@ -6209,7 +6209,8 @@ OP_ELSE
     OP_RETURN
 OP_END_IF
 </code></pre>
-<p>By submitting this <a href="Glossary.html#unspent-transaction-outputs">UTXO</a> the validator node operator is committing to providing a highly-available node for <code>VNRegistrationValidityPeriod</code> epochs.</p>
+<p>By submitting this <a href="Glossary.html#unspent-transaction-outputs">UTXO</a> the validator node operator is committing to providing a highly-available node from the next epoch
+after the validator node registration was submitted to <code>VNRegistrationValidityPeriod</code> epochs after that.</p>
 <p>A validator node operator MAY re-register their <code>VN_Public_Key</code> before the <code>VNRegistrationValidityPeriod</code> epoch is reached, OPTIONALLY 
 spending the previous <code>ValidatorNodeRegistration</code> <a href="Glossary.html#unspent-transaction-outputs">UTXO</a>. If the previous <code>ValidatorNodeRegistration</code> <a href="Glossary.html#unspent-transaction-outputs">UTXO</a> has not expired and
 a new <code>ValidatorNodeRegistration</code> <a href="Glossary.html#unspent-transaction-outputs">UTXO</a> is submitted, the new <code>ValidatorNodeRegistration</code> <a href="Glossary.html#unspent-transaction-outputs">UTXO</a> supersedes the previous one.</p>
@@ -6237,7 +6238,7 @@ The <code>validator_node_mr</code> MUST remain unchanged for blocks between epoc
 <li>if the current block height is a multiple of <code>EpochSize</code>
 <ul>
 <li>then fetch the VN set for the epoch</li>
-<li>build a merkle tree from the VN set, each node is $H(P_i \mathbin\Vert S_i)$</li>
+<li>build a merkle tree from the VN set, each node is $H(V_i \mathbin\Vert S_i)$</li>
 </ul>
 </li>
 <li>otherwise, fetch the previous block's <code>validator_node_mr</code> and return it</li>
@@ -6289,8 +6290,8 @@ V_n - Validator registrations
 <li>it is assumed at this point that almost all (at least $2f + 1$) nodes will accept epoch 12</li>
 </ul>
 <h4 id="validator-node-set-definition"><a class="header" href="#validator-node-set-definition">Validator Node Set Definition</a></h4>
-<p>The function $\text{get_vn_set}(\epsilon_\text{start}, \epsilon_\text{end}) \rightarrow \vec{S}$ that returns an ordered vector $\vec{S}$ of <code>VN_Shard_Key</code>s that are registered for the epoch $\epsilon_n$.
-As all <a href="Glossary.html#unspent-transaction-outputs">UTXO</a>s are already ordered in the base layer, we can rely on deterministic ordering based on order the registration <a href="Glossary.html#unspent-transaction-outputs">UTXO</a>s are placed in the blockchain.</p>
+<p>The function $\text{get_vn_set}(\epsilon_\text{start}, \epsilon_\text{end}) \rightarrow \vec{S}$ that returns an ordered 
+vector $\vec{S}$ of <code>VN_Shard_Key</code>s that are registered for the epoch $\epsilon_n$. The validator node set is ordered by <code>VN_Shard_Key</code>.</p>
 <h5 id="data-indexes"><a class="header" href="#data-indexes">Data Indexes</a></h5>
 <p>The following additional indexes are recommended to allow efficient retrieval of the VN set, shard key mappings and to produce a valid <code>validator_node_mr</code>:</p>
 <ul>
@@ -6352,10 +6353,10 @@ maps onto the 256-bit <a href="RFC-0304-DanGlossarymd#Consensus-level">shard spa
 current epoch. </p>
 <p>Over time, an adversary may gain excessive control over a particular shard space. To mitigate this, we introduce a shuffling mechanism that
 periodically and randomly reassigns <code>VN_Shard_Key</code>s within the network.</p>
-<p>We define the function $\text{generate_shard_key}(P_n, \eta) \rightarrow S$ that generates the <code>VN_Shard_Key</code> from the inputs.
-$S = H_\text{shard}(P_n \mathbin\Vert \eta)$ where $H_\text{shard}$ is a domain-separated <a href="https://github.com/tari-project/tari-crypto/blob/fa042e498be144d8d2af7b96efe805c5af0b2d4f/src/hash/blake2.rs">Blake256</a> hash function, $P_n$ is the public <code>VN_Public_Key</code> and $\eta$ is some entropy.</p>
-<p>And we define the function $\text{derive_shard_key}(S_{n-1}, P_n, \epsilon_n, \hat{B}) \rightarrow S$ that deterministically derives the <code>VN_Shard_Key</code> for
-epoch $\epsilon_n$ from the public <code>VN_Public_Key</code> $P_n$, $\hat{B}$ the block hash at height $\epsilon_n * \text{EpochSize} - 1$ (the block before the epoch block).</p>
+<p>We define the function $\text{generate_shard_key}(V_n, \eta) \rightarrow S$ that generates the <code>VN_Shard_Key</code> from the inputs.
+$S = H_\text{shard}(V_n \mathbin\Vert \eta)$ where $H_\text{shard}$ is a domain-separated <a href="https://github.com/tari-project/tari-crypto/blob/fa042e498be144d8d2af7b96efe805c5af0b2d4f/src/hash/blake2.rs">Blake256</a> hash function, $V_n$ is the public <code>VN_Public_Key</code> and $\eta$ is some entropy.</p>
+<p>And we define the function $\text{derive_shard_key}(S_{n-1}, V_n, \epsilon_n, \hat{B}) \rightarrow S$ that deterministically derives the <code>VN_Shard_Key</code> for
+epoch $\epsilon_n$ from the public <code>VN_Public_Key</code> $V_n$, $\hat{B}$ the block hash at height $\epsilon_n * \text{EpochSize} - 1$ (the block before the epoch block).</p>
 <p>The function $\text{derive_shard_key}$ is defined as follows:</p>
 <ol>
 <li>Given:
