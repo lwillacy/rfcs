@@ -1117,12 +1117,10 @@ and it proved to be a good choice in the multi-PoW scene as well.</p>
 <li>A log-weighted moving average difficulty adjustment algorithm using a window of 90 blocks.</li>
 </ul>
 <h3 id="tari-mining-hash"><a class="header" href="#tari-mining-hash">Tari mining hash</a></h3>
-<p>First, the block header is hashed with the 256-bit Blake2b hashing algorithm using 
-<a href="https://github.com/tari-project/tari-crypto/blob/main/src/hashing.rs">domain-separated hashing</a>, using the domain 
-<code>com.tari.base_layer.core.blocks</code>. The fields are hashed in the order:</p>
+<p>First, the block header is hashed with the 256-bit Blake2b hashing algorithm using the approach described in
+consensus encoding. The fields are hashed in the order:</p>
 <ul>
 <li>version</li>
-<li>block height</li>
 <li>previous header hash</li>
 <li>timestamp</li>
 <li>input Merkle root</li>
@@ -1191,8 +1189,7 @@ expected in block explorers and such that block hashes should always start with 
 <p>This RFC is stable as of PR#4862</p>
 <h1 id="change-log-4"><a class="header" href="#change-log-4">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
-<tr><td align="left">2022-11-25</td><td align="left">Update mining hash decsription</td><td align="left">CjS77</td></tr>
-<tr><td align="left">2022-10-26</td><td align="left">Finalise SHA-3 algorithm</td><td align="left">CjS77</td></tr>
+<tr><td align="left">2022-11-26</td><td align="left">Finalise SHA-3 algorithm</td><td align="left">CjS77</td></tr>
 <tr><td align="left">2022-10-11</td><td align="left">First outline</td><td align="left">SWvHeerden</td></tr>
 </tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0132mergeminingmonero"><a class="header" href="#rfc-0132mergeminingmonero">RFC-0132/MergeMiningMonero</a></h1>
