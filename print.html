@@ -857,12 +857,10 @@ plus the total transaction fees within the block</li>
 </ul>
 <p>The <a href="Glossary.html#block-header">block header</a> MUST conform to the following:</p>
 <ul>
-<li>The nonce and <a href="RFC-0120_Consensus.html#pow">PoW</a> must be valid for the <a href="Glossary.html#block-header">block header</a>.
-<ul>
+<li>The nonce and <a href="RFC-0120_Consensus.html#pow">PoW</a> must be valid for the <a href="Glossary.html#block-header">block header</a>.</li>
 <li>The [achieved difficulty] MUST be greater than or equal to the <a href="RFC-0120_Consensus.html#target-difficulty" title="Target Difficulty">target difficulty</a>.</li>
-</ul>
-</li>
 <li>The <a href="RFC-0120_Consensus.html#ftl" title="Future Time Limit">FTL</a> and <a href="RFC-0120_Consensus.html#mtp" title="Median Time Passed">MTP</a> rules, detailed below.</li>
+<li>The block hash must not appear in the bad block list.</li>
 </ul>
 <p>The Merkle roots are validated as part of the full block validation, detailed in <a href="RFC-0120_Consensus.html#blocks" title="Block consensus">Blocks</a>.</p>
 <p>If the <a href="Glossary.html#block-header">block header</a> does not conform to any of the above, the <a href="Glossary.html#block">block</a> SHOULD be rejected and MAY ban the peer that
@@ -872,7 +870,8 @@ sent it.</p>
 <p>The version MUST conform to the following:</p>
 <ul>
 <li>It is represented as an unsigned 16-bit integer.</li>
-<li>Version numbers MUST be incremented whenever there is a change in the blockchain schema starting from 0.</li>
+<li>Version numbers MUST be incremented whenever there is a change in the blockchain schema or validation rules starting from 0.</li>
+<li>The version must be one of the allowed versions for the consensus rules at this block's height.</li>
 </ul>
 <h4 id="height"><a class="header" href="#height">Height</a></h4>
 <p>A counter indicating how many blocks have passed since the genesis block (inclusive).</p>
@@ -967,10 +966,13 @@ Hash ( <code>RangeProof</code> || <code>metadata commitment signature</code>), i
 <p>This is the Proof of Work algorithm used to solve the Proof of Work. This is used in conjunction with the Nonce.</p>
 <p>The [PoW] MUST contain the following:</p>
 <ul>
-<li>accumulated_monero_difficulty as an unsigned 64-bit integer.</li>
-<li>accumulated_blake_difficulty as an unsigned 64-bit integer.</li>
 <li>pow_algo as an enum (0 for Monero, 1 for Sha3).</li>
-<li>pow_data as an array of unsigned 8-bit integers (bytes) in little-endian format.</li>
+<li>pow_data for Monero blocks as an array of unsigned 8-bit integers (bytes) in little-endian format, containing the Monero merge-mining Proof-of-Work data.
+<ul>
+<li>the RandomX seed, stored as <code>randomx_key</code> within the Monero block, must have not been first seen in a block with confirmations more than <code>max_randomx_seed_height</code>.</li>
+</ul>
+</li>
+<li>pow_data for Sha3 blocks must be empty.</li>
 </ul>
 <h4 id="difficulty-calculation"><a class="header" href="#difficulty-calculation">Difficulty Calculation</a></h4>
 <p>The target difficulty represents how difficult it is to mine a given block. This difficulty is not fixed and needs to
