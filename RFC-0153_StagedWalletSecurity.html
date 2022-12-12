@@ -211,10 +211,12 @@ met.</p>
 <p>Once the user's balance exceeds the <code>MINIMUM_STAGE_ONE_BALANCE</code>, they will be prompted to review and write down their
 seed phrase. The <code>MINIMUM_STAGE_ONE_BALANCE</code> is any non-zero balance by default.</p>
 <p>After the transaction that causes the balance to exceed <code>MINIMUM_STAGE_ONE_BALANCE</code> is confirmed, the user is presented
-with a friendly message: &quot;You now have <em>real</em> money in your wallet. If you accidentally delete your wallet app or lose
+with a friendly message: </p>
+<pre><code class="language-text">You now have _real_ money in your wallet. If you accidentally delete your wallet app or lose
 your device, your funds are lost, and there is no way to recover them unless you have safely kept a copy of your
-<code>seed phrase</code> safe somewhere. Click 'Ok' to review and save the phrase now, or 'Do it later' to do it at a more
-convenient time&quot;.</p>
+`seed phrase` safe somewhere. Click 'Ok' to review and save the phrase now, or 'Do it later' to do it at a more
+convenient time.
+</code></pre>
 <p>If the user elects <em>not</em> to save the phrase, the message pops up again periodically. Once per day, or when the balance
 increases -- whichever is less frequent -- is sufficient without being too intrusive.</p>
 <h4 id="stage-1b---simple-wallet-backups"><a class="header" href="#stage-1b---simple-wallet-backups">Stage 1b - simple wallet backups</a></h4>
@@ -233,11 +235,25 @@ somewhere in the region of $10 to $50.</p>
 lost if the backup were ever compromised. Since the backup is unencrypted in Stage 1b, we store the minimum amount of data
 needed to recover the funds and limit the potential loss of funds in case of a breach to just that found in the commitments in the
 backup, which should not be more than $50.</p>
+<p>Therefore, stage 1b backups are really just exporting and importing of UTXO data. The consequence of this is 
+that restoring from a 1b backup does not restore the emoji id. On the other hand, you can easily import into any 
+other wallet (e.g. into another wallet on another device owned by the same user).</p>
 <p>Backups MUST be authorised by the user when the first cloud backup is made and SHOULD be automatically updated after each
 transaction is confirmed.</p>
-<p>Restoring a wallet from Stage 1b entails <em>importing</em> the UTXO commitments into the user's current wallet.</p>
 <p>Wallet authors MAY choose to exclude Stage 1b from the staged security protocol.</p>
 <p>As usual, the user MUST be able to configure <code>STAGE_TWO_THRESHOLD_BALANCE</code> to suit their particular needs.</p>
+<p>When this threshold is reached, the user SHOULD be prompted with a call to back-up their data:</p>
+<pre><code class="language-text">Your wallet now holds a fair amount of value, which you probably don't want to lose. Unlike a physical wallet's 
+notes, it's possible to make a copy of your wallet's contents that you can use to recover your funds in case you 
+lose them.
+ 
+You should think about making a copy of your wallet's coins, which we will keep up date date after every transaction.
+
+If you have a copy of your seed phrase saved somewhere safe, and don't want to back up your coins into the cloud, you 
+can skip this step.
+</code></pre>
+<p>The user can pick between <code>backup my coins</code> or <code>I have my seed phrase. Skip backups for now</code>.</p>
+<p>If the user chooses to skip the backup, do not prompt them for stage 1b backups again.</p>
 <h4 id="stage-2---full-wallet-backups"><a class="header" href="#stage-2---full-wallet-backups">Stage 2 - full wallet backups</a></h4>
 <p>Once a user has a significant balance (over <code>STAGE_TWO_THRESHOLD_BALANCE</code>), Stage 2 is active. Stage 2 entails a full,
 encrypted backup of the user's wallet to the cloud. The user needs to provide a <strong>password</strong> to perform and secure the encryption.</p>
@@ -248,6 +264,26 @@ metadata, rather than just the commitments). For this reason, Stage 1b is option
 <p>Backups MUST be authorised by the user when the first cloud backup is made and SHOULD be automatically updated after each
 transaction.</p>
 <p>When migrating from Stage 1 to Stage 2, the Stage 1b backups SHOULD be deleted.</p>
+<p>Once the stage 2 threshold is reached, the user is again presented with a call-to-action:</p>
+<pre><code class="language-text">                   😎💰💰💰😎
+It's awesome that you're using [this Tari wallet] so much!
+You're a high-roller, so it's time to add another layer of security 
+to your wallet backups.
+
+Your funds will be safer if we encrypt your cloud backups with an 
+additional password of your own choosing. You need to make sure that 
+this password is very string and that YOU DO NOT FORGET it!
+
+(Whatever happens, you can always restore from your seed phrase, so 
+make sure you're still keeping this safe and secreted away).
+
+As an added benefit, password-encrypted backups allow us to backup your 
+transaction history as well!            
+</code></pre>
+<p>The user can choose to <code>Upgrade my backups</code>, <code>do this later</code>, <code>check my backup settings</code>. </p>
+<p>The latter option takes the user to the wallet settings, where they can configure the various thresholds and 
+manually decide which backup strategy they want to pursue.</p>
+<p>They should be prompted periodically (once per day is sufficient) if they choose to defer the upgrade.</p>
 <h4 id="stage-3---sweep-to-cold-wallet"><a class="header" href="#stage-3---sweep-to-cold-wallet">Stage 3 - Sweep to cold wallet</a></h4>
 <p><strong>Pending hardware wallet support</strong></p>
 <p>Above a given limit -- user-defined, or the default <code>MAX_HOT_WALLET_BALANCE</code>, the user should be prompted to transfer
@@ -257,11 +293,32 @@ an option to re-configure the values for <code>MAX_HOT_WALLET_BALANCE</code> and
 <p>Assuming one-sided payments are live, the user SHOULD be able to configure a <code>COLD_WALLET_ADDRESS</code> in the wallet.</p>
 <p>For security reasons, a user SHOULD be asked for their 2FA confirmation, if it is configured, before broadcasting the
 sweep transaction to the blockchain.</p>
+<p>A suitable prompt for the user once the <code>MAX_HOT_WALLET_BALANCE</code> threshold is reached is:</p>
+<pre><code class="language-text">🐋🐋🐋🐋🐋🐋🐋🐋  ❗❗❗ Whale Alert ❗❗❗  🐋🐋🐋🐋🐋🐋🐋🐋
+Your mobile wallet holds way more funds than would normally be 
+considered safe to walk around with in your pocket.
+
+You should really consider sweeping most of your balance into a 
+cold- or hardware wallet.   
+</code></pre>
+<p>Possible actions from this prompt include:</p>
+<ul>
+<li><code>Set up my cold wallet address</code>, if the cold wallet address has not been configured.</li>
+<li><code>Transfer funds to my cold wallet</code>, if the cold wallet <em>has</em> been set up. The usual transaction confirmation flow 
+SHOULD be followed here, and a stealth one-sided payment SHOULD be the default transaction type.</li>
+<li><code>I'll deal with this myself</code>, which takes the user to their backup settings.</li>
+</ul>
+<p>To avoid spamming the user, do not fire this prompt more than once every three days.</p>
 <h4 id="security-hygiene"><a class="header" href="#security-hygiene">Security hygiene</a></h4>
 <ul>
 <li>From stage 1 onwards Users should be asked periodically whether they still have their seed phrase written down.
 Once every two months is sufficient.</li>
 </ul>
+<h1 id="change-log"><a class="header" href="#change-log">Change Log</a></h1>
+<table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
+<tr><td align="left">2022-11-10</td><td align="left">Initial stable</td><td align="left">Adrian Truszczyński</td></tr>
+<tr><td align="left">2022-12-12</td><td align="left">Update user messages</td><td align="left">CjS77</td></tr>
+</tbody></table>
 
                     </main>
 
