@@ -2590,7 +2590,7 @@ also offers significant ability to tweak how a given struct will be serialized t
 </tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0172peertopeermessaging"><a class="header" href="#rfc-0172peertopeermessaging">RFC-0172/PeerToPeerMessaging</a></h1>
 <h2 id="peer-to-peer-messaging-protocol"><a class="header" href="#peer-to-peer-messaging-protocol">Peer to Peer Messaging Protocol</a></h2>
-<p><img src="theme/images/status-outofdate.svg" alt="status: outdated" /></p>
+<p><img src="theme/images/status-stable.svg" alt="status: stable" /></p>
 <p><strong>Maintainer(s)</strong>: <a href="https://github.com/sdbondi">Stanley Bondi</a>, <a href="https://github.com/CjS77">Cayle Sharrock</a>, <a href="https://github.com/neonknight64">Yuko Roodt</a>, <a href="https://github.com/stringhandler">Stringhandler</a></p>
 <h1 id="licence-11"><a class="header" href="#licence-11">Licence</a></h1>
 <p><a href="https://opensource.org/licenses/BSD-3-Clause"> The 3-Clause BSD Licence</a>.</p>
@@ -2634,7 +2634,8 @@ and <a href="Glossary.html#communication-client">communication client</a>s on th
 <h2 id="description-8"><a class="header" href="#description-8">Description</a></h2>
 <h3 id="assumptions-1"><a class="header" href="#assumptions-1">Assumptions</a></h3>
 <ul>
-<li>All messages are de/serialized as per <a href="RFC-0171_MessageSerialisation.html">RFC-0171: Message Serialisation</a>.</li>
+<li>All wire messages are de/serialized as per <a href="RFC-0171_MessageSerialisation.html#wire-message-format">RFC-0171: Message Serialisation</a>.</li>
+<li>All peer's public identities are based on <a href="https://ristretto.group/">Ristretto</a> <a href="https://tlu.tarilabs.com/cryptography/elliptic-curves">prime order elliptic curves</a>.</li>
 </ul>
 <h3 id="broad-requirements-1"><a class="header" href="#broad-requirements-1">Broad Requirements</a></h3>
 <p>Tari network peer communication must facilitate secure, private and efficient communication
@@ -2646,380 +2647,152 @@ between peers. Broadly, a <a href="Glossary.html#communication-node">communicati
 <li>gracefully reestablishing dropped connections; and (optionally)</li>
 <li>either: 
 <ul>
-<li>communicating to a SOCKS5 proxy (for connections over Tor).</li>
+<li>communicating to a SOCKS5 proxy (e.g. connections over Tor).</li>
 <li>or have a static public IPv4 address.</li>
 </ul>
 </li>
 </ul>
 <p>Additionally, communication nodes MUST be capable of performing the following tasks:</p>
 <ul>
-<li>opening a proxy control port for establishing secure peer channels;</li>
-<li>maintaining a list of known peers in the form of a routing table;</li>
+<li>maintaining a list of known and available peers in the form of a peer list;</li>
 <li>forwarding directed messages to neighbouring peers; and</li>
 <li>broadcasting messages to neighbouring peers.</li>
 </ul>
 <h3 id="overall-architectural-design"><a class="header" href="#overall-architectural-design">Overall Architectural Design</a></h3>
 <p>The Tari communication layer has a modular design to allow for the various communicating nodes and clients to
 use the same infrastructure code.</p>
-<p><em>A multipart message consisting of three frames &quot;HELLO&quot;, a zero-length frame and &quot;FOO&quot;</em></p>
-<p>When this RFC mentions 'multipart messages', this is what it's referring to.</p>
+<p>Peer connection state is monitored by the <code>ConnectionManager</code> component. The <code>ConnectionManager</code> emits events to allow 
+other components to subscribe to connection state changes. </p>
+<ul>
+<li><code>ConnectionManager</code> - manages peer connections and connection state monitoring.</li>
+<li><code>PeerConnection</code> - manages the sending and receiving of messages for a single peer connection.</li>
+<li><code>NetAddress</code> - <a href="https://multiformats.io/multiaddr/">multiaddr</a> describing the public address and transport for a peer-to-peer connection.</li>
+<li><code>Messaging Protocol</code> - defines the Tari wire message format and message types.</li>
+<li><code>Connection Multiplexer</code> - allows multiple substreams to be established over a single transport-level connection.</li>
+</ul>
+<h4 id="netaddress"><a class="header" href="#netaddress">NetAddress</a></h4>
+<p>A <code>NetAddress</code> is a publicly-accessible address for a peer. A peer may have one or more <code>NetAddress</code>es. </p>
+<p>A good <code>NetAddress</code> format should:</p>
+<ul>
+<li>have an efficient binary representation;</li>
+<li>have a human-readable representation with a simple syntax;</li>
+<li>support many transport protocols; and</li>
+<li>be self-describing</li>
+</ul>
+<p>For these reasons, we select the <a href="https://multiformats.io/multiaddr/">multiaddr</a> format for all peer-to-peer addresses.</p>
+<p>For example,</p>
+<ul>
+<li><code>/ip4/123.123.123.123/tcp/12345</code> - IPv4 address with TCP transport on port 12345.</li>
+<li><code>/onion3/abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrst:12345</code> - Tor onion address </li>
+</ul>
+<h4 id="supported-transports"><a class="header" href="#supported-transports">Supported Transports</a></h4>
+<p>The following transports are supported by the Tari communication layer:</p>
+<ul>
+<li>TCP/IP - A publicly accessible IPv4 address.</li>
+<li>SOCKS5 - Allows a SOCKS5 proxy to be configured for inbound and outbound connections.</li>
+<li>Tor - A specialisation of the SOCKS5 transport that facilitates connections over the Tor network.</li>
+</ul>
 <h4 id="establishing-a-connection"><a class="header" href="#establishing-a-connection">Establishing a Connection</a></h4>
-<p>Every participating <a href="Glossary.html#communication-node">communication node</a> SHOULD open a control socket (refer to <a href="RFC-0172_PeerToPeerMessagingProtocol.html#controlservice">ControlService</a>) to allow peers to negotiate and
-establish a peer connection. The <a href="RFC-0172_PeerToPeerMessagingProtocol.html#netaddress">NetAddress</a> of the control socket is what is stored in peers' routing tables and will
-be used to establish new ephemeral <a href="RFC-0172_PeerToPeerMessagingProtocol.html#peerconnection">PeerConnection</a>s. Any peer that wants to connect MUST establish a connection
-to the control socket of the destination peer to negotiate a new encrypted PeerConnection.</p>
-<p>Once a connection is established, messages can be sent and received directly to or from the <a href="RFC-0172_PeerToPeerMessagingProtocol.html#peer">Peer</a>.</p>
-<p>Incoming messages are validated, deserialized and handled as appropriate.</p>
-<h4 id="encryption"><a class="header" href="#encryption">Encryption</a></h4>
-<p>The <a href="RFC-0172_PeerToPeerMessagingProtocol.html#messageenvelopebody">MessageEnvelopeBody</a> is encrypted so that it can only be decrypted by the destination recipient using DHKE and Chacha20Poly1305. </p>
-<p>If the messages are transported over Tor, they will also be encrypted according to Tor's protocol. If they are transported over TCP/IP, only the message envelope body will be encrypted.</p>
-<h3 id="components"><a class="header" href="#components">Components</a></h3>
-<p>The following components are proposed:</p>
-<div class="mermaid">
-graph TD
-CSRV[ControlService]
-IMS[InboundMessageService]
-PM[PeerManager]
-CM[ConnectionManager]
-BCS[BroadcastStrategy]
-OMS[OutboundMessageService] 
-PC[PeerConnection] 
-MA[Multaddr]
-STR[Storage]
-PEER[Peer]
-RT[RoutingTable]
-IMS --> PM
-IMS --> CM
-CSRV --> CM
-CSRV --> PM
-OMS -->|execute| BCS
-OMS --> PM
-OMS --> CM
-PM --> RT
-PM --> STR
-CM --> PC
-PC -->|has one| PEER
-PEER -->|has many| MA
-</div>
-<h4 id="multiaddr"><a class="header" href="#multiaddr">Multiaddr</a></h4>
-<p><a href="https://multiformats.io/multiaddr/">Multiaddr</a> is a self-describing network address. Currently, only IP4 and Onion addresses are supported.</p>
-<h4 id="messaging-structure"><a class="header" href="#messaging-structure">Messaging Structure</a></h4>
-<p>The following illustrates the structure of a Tari message:</p>
-<pre><code class="language-text">+----------------------------------------+
-|             MessageEnvelope            |
-|  +----------------------------------+  |
-|  |        MessageEnvelopeHeader     |  |
-|  +----------------------------------+  |
-|  +----------------------------------+  |
-|  |      MessageEnvelopeBody         |  |
-|  |     (optionally encrypted)       |  |
-|  | +------------------------------+ |  |
-|  | |            Message           | |  |
-|  | |   +-----------------------+  | |  |
-|  | |   |     MessageHeader     |  | |  |
-|  | |   +-----------------------+  | |  |
-|  | |                              | |  |
-|  | |   +-----------------------+  | |  |
-|  | |   |      MessageBody      |  | |  |
-|  | |   +-----------------------+  | |  |
-|  | +------------------------------+ |  |
-|  +----------------------------------+  |
-+----------------------------------------+
-</code></pre>
-<h4 id="messageenvelope-wire-format"><a class="header" href="#messageenvelope-wire-format">MessageEnvelope Wire format</a></h4>
-<p>Every Tari message MUST use the MessageEnvelope format. This format consists of four frames of a multipart message.</p>
-<p>A MessageEnvelope  represents a message that has either just come off or is about to go on to the wire. and consists of 
-the following:</p>
-<table><thead><tr><th>Name</th><th>Frame</th><th>Length (Octets)</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td>identity</td><td>0</td><td>8</td><td><code>[u8;8]</code></td><td>The identifier that a <code>ZMQ_ROUTER</code> socket expects so that it knows the intended destination of the message. This can be thought of as a session token.</td></tr>
-<tr><td>version</td><td>1</td><td>1</td><td><code>u8</code></td><td>The wire protocol version.</td></tr>
-<tr><td>header</td><td>2</td><td>Varies</td><td><code>Vec&lt;u8&gt;</code></td><td>Serialized bytes of data containing an unencrypted <a href="RFC-0172_PeerToPeerMessagingProtocol.html#messageenvelopeheader">MessageEnvelopeHeader</a>.</td></tr>
-<tr><td>body</td><td>3</td><td>Varies</td><td><code>Vec&lt;u8&gt;</code></td><td>Serialized bytes of data containing an unencrypted or encrypted <a href="RFC-0172_PeerToPeerMessagingProtocol.html#messageenvelopebody">MessageEnvelopeBody</a>.</td></tr>
-</tbody></table>
-<p>The header and decrypted body MUST be deserializable as per <a href="RFC-0171_MessageSerialisation.html">RFC-0171: MessageSerialization</a>.</p>
-<h4 id="messageenvelopeheader"><a class="header" href="#messageenvelopeheader">MessageEnvelopeHeader</a></h4>
-<p>Every MessageEnvelope MUST have an unencrypted header containing the following fields:</p>
-<table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td>version</td><td><code>u8</code></td><td>Message protocol version.</td></tr>
-<tr><td>source</td><td><code>PublicKey</code></td><td>Source public key.</td></tr>
-<tr><td>dest</td><td><code>Option&lt;NodeDestination&gt;</code></td><td>Destination <a href="Glossary.html#node-id">node ID</a> or public key. A destination is optional.</td></tr>
-<tr><td>signature</td><td><code>[u8]</code></td><td>Signature of the message header and body, signed with the private key of the source.</td></tr>
-<tr><td>flags</td><td><code>u8</code></td><td><ul><li>bit 0: 1 indicates that the message body is encrypted</li><li>bits 1-7: reserved</li></ul>.</td></tr>
-</tbody></table>
-<p>A <a href="Glossary.html#communication-node">communication node</a> and <a href="Glossary.html#communication-client">communication client</a>:</p>
+<p>Every participating <a href="Glossary.html#communication-node">communication node</a> SHOULD listen on at least one of the supported transports, accessible from a
+public address, to allow remote peers to establish peer connections. </p>
+<p>A peer wishing to establish a peer connection should attempt a connection to one of the remote peer's public 
+<a href="RFC-0172_PeerToPeerMessagingProtocol.html#netaddress">NetAddresses</a> using the transport described in the <a href="RFC-0172_PeerToPeerMessagingProtocol.html#netaddress">NetAddress</a>. </p>
+<p>The peer that is initiating the <em>outbound</em> connection is referred to as <em>the initiator</em> and the peer that accepts the
+<em>inbound</em> connection is referred to as <em>the responder</em> for the remainder of this section. </p>
+<p>We describe the following socket upgrade procedures for an encrypted peer-to-peer connection on the Tari network.</p>
+<ol>
+<li>The Wire Mode Byte</li>
+</ol>
+<p>The wire mode indicates the intention of the initiator. It is up to the application domain to dictate what byte is acceptable
+however a common configuration is to use the wire mode to indicate which network (mainnet, testnet etc) the initiator is 
+attempting to use allowing the responder to accept/reject the connection early on in the connection procedure.</p>
+<p><em>The initiator</em> MUST send a single byte indicating the wire mode within <code>WIRE_MODE_TIMEOUT</code>.
+<em>The responder</em> SHOULD to accept or reject (close) the connection based on the initiator's wire mode byte.
+<em>The responder</em> SHOULD reject (close) the connection if no byte is received within <code>WIRE_MODE_TIMEOUT</code>.</p>
+<p>Once the byte is sent, the initiator may immediately proceed to the next procedure.</p>
+<ol start="2">
+<li>The <a href="http://www.noiseprotocol.org/">Noise Protocol</a></li>
+</ol>
+<p>The <a href="http://www.noiseprotocol.org/">Noise Protocol</a> framework is a set of related crypto protocols that support mutual authentication and ephemeral 
+encryption key exchange amongst other features. </p>
+<p>We list the following characteristics and requirements for encrypted peer-to-peer connections on the Tari network:</p>
 <ul>
-<li>MUST validate the signature of the message using the source's public key.</li>
-<li>MUST reject the message if the signature verification fails.</li>
-<li>If the encryption bit flag is set:
+<li>Mutual authentication of the initiator and responder;</li>
+<li><em>the responder</em> need not know <em>the initiator's</em> public identity prior to the connection;</li>
+<li>the public identity of each participant is hidden to any observer; </li>
+<li>forward secrecy; and,</li>
+<li>for efficiency, has a minimal round trip time.</li>
+</ul>
+<p>For these reasons we select the single round-trip <code>Noise_IX_25519_ChaChaPoly_BLAKE2b</code> protocol, that is, the Noise IX 
+handshake pattern using Curve25519 for ephemeral and static identities, ChaChaPoly encryption and a HKDF using BLAKE2b.</p>
+<p>If successful, an authenticated encrypted socket connection is established between the peers.</p>
+<ol start="3">
+<li>Identity Exchange</li>
+</ol>
+<p>At this point the initiator and responder are aware of each other's public identity keys, however, some additional
+information is required to fully &quot;introduce&quot; the participants to each other.</p>
+<p>Both the initiator and responder simultaneously transmit a message containing their up-to-date public addresses, 
+the peer feature flags, protocols supported by the peer, a timestamp of the last time these details changed 
+and a signature that signs the public addresses, feature flags and update timestamp. Peers may store and share 
+these details with other peers, who can check the authenticity of the provided information by verifying the signature.</p>
+<ol start="4">
+<li>Multiplexing</li>
+</ol>
+<p>Now that these procedures are complete, we have an active PeerConnection. There is no explicit protocol message required 
+to initiate multiplexing as both sides implicitly agree to send <a href="https://github.com/hashicorp/yamux/blob/master/spec.md">yamux</a> protocol messages. Light-weight <a href="https://github.com/hashicorp/yamux/blob/master/spec.md">Yamux</a> 
+substreams are opened lazily as/when required by the application.</p>
+<p>Multiplexing allows a single socket connection to be used simultaneously by multiple components as if each had their own
+dedicated channel, in a very similar way that your browser can perform many HTTP2 requests over a single server connection.
+In <a href="https://github.com/hashicorp/yamux/blob/master/spec.md">yamux</a>, these dedicated channels are called substreams. The details of the <a href="https://github.com/hashicorp/yamux/blob/master/spec.md">yamux</a> protocol are out of scope for this
+RFC.</p>
+<h3 id="protocol-negotiation"><a class="header" href="#protocol-negotiation">Protocol Negotiation</a></h3>
+<p>To begin any protocol, an initiator MUST open a new <a href="https://github.com/hashicorp/yamux/blob/master/spec.md">yamux</a> substream and begin protocol negotiation.
+Protocol negotiation ensures that both sides of the exchange are speaking the same language. 
+Protocols are identified by a unique string identifier given by the author of the protocol.
+A protocol name can technically be any string, but it is defined in the Tari protocol as <code>t/{protocol-ident}/{version}</code>,
+where <code>t</code> is short for Tari, for example the messaging protocol is <code>t/msg/0.1</code>.</p>
+<p>To begin, the initiator MUST send a protocol negotiation message consisting of 1 length byte, 
+1 bitflag byte and the protocol identifier string. The length byte MUST be equal to the length of the protocol identifier.</p>
+<p>The bitflags are defined as follows:</p>
 <ul>
-<li>MUST attempt to decrypt the <a href="RFC-0172_PeerToPeerMessagingProtocol.html#messageenvelopebody">MessageEnvelopeBody</a>; or failing that</li>
-<li>MUST forward the message to a subset of peers using the <code>Closest</code> <a href="RFC-0172_PeerToPeerMessagingProtocol.html#outboundmessageservice">BroadcastStrategy</a>.</li>
-<li>MUST discard the message if the body is not encrypted.</li>
+<li><code>0x01</code> - <code>OPTIMISTIC</code></li>
+<li><code>0x02</code> - <code>TERMINATE</code></li>
+<li><code>0x04</code> - <code>PROTOCOL_NOT_SUPPORTED</code> (response)</li>
+<li><code>0x08 - 0x128</code> - Future use (ignored)</li>
 </ul>
-</li>
-</ul>
-<h4 id="messageenvelopebody"><a class="header" href="#messageenvelopebody">MessageEnvelopeBody</a></h4>
-<p>A MessageEnvelopeBody is the payload of the [MessageEnvelope]. A <a href="RFC-0172_PeerToPeerMessagingProtocol.html#messageenvelopebody">MessageEnvelopeBody</a> may be encrypted as required.</p>
-<p>It consists of a <a href="RFC-0172_PeerToPeerMessagingProtocol.html#messageheader">MessageHeader</a> and <a href="RFC-0172_PeerToPeerMessagingProtocol.html#message">Message</a> of a particular predefined <a href="RFC-0172_PeerToPeerMessagingProtocol.html#messagetype">MessageType</a>.</p>
-<h4 id="messagetype"><a class="header" href="#messagetype">MessageType</a></h4>
-<p>An enumeration of the messages that are part of the Tari network. MessageTypes are represented
-as an unsigned eight-bit integer and each value must be mapped to a corresponding Message struct.</p>
-<p>All MessageTypes fall within a particular numerical range according to the message's concern:</p>
-<table><thead><tr><th>Category</th><th>Range</th><th># Message Types</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>reserved</code></td><td>0</td><td>1</td><td>Reserved for control messages such as <code>Ack</code>.</td></tr>
-<tr><td><code>net</code></td><td>1-32</td><td>32</td><td>Network-related messages such as <code>join</code> and <code>discover</code>.</td></tr>
-<tr><td><code>peer</code></td><td>33-64</td><td>32</td><td>Peer connection messages, such as <code>establish connection</code>.</td></tr>
-<tr><td><code>blockchain</code></td><td>65-96</td><td>32</td><td>Messages related to the blockchain, such as <code>add block</code>.</td></tr>
-<tr><td><code>vn</code></td><td>97-224</td><td>128</td><td>Messages related to the validator nodes, such as <code>execute instruction</code>.</td></tr>
-<tr><td><code>extended</code></td><td>225-255</td><td>30</td><td>Reserved for future use.</td></tr>
-</tbody></table>
-<p>In documentation, MessageTypes can be referred to by the category and name. For example, <code>peer::EstablishConnection</code> and
-<code>net::Discover</code>.</p>
-<h4 id="messageheader"><a class="header" href="#messageheader">MessageHeader</a></h4>
-<p>Every Tari message MUST have a header containing the following fields:</p>
-<table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td>version</td><td><code>u8</code></td><td>The message version.</td></tr>
-<tr><td>message_type</td><td><code>u8</code></td><td>An enumeration of the message type of the body. Refer to <a href="RFC-0172_PeerToPeerMessagingProtocol.html#messagetype">MessageType</a>.</td></tr>
-</tbody></table>
-<p>As this is part of the <a href="RFC-0172_PeerToPeerMessagingProtocol.html#messageenvelopebody">MessageEnvelopeBody</a>, it can be encrypted along with the rest of the message,
-which keeps the type of message private.</p>
-<h4 id="messagebody"><a class="header" href="#messagebody">MessageBody</a></h4>
-<p>Messages are an intention to perform a task. MessageType names should thus be a verb such as <code>net::Join</code> or <code>blockchain::AddBlock</code>.</p>
-<p>All messages can be categorized as follows; each categorization has rules for how they should be handled:</p>
-<ul>
-<li>A propagation message
-<ul>
-<li>SHOULD NOT have a destination in the MessageHeader;</li>
-<li>MUST be forwarded;</li>
-<li>SHOULD use the <code>Random</code> BroadcastStrategy;</li>
-<li>SHOULD discard a message that it has seen within the <a href="RFC-0172_PeerToPeerMessagingProtocol.html#duplicatemessagewindow">DuplicateMessageWindow</a>.</li>
-</ul>
-</li>
-<li>A direct message
-<ul>
-<li>MUST have a destination in the MessageHeader;</li>
-<li>SHOULD be discarded if it does not have a destination;</li>
-<li>SHOULD discard a message that it has seen before;</li>
-<li>MUST use the <code>Direct</code> BroadcastStrategy if a destination peer is known;</li>
-<li>SHOULD use the <code>Closest</code> BroadcastStrategy if a destination peer is not known.</li>
-</ul>
-</li>
-<li>An encrypted message
-<ul>
-<li>MUST undergo an attempt to be decrypted by all recipients;</li>
-<li>MUST be forwarded by recipients if it cannot be decrypted;</li>
-<li>SHOULD discard a message that it has seen before.</li>
-</ul>
-</li>
-</ul>
-<p>The <a href="RFC-0172_PeerToPeerMessagingProtocol.html#messagetype">MessageType</a> in the header MUST be used to determine the type of the message deserialized.
-If the deserialization fails, the message SHOULD be discarded.</p>
-<h4 id="duplicatemessagewindow"><a class="header" href="#duplicatemessagewindow">DuplicateMessageWindow</a></h4>
-<p>A configurable length of time for which message signatures should be tracked in order to eliminate duplicate messages.
-This should be long enough to make it highly unlikely that a particular message will be processed again
-and short enough to not be a burden on the node.</p>
-<h4 id="inboundconnection"><a class="header" href="#inboundconnection">InboundConnection</a></h4>
-<p>A thin wrapper around a <code>ZMQ_ROUTER</code> socket, which binds to a <a href="RFC-0172_PeerToPeerMessagingProtocol.html#netaddress">NetAddress</a> and accepts incoming multipart messages.
-This connection blocks until there is data to read, or a timeout is reached. In both cases, the <code>receive</code> method
-can be called again (i.e. in a loop) to continue listening for messages. Client code should run this loop in its own thread.
-<code>send</code> is only called (if at all) in response to an incoming message.</p>
-<p>Fields may include</p>
-<ul>
-<li>a NetAddress;</li>
-<li>a timeout;</li>
-<li>underlying <a href="http://api.zeromq.org/2-1:zmq-socket">ZeroMQ socket</a>.</li>
-</ul>
-<p>Methods may include:</p>
-<ul>
-<li><code>receive()</code></li>
-<li><code>send(data)</code></li>
-<li><code>set_encryption(secret_key)</code></li>
-<li><code>set_socks_proxy(address)</code></li>
-<li><code>set_hwm(v)</code></li>
-</ul>
-<p>An InboundConnection:</p>
-<ul>
-<li>MUST perform the &quot;server-side&quot; <a href="http://curvezmq.org/page:read-the-docs">CurveZMQ</a> encryption protocol if encryption is set.
-<ul>
-<li>Using <a href="http://zeromq.org/">ZeroMQ</a>. this means setting the socketopts <code>ZMQ_CURVE_SERVER</code> to 1 and <code>ZMQ_CURVE_SECRETKEY</code> to the secret key before binding.</li>
-</ul>
-</li>
-<li>MUST listen for and accept TCP connections.
-<ul>
-<li>For an IP NetAddress, bind on the given host IP and port.</li>
-<li>For an Onion NetAddress, bind on 127.0.0.1 and the given port.</li>
-<li>For an I2P NetAddress, as yet undetermined.</li>
-</ul>
-</li>
-<li>MUST read multipart messages and return them to the caller.
-<ul>
-<li>If the timeout is reached, return an error to be handled by the calling code.</li>
-</ul>
-</li>
-</ul>
-<h4 id="outboundconnection"><a class="header" href="#outboundconnection">OutboundConnection</a></h4>
-<p>A thin wrapper around a <code>ZMQ_DEALER</code> socket, which connects to a <a href="RFC-0172_PeerToPeerMessagingProtocol.html#netaddress">NetAddress</a> and sends outbound multipart messages.
-This connection blocks until data can be written, or a timeout is reached. The timeout should never be reached, as
-<a href="http://zeromq.org/">ZeroMQ</a> internally queues messages to be sent.</p>
-<p>Fields may include:</p>
-<ul>
-<li>a NetAddress;</li>
-<li>underlying <a href="http://api.zeromq.org/2-1:zmq-socket">ZeroMQ socket</a>.</li>
-</ul>
-<p>Methods may include:</p>
-<ul>
-<li><code>send(msg)</code></li>
-<li><code>receive()</code></li>
-<li><code>disconnect()</code></li>
-<li><code>set_encryption(server_pk, client_pk, client_sk)</code></li>
-<li><code>set_socks_proxy(address)</code></li>
-<li><code>set_hwm(v)</code></li>
-</ul>
-<p>An OutboundConnection:</p>
-<ul>
-<li>MUST perform the &quot;client-side&quot; <a href="http://curvezmq.org/page:read-the-docs">CurveZMQ</a> encryption protocol if encryption is set.
-<ul>
-<li>Using ZeroMQ, this means setting the socketopts <code>ZMQ_CURVE_SERVERKEY</code>, <code>ZMQ_CURVE_SECRETKEY</code> and <code>ZMQ_CURVE_PUBLICKEY</code>.</li>
-</ul>
-</li>
-<li>MUST connect to a TCP endpoint.
-<ul>
-<li>For an IP NetAddress, connect to the given host IP and port.</li>
-<li>For an Onion NetAddress, connect to the onion address using the TCP, e.g. <code>tcp://xyz...123.onion:1234</code>.</li>
-<li>For an I2P NetAddress, as yet undetermined.</li>
-</ul>
-</li>
-<li>MUST write the parts of the given MessageEnvelope to the socket as a multipart message consisting of, in order:
-<ul>
-<li>identity;</li>
-<li>version;</li>
-<li>header;</li>
-<li>body.</li>
-</ul>
-</li>
-<li>If specified, MUST set a High Water Mark (HWM) on the underlying ZeroMQ socket.</li>
-<li>If the HWM is reached, a call to <code>send</code> MUST return an error and any messages received SHOULD be discarded.</li>
-</ul>
+<p>If the <code>OPTIMISTIC</code> flag is set, the initiator considers the negotiation complete as it is optimistic that the responder 
+supports it. It can assume this because the peer gave a list of supported protocols in the <a href="RFC-0172_PeerToPeerMessagingProtocol.html#identity-exchange">Identity Exchange</a> 
+procedure. If the responder does not support the protocol, it can simply close the substream.</p>
+<p>In general, peers will use <code>OPTIMISTIC</code> negatation and never wait for a response, as they have a full list of supported 
+protocols. However, if the initiator wishes to negotiate a protocol not in the protocol list, it may leave the <code>OPTIMISTIC</code> 
+flag unset in the initial message.</p>
+<p>If the responder supports the protocol, it SHOULD respond with the name of the supported protocol and all flags unset and
+immediately proceed with the agreed upon protocol.
+If not, it SHOULD respond with the <code>PROTOCOL_NOT_SUPPORTED</code> flag set and an empty protocol name and wait for more messages.
+The initiator MAY send another protocol negotiation message or close the substream.</p>
+<p>A responder MAY set the <code>TERMINATE</code> flag at any time and close the substream. In practise, this is used to indicate to the 
+initiator that it has exceeded the maximum number of protocol negotiation queries (5) and should give up.</p>
 <h4 id="peer"><a class="header" href="#peer">Peer</a></h4>
 <p>A single peer that can communicate on the Tari network.</p>
-<p>Fields may include:</p>
+<p>Fields include:</p>
 <ul>
-<li><code>addresses</code> - a list of <a href="RFC-0172_PeerToPeerMessagingProtocol.html#netaddress">NetAddress</a>es associated with the peer, perhaps accompanied by some bookkeeping metadata, such 
+<li><code>public_key</code> - The <a href="https://ristretto.group/">Ristretto</a> public key identity of the peer.</li>
+<li><code>addresses</code> - a list of <a href="RFC-0172_PeerToPeerMessagingProtocol.html#netaddress">NetAddress</a>es associated with the peer, perhaps accompanied by some bookkeeping metadata, such
 as preferred address;</li>
-<li><code>node_type</code> - the type of node or client, i.e. <a href="Glossary.html#base-node">BaseNode</a>, <a href="Glossary.html#validator-node">ValidatorNode</a>, <a href="Glossary.html#wallet">Wallet</a> or <a href="Glossary.html#token-wallet">TokenWallet</a>);</li>
-<li><code>last_seen</code> - a timestamp of the last time a message has been sent/received from this peer;</li>
-<li><code>flags</code> - 8-bit flag;
+<li><code>peer_features</code> - bitflags with the following flags
 <ul>
-<li>bit 0: is_banned,</li>
-<li>bit 1-7: reserved.</li>
+<li><code>MESSAGE_PROPAGATION = 0x01</code> - peer is able to propagate/route messages</li>
+<li><code>DHT_STORE_FORWARD = 0x02</code> - peer provides message storage and can respond to <code>SafRequestMessages</code></li>
+<li>A <code>COMMUNICATION_NODE</code> is defined as <code>0x03</code> (<code>MESSAGE_PROPAGATION | DHT_STORE_FORWARD</code>)</li>
+<li>A <code>COMMUNICATION_CLIENT</code> is defined as <code>0x00</code></li>
 </ul>
 </li>
+<li><code>last_seen</code> - a timestamp of the last time a message has been sent/received from this peer;</li>
+<li><code>banned_until</code> - an optional timestamp indicating the peer is banned;</li>
+<li><code>offline_at</code> - an optional timestamp indicating at which time a peer was marked as offline due to multiple failed attempts to contact the peer.</li>
 </ul>
 <p>A peer may also contain reputation metrics (e.g. rejected_message_count, avg_latency) to be used to decide
 if a peer should be banned. This mechanism is yet to be decided.</p>
-<h4 id="peerconnection"><a class="header" href="#peerconnection">PeerConnection</a></h4>
-<p>Represents direct bidirectional connection to another node or client. As connections are bidirectional,
-the PeerConnection need only hold a single <a href="RFC-0172_PeerToPeerMessagingProtocol.html#inboundconnection">InboundConnection</a> or <a href="RFC-0172_PeerToPeerMessagingProtocol.html#outboundconnection">OutboundConnection</a>, depending on if the
-node requested a peer connect to it or if it is connecting to a peer.</p>
-<p>PeerConnection will send messages to the peer in a non-blocking, asynchronous manner as long as the connection
-is maintained.</p>
-<p>It has a few important functions:</p>
-<ul>
-<li>managing the underlying network connections, with automatic reconnection if necessary;</li>
-<li>forwarding incoming messages onto the given handler socket; and</li>
-<li>sending outgoing messages.</li>
-</ul>
-<p>Unlike InboundConnection and OutboundConnection, which are essentially stateless,
-<code>PeerConnection</code> maintains a particular <code>ConnectionState</code>.</p>
-<ul>
-<li><code>Idle</code> - the connection has not been established.</li>
-<li><code>Connecting</code> - the connection is in progress.</li>
-<li><code>Connected</code> - the connection has been established.</li>
-<li><code>Suspended</code> - the connection has been suspended. Incoming messages will be discarded, calls to <code>send()</code> will error.</li>
-<li><code>Dead</code> - the connection is no longer active because the connection was dropped.</li>
-<li><code>Shutdown</code> - the connection is no longer active because it was shut down.</li>
-</ul>
-<p>Fields may include:</p>
-<ul>
-<li>a connection state;</li>
-<li>a control socket;</li>
-<li>a peer connection <code>NetAddress</code>;</li>
-<li>a direction (either <code>Inbound</code> or <code>Outbound</code>);</li>
-<li>a public key obtained from the connection negotiation;</li>
-<li>(optional) SOCKS proxy.</li>
-</ul>
-<p>Methods may include:</p>
-<ul>
-<li><code>establish()</code></li>
-<li><code>shutdown()</code></li>
-<li><code>suspend()</code></li>
-<li><code>resume()</code></li>
-<li><code>send(msg)</code></li>
-</ul>
-<p>A <code>PeerConnection</code>:</p>
-<ul>
-<li>MUST listen for data on the given <a href="RFC-0172_PeerToPeerMessagingProtocol.html#netaddress">NetAddress</a> using an InboundConnection;</li>
-<li>MUST sequentially try to connect to one of the peer's NetAddresses until one succeeds or all fail using an OutboundConnection;</li>
-<li>MUST immediately reject and dispose of a multipart message not consisting of four parts, as detailed in MessageEnvelope;</li>
-<li>MUST construct a MessageEnvelope from the multiple parts;</li>
-<li>MUST pass the constructed MessageEnvelope to the message handler;</li>
-<li>MUST transition to <code>Connecting</code> state and retry the connection, should a connection drop;</li>
-<li>MUST send a <code>net::Disconnect</code> message and drop the connection when a shutdown signal is received.</li>
-</ul>
-<h4 id="connectionmanager"><a class="header" href="#connectionmanager">ConnectionManager</a></h4>
-<p>The ConnectionManager manages a set of live PeerConnections. It provides an abstraction for other components
-to initiate and use PeerConnections without having to worry about attaching the new PeerConnection to message handlers.</p>
-<p>It consists of a list of active peer connections and an <code>inproc</code> message handler socket. This socket is 'written to' whenever
-a message is received from any active <a href="RFC-0172_PeerToPeerMessagingProtocol.html#peerconnection">PeerConnection</a> for other components to act on.</p>
-<p>Methods may include:</p>
-<ul>
-<li><code>establish_connection(Peer)</code> - create and return a new PeerConnection;</li>
-<li><code>disconnect(peer)</code> - disconnect a particular peer;</li>
-<li><code>suspend()</code> - temporarily suspend connections;</li>
-<li><code>resume()</code> - temporarily suspend connections;</li>
-<li><code>shutdown</code> - cleanly shut down all PeerConnections.</li>
-</ul>
-<p>The <code>ConnectionManager</code>:</p>
-<ul>
-<li>MUST call <code>suspend</code> on every PeerConnection if its <code>suspend</code> method is called;</li>
-<li>MUST call <code>resume</code> on every PeerConnection if its <code>resume</code> method is called;</li>
-<li>MUST call <code>shutdown</code> on every PeerConnection if its <code>shutdown</code> method is called</li>
-<li>MUST create a new PeerConnection with the given Peer and NetAddress, when <code>establish_connection</code> is called;</li>
-<li>MUST call <code>shutdown</code> on the PeerConnection and remove the connection for the given peer, when <code>disconnect(peer)</code> is called;</li>
-<li>MAY disconnect peers if the connection has not been used for an extended period;</li>
-<li>SHOULD disconnect the least recently used peer if the connection pool is greater than <code>max connections</code></li>
-</ul>
-<h4 id="controlservice"><a class="header" href="#controlservice">ControlService</a></h4>
-<p>The purpose of this service is to negotiate a new secure PeerConnection.</p>
-<p>The control service accepts a single message:</p>
-<ul>
-<li><code>peer::EstablishConnection(pk, curve_pk, net_address)</code>.</li>
-</ul>
-<p>A ControlService:</p>
-<ul>
-<li>MUST listen for connections on a predefined CONTROL PORT;</li>
-<li>SHOULD deny connections from banned peers.</li>
-</ul>
-<p>The steps to establish a peer connection are as follows:</p>
-<p>Alice wants to connect to Bob</p>
-<ol>
-<li>Alice creates a <code>PeerConnection</code> to which Bob can connect.
-<ul>
-<li>A new CURVE key pair is generated.</li>
-</ul>
-</li>
-<li>Alice connects to Bob's control server and Bob accepts the connection.</li>
-<li>Alice sends a <code>peer::establish_connection</code> message, with:
-<ul>
-<li>the CURVE public key for the socket connection;</li>
-<li>the node's public key corresponding to its <a href="Glossary.html#node-id">Node ID</a>; and</li>
-<li>the <a href="RFC-0172_PeerToPeerMessagingProtocol.html#netaddress">NetAddress</a> of the new PeerConnection.</li>
-</ul>
-</li>
-<li>Bob accepts this request and opens a new <code>PeerConnnection</code> socket using Alice's CURVE public key.</li>
-<li>Bob connects to the given NetAddress and sends a <code>peer::establish_connection</code> message.</li>
-<li>If Alice accepts the connection, they can begin sending messages. If not, both sides terminate the connection.</li>
-</ol>
 <h4 id="peermanager"><a class="header" href="#peermanager">PeerManager</a></h4>
 <p>The PeerManager is responsible for managing the list of peers with which the node has previously interacted.
 This list is called a routing table and is made up of <a href="RFC-0172_PeerToPeerMessagingProtocol.html#peer">Peer</a>s.</p>
@@ -3033,182 +2806,245 @@ This list is called a routing table and is made up of <a href="RFC-0172_PeerToPe
 <li>maintain lightweight views of peers, using a filter criterion, e.g. a list of peers that have been banned, i.e. a denylist; and</li>
 <li>prune the routing table based on a filter criterion, e.g. last date seen.</li>
 </ul>
-<h4 id="messagedispatcher"><a class="header" href="#messagedispatcher">MessageDispatcher</a></h4>
-<p>The MessageContext contains:</p>
+<h3 id="general-purpose-messaging-protocol"><a class="header" href="#general-purpose-messaging-protocol">General-purpose Messaging Protocol</a></h3>
+<p>The messaging protocol is a simple fire-and-forget protocol where arbitrary messages can be sent between peers.
+If Alice wants to send a message to Bob, she will open a new <a href="https://github.com/hashicorp/yamux/blob/master/spec.md">yamux</a> substream and <a href="RFC-0172_PeerToPeerMessagingProtocol.html#protocol-negotiation">negotiate</a> the 
+<code>t/msg/0.1</code> protocol. If Bob wants to send a message to Alice, he will do the same. This means that two substreams (one per direction)
+are open for bi-directional message sending as required. </p>
+<p>Message frames are length delimited (see <a href="https://docs.rs/tokio-util/latest/tokio_util/codec/length_delimited/">Tokio's LengthDelimitedCodec</a>).
+At this level, no structure apart from the length-delimited framing is imposed on the message protocol allowing that 
+to be fully determined by domain-level components.</p>
+<h4 id="tari-dht-and-base-layer-messaging-protocol"><a class="header" href="#tari-dht-and-base-layer-messaging-protocol">Tari DHT and Base-Layer Messaging Protocol</a></h4>
+<p>The following illustrates the structure of a Tari message:</p>
+<pre><code class="language-text">+----------------------------------------+
+|              DhtEnvelope               |
+|  +----------------------------------+  |
+|  |             DhtHeader            |  |
+|  +----------------------------------+  |
+|  +----------------------------------+  |
+|  |         EnvelopeBody             |  |
+|  | (multipart, optionally encrypted)|  |
+|  | +------------------------------+ |  |
+|  | |   +-----------------------+  | |  |
+|  | |   |    1. MessageHeader   |  | |  |
+|  | |   +-----------------------+  | |  |
+|  | |   +-----------------------+  | |  |
+|  | |   |    2. MessageBody     |  | |  |
+|  | |   +-----------------------+  | |  |
+|  | +------------------------------+ |  |
+|  +----------------------------------+  |
++----------------------------------------+
+</code></pre>
+<p>Each Tari message is wrapped in a <code>DhtEnvelope</code> which contains a <code>DhtHeader</code> and an <code>EnvelopeBody</code>.</p>
+<p>The <code>DhtHeader</code> is a protobuf message with these fields:</p>
 <ul>
-<li>the requesting PeerConnection;</li>
-<li>the MessageHeader;</li>
-<li>the deserialized message;</li>
-<li>the OutboundMessageService.</li>
-</ul>
-<p>Basically, all the tools the handler needs to interact with the network.</p>
-<p>A MessageDispatcher is responsible for:</p>
-<ul>
-<li>constructing the MessageContext;</li>
-<li>finding the message handler that is associated with the MessageType;</li>
-<li>passing the MessageContext to the handler; and</li>
-<li>ignoring the message if the handler cannot be found.</li>
-</ul>
-<p>An example API may be:</p>
-<pre><pre class="playground"><code class="language-rust compile_fail">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>let dispatcher = MessageDispatcher::&lt;MessageType&gt;::new()
-    .middleware(logger)
-    .route(BlockchainMessageType::NewBlock, BlockHandlers::store_and_broadcast)
-    ...
-    .route(NetMessageType::Ping, send_pong);
-
-inbound_msg_service.set_handler(dispatcher.handler);
-<span class="boring">}
-</span></code></pre></pre>
-<h4 id="inboundmessageservice"><a class="header" href="#inboundmessageservice">InboundMessageService</a></h4>
-<p>InboundMessageService is a service that receives messages over a non-blocking asynchronous socket and
-determines what to do with it. There are three options: handle, forward and discard.</p>
-<p>A pool of worker threads (with a configurable size) is started and each one listens for messages on its $1:n$ <code>inproc</code> message
-socket. A <code>ZMQ_DEALER</code> socket is suggested for fair-queueing work amongst workers, who listen for work with a <code>ZMQ_REP</code>.
-The workers read off this socket and process the messages.</p>
-<p>An InboundMessageService:</p>
-<ul>
-<li>MUST receive messages from all PeerConnections; and</li>
-<li>MUST write the message to the worker socket.</li>
-</ul>
-<p>A worker:</p>
-<ul>
-<li>MUST deserialize the MessageHeader.
-<ul>
-<li>If unable to deserialize, MUST discard the message.</li>
-</ul>
+<li>
+<p><code>version: u32</code> </p>
+<p>The major message header version. A peer MAY discard the message if the version is not supported.</p>
 </li>
-<li>MUST check the message signature.
+<li>
+<p><code>message_signature: 64 bytes</code> </p>
+<p>The raw representation of a Schnorr signature committing to: </p>
 <ul>
-<li>MUST discard the message if the signature is invalid.</li>
-<li>MUST discard the message if the signature has been processed within the <a href="RFC-0172_PeerToPeerMessagingProtocol.html#duplicatemessagewindow">DuplicateMessageWindow</a>.</li>
-</ul>
-</li>
-<li>If the encryption flag is set:
+<li>sender public key</li>
+<li>signature public nonce</li>
+<li>and Blake2b hash of:
 <ul>
-<li>MUST attempt to decrypt the message.
-<ul>
-<li>If successful, process and handle the message.</li>
-<li>Otherwise, MUST forward the message using the <code>Random</code> BroadcastStrategy.</li>
-<li>If the message is not encrypted, MUST discard it.</li>
+<li>&quot;comms.dht.v1.message_signature&quot;</li>
+<li>version </li>
+<li>destination </li>
+<li>msg_type </li>
+<li>flags </li>
+<li>expiry </li>
+<li>ephemeral_public_key </li>
+<li>body </li>
 </ul>
 </li>
 </ul>
+<p>This is required if the <code>ENCRYPTED</code> flag is set.</p>
 </li>
-<li>If the destination <a href="Glossary.html#node-id">node ID</a> is set:
-<ul>
-<li>If the destination matches this node's ID - process and handle the message.</li>
-<li>If the destination does not match this node's ID - MUST forward the message using the <code>Closest</code> BroadcastStrategy.</li>
-</ul>
+<li>
+<p><code>ephemeral_public_key: 32 bytes</code></p>
+<p>Ephemeral public key component of the ECDH shared key. MUST be specified if the ENCRYPTED flag is set.</p>
 </li>
-<li>If the destination is not set
+<li>
+<p><code>dht_message_type: i32</code></p>
+<p>Enumeration of the type of message.</p>
 <ul>
-<li>If the MessageType is a kind of propagation message:
-<ul>
-<li>MUST handle the message;</li>
-<li>MUST forward the message using the <code>Random</code> BroadcastStrategy.</li>
-</ul>
-</li>
-<li>If the MessageType is a kind of encrypted message:
-<ul>
-<li>MUST attempt to decrypt and handle the message;</li>
-<li>if successful, MUST handle the message;</li>
-<li>if unsuccessful, MUST forward the message using the <code>Random</code> or <code>Flood</code> BroadcastStrategy,</li>
+<li>None = 0 - Domain-level message</li>
+<li>Join = 1 - Join/Announce</li>
+<li>Discovery = 2 - Discovery request</li>
+<li>DiscoveryResponse = 3 - Response to a discovery request</li>
+<li>SafRequestMessages = 20 - Request stored messages from a node</li>
+<li>SafStoredMessages = 21 - Stored messages response</li>
 </ul>
 </li>
+<li>
+<p><code>flags: u32</code> - bitflags <code>0x01 - ENCRYPTED</code> </p>
+</li>
+<li>
+<p><code>message_tag: u64</code> - Message trace ID. This can be omitted or any value and is used for debug tracing.</p>
+</li>
+<li>
+<p><code>expires: Option&lt;prost_types::Timestamp&gt;</code></p>
+<p>Expiry timestamp for the message, if any. If specified any peer receiving the message after this time MAY discard it.</p>
+</li>
+<li>
+<p><code>destination: Option&lt;dht_header::Destination&gt;</code></p>
+<p>Enumeration of the message destination:</p>
+<ul>
+<li><code>UNKNOWN = 0</code> - the destination was not specified, this indicates that the message is destined for the receiver.</li>
+<li><code>PUBLICKEY(XXXXX) = 1</code> - destination is the specified public key. This MUST be provided when the <code>ENCRYPTED</code> flag is set.</li>
 </ul>
 </li>
 </ul>
-<h4 id="outboundmessageservice"><a class="header" href="#outboundmessageservice">OutboundMessageService</a></h4>
-<p>OutboundMessageService is responsible for using the connection and peer infrastructure to
-send messages to the rest of the network.</p>
-<p>In particular, it is responsible for:</p>
+<h5 id="inbound-message-validation"><a class="header" href="#inbound-message-validation">Inbound Message Validation</a></h5>
+<p>The following validation rules MUST be applied to all incoming messages:</p>
 <ul>
-<li>serializing the message body;</li>
-<li>constructing the MessageEnvelope;</li>
-<li>executing the required BroadcastStrategy; and</li>
-<li>sending messages using the [ConnectionManager].</li>
-</ul>
-<p>The actual sending of messages can be requested via the public <code>send_message</code> method, which takes a
-MessageHeader, MessageBody and BroadcastStrategy as parameters.</p>
-<p><code>send_message</code> then selects an appropriate peer(s) from the ConnectionManager according to the
-BroadcastStrategy and sends the message to each of the selected peers.</p>
-<p>BroadcastStrategy determines how a set of peer nodes will be selected and can be:</p>
+<li>If <code>ENCRYPTED</code> is set
 <ul>
-<li><code>Direct</code> - send to a particular peer matching the given <a href="Glossary.html#node-id">node ID</a>;</li>
-<li><code>Flood</code> - send to all known peers who are not [communication clients];</li>
-<li><code>Closest</code> - send to $n$ closest peers who are not [communication clients]; or</li>
-<li><code>Random</code> - send to a random set of peers of size $n$ who are not [communication clients].</li>
-</ul>
-<h3 id="privacy-features"><a class="header" href="#privacy-features">Privacy Features</a></h3>
-<p>The following privacy features are proposed:</p>
+<li>The <code>destination</code> MUST be <code>PUBLICKEY(XXXXX)</code></li>
+<li>The <code>ephemeral_public_key</code> MUST be specified</li>
+<li>The <code>message_signature</code> MUST be non-empty</li>
+<li>If able to decrypt the message signature:
 <ul>
-<li>A <a href="Glossary.html#communication-node">communication node</a> or <a href="Glossary.html#communication-client">communication client</a> MAY communicate solely over the Tor/I2P networks.</li>
-<li>All traffic (with the exception of the control service) MUST be encrypted.</li>
-<li>Messages MAY encrypt the body of a MessageEnvelope, which only a particular recipient can decrypt.</li>
-<li>The <code>destination</code> header field can be omitted when used in conjunction with body encryption; the destination is
-completely unknown to the rest of the network.</li>
+<li>the signature MUST be valid</li>
+<li>the destination public key MUST match the local public key</li>
 </ul>
-<h3 id="store-and-forward-strategy"><a class="header" href="#store-and-forward-strategy">Store and Forward Strategy</a></h3>
+</li>
+</ul>
+</li>
+<li>If <code>ENCRYPTED</code> is not set
+<ul>
+<li>The <code>message_signature</code> MAY be specified. If it is, it MUST be valid.</li>
+</ul>
+</li>
+</ul>
+<p>If any of these rules fail the message SHOULD be discarded.</p>
+<h5 id="outbound-messaging"><a class="header" href="#outbound-messaging">Outbound Messaging</a></h5>
+<p>The protocol provides for the following outbound message broadcast strategies:</p>
+<ul>
+<li><code>Direct(Identity)</code> - Send the message directly to the destination peer. </li>
+<li><code>Flood(exclude)</code> - Send to all connected peers excluding <code>exclude</code> peers. If no peers are connected, no messages are sent.</li>
+<li><code>Random(n, exclude)</code> - Send to a random set of peers of size n that are Communication Nodes, excluding <code>exclude</code> peers.</li>
+<li><code>ClosestNodes({node_id, exclude, connected_only})</code> - Send to all n nearest Communication Nodes to the given node_id.</li>
+<li><code>DirectOrClosestNodes({node_id, exclude, connected_only})</code> - Send directly to destination if connected but otherwise send to all n nearest Communication Nodes</li>
+<li><code>Broadcast(excludes)</code>- Send to a random set of <em>connected</em> peers, excluding <code>excludes</code> peers. The number of peers selected at most equal to <code>propagation_factor</code>.</li>
+<li><code>SelectedPeers(peers)</code> - Send to the specified peers.</li>
+<li><code>Propagate(NodeDestination, Vec&lt;NodeId&gt;)</code> - Propagate to a set of <em>connected</em> peers closer to the destination. The number of peers selected at most equal to <code>propagation_factor</code>.</li>
+</ul>
+<p>A peer's node_id is defined as the 13-byte variable-length Blake2b hash of the public key. To determine if a peer identity 
+is &quot;closer&quot; to another peer we compare the XOR distance between peers as proposed by the <a href="https://www.scs.stanford.edu/%7Edm/home/papers/kpos.pdf">kademlia</a> paper.</p>
+<h5 id="dht-messages"><a class="header" href="#dht-messages">DHT Messages</a></h5>
+<ul>
+<li><code>Join</code></li>
+</ul>
+<p>Announces a peer's availability to the network. A routing node SHOULD propagate this message closer to the destination. 
+As it travels through the network, the peer information is stored in the peer list. Peers close to the newly 
+joined node MAY attempt to dial the node on receipt of this message.</p>
+<ul>
+<li><code>Discovery</code></li>
+</ul>
+<p>An encrypted discovery request containing the sender's contact details. A routing node SHOULD propagate this message closer to the destination.
+The destination peer will attempt to contact the sender and send a <code>DiscoveryResponse</code> message to reciprocate with its peer information.</p>
+<ul>
+<li><code>DiscoveryResponse</code></li>
+</ul>
+<p>Sent in response to a <code>Discovery</code> message. </p>
+<ul>
+<li><code>SafRequestMessages</code> / <code>SafStoredMessages</code></li>
+</ul>
+<p>Request and response messages for stored messages destined for the requester.</p>
+<h5 id="envelopebody"><a class="header" href="#envelopebody">EnvelopeBody</a></h5>
+<p>The <code>EnvelopeBody</code> is the &quot;payload&quot; of the message and consists of an arbitrary number of ordered opaque BLOBs.
+It may be encrypted for a particular destination. The contents of these BLOBs are decided by domain-level requirements.</p>
+<p>The Tari protocol inserts a <code>MessageHeader</code> at index 0 and <code>MessageBody</code> at index 1.</p>
+<h5 id="messageheader"><a class="header" href="#messageheader">MessageHeader</a></h5>
+<p>Every Tari message MUST have a payload header containing the following fields at index 0 in the <code>EnvelopeBody</code>:</p>
+<table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>message_type</td><td><code>u8</code></td><td>An enumeration of the message type of the body. Refer to message types below.</td></tr>
+<tr><td>nonce</td><td><code>u32</code></td><td>The optional message nonce.</td></tr>
+</tbody></table>
+<p>MessageTypes are represented as an unsigned eight-bit integer denoting the expected contents of the <code>MessageBody</code>.</p>
+<table><thead><tr><th>Category</th><th align="left">Name</th><th>Value</th><th>Description</th></tr></thead><tbody>
+<tr><td>Network</td><td align="left">PingPong</td><td>1</td><td>A PongPong message.</td></tr>
+<tr><td>Blockchain</td><td align="left">NewTransaction</td><td>65</td><td>Transaction submitted by a wallet or propagated by a base node.</td></tr>
+<tr><td>Blockchain</td><td align="left">NewBlock</td><td>66</td><td>Block propagated by a base node.</td></tr>
+<tr><td>Wallet</td><td align="left">SenderPartialTransaction</td><td>67</td><td>A partial MimbleWimble transaction submitted by a sender wallet to the receiver.</td></tr>
+<tr><td>Wallet</td><td align="left">ReceiverPartialTransactionReply</td><td>68</td><td>Reply to SenderPartialTransaction submitted by a receiver wallet to the sender.</td></tr>
+<tr><td>Blockchain</td><td align="left">BaseNodeRequest</td><td>69</td><td>Base node request message.</td></tr>
+<tr><td>Blockchain</td><td align="left">BaseNodeResponse</td><td>70</td><td>Base node response in reply to a BaseNodeRequest message.</td></tr>
+<tr><td>Blockchain</td><td align="left">MempoolRequest</td><td>71</td><td>Base node mempool request message.</td></tr>
+<tr><td>Blockchain</td><td align="left">MempoolResponse</td><td>72</td><td>Base node response in reply to a MempoolRequest message.</td></tr>
+<tr><td>Wallet</td><td align="left">TransactionFinalized</td><td>73</td><td>Finalized transaction message sent by a sender to receiver wallet.</td></tr>
+<tr><td>Wallet</td><td align="left">TransactionCancelled</td><td>74</td><td>A courtesy message sent by a wallet to inform the other that the transaction is cancelled.</td></tr>
+</tbody></table>
+<p>All other message types are reserved for future use.</p>
+<h5 id="message-encryption"><a class="header" href="#message-encryption">Message Encryption</a></h5>
+<p>Encrypted messages may be routed across the Tari network such that only the destination node is able to decipher the 
+contents of the message. An encrypted message reveals to recipient but keeps the sender and contents private.</p>
+<p>To route an encrypted message, the following requirements MUST be met:</p>
+<ul>
+<li>The destination public key MUST be specified.</li>
+<li>The <code>message_signature</code> MUST be non-empty and SHOULD be encrypted.</li>
+<li>The <code>ephemeral_public_key</code> MUST be a valid <a href="https://ristretto.group/">Ristretto</a> public key.</li>
+<li>The <code>EnvelopeBody</code> MUST be non-empty.</li>
+<li>If the message <code>expiry</code> is specified, a routing node MAY discard the message if the expiry time has passed.</li>
+</ul>
+<p>A message is encrypted using the following procedure:</p>
+<ul>
+<li>The <code>DhtEnvelopBody</code> is containing the <code>MessageHeader</code> and <code>MessageBody</code> is serialized using [protobuf].</li>
+<li>A CSRNG is used to generate the cipher nonce and this is prepended onto the message.</li>
+<li>The plaintext message is padded with '0x00' to a multiple of 6000 bytes.</li>
+<li>The message encryption key is generated as follows:
+<ul>
+<li>Key material <code>dh_key</code> is generated by Diffie-Hellman of the recipient public key and the ephemeral private key.</li>
+<li>The final message key is constructed: <code>message_key = Blake2b(&quot;comms.dht.v1.key_message&quot; || dh_key)</code> to produce a 32-byte key.</li>
+</ul>
+</li>
+<li>The message Schnorr signature is generated as follows:
+<ul>
+<li>A domain-separated Blake2b hash is generated with the challenge <code>message_challenge = Blake2b(&quot;comms.dht.v1.challenge&quot; || protocol_version || destination || dht_message_type || le_bytes(flags) || expiry || ephemeral_public_key || message_body)</code>.</li>
+<li>The signer signs the hashed challenge <code>&quot;comms.dht.v1.message_signature&quot; || signer_public_key || public_nonce || message_challenge</code> with the sender secret key.</li>
+<li>The signature is serialized and encrypted using the [ChaCha20Poly1305] AEAD cipher and the same <code>dh_key</code> constructed earlier.
+<ul>
+<li>The final signature key is constructed: <code>Blake2b(&quot;comms.dht.v1.key_signature&quot; || dh_key)</code> to produce a 32-byte key.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>The <code>DhtEnvelopBody</code> is encrypted using the [ChaCha20Poly1305] AEAD cipher and <code>message_key</code>.</li>
+<li>The final message is a <code>DhtEnvelope</code> containing the plaintext <code>DhtHeader</code> and encrypted <code>DhtEnvelopeBody</code>.</li>
+</ul>
+<h5 id="message-routing"><a class="header" href="#message-routing">Message Routing</a></h5>
+<p>On receipt of a valid message with destination set to <code>PUBLIC_KEY(xxxx)</code>, a node SHOULD forward a message either
+directly to the peer, if able, or closer to the peer as per the XOR metric. If the message is invalid, the node
+SHOULD discard it.</p>
+<h5 id="store-and-forward"><a class="header" href="#store-and-forward">Store and Forward</a></h5>
 <p>Sometimes it may be desirable for messages to be sent without a destination node/client being online. This
-is especially important for a modern chat/messaging application.</p>
-<p>The mechanism for this is proposed as follows:</p>
-<p>Each <a href="Glossary.html#communication-node">communication node</a> MUST allocate some disk space for storage of messages for offline recipients.
-Only some allowlisted MessageTypes are permitted to be stored. A sender sends a message destined for a particular
-<a href="Glossary.html#node-id">node ID</a> to its closest peers, which forward the message to their closest peers, and so on.</p>
+is especially important for a modern chat/messaging application as well as interactive Mimblewimble transactions.</p>
+<p>Each <a href="Glossary.html#communication-node">communication node</a> SHOULD allocate some disk space for storage of messages for offline recipients.
+A sender sends a message destined for a particular public identity to its closest peers, which forward the message
+to their closest peers, and so on. A peer is considered close enough by finding the farthest peer from the <code>n</code> closest 
+online and available peers to the storage node and comparing that to the XOR distance of the message destination.</p>
 <p>Eventually, the message will reach nodes that either know the destination or are very close to the destination.
-These nodes MUST store the message in some pending message bucket for the destination. The maximum number of
+These nodes SHOULD store the message in some pending message storage for the destination. The maximum number of
 buckets and the size of each bucket SHOULD be sufficiently large as to be unlikely to overflow, but not so
 large as to approach disk space problems. Individual messages should be small and responsibilities for
 storage spread over the entire network.</p>
-<p>A communication node</p>
-<ul>
-<li>MUST store messages for later retransmission, if all of the following conditions are true:
-<ul>
-<li>the MessageType is permitted to be stored;</li>
-<li>there are fewer than $n$ closer online peers to the destination.</li>
-</ul>
-</li>
-<li>MUST retransmit pending messages when a closer peer comes online or is added to the routing table.</li>
-<li>MAY remove a bucket, in any of the following conditions:
-<ul>
-<li>The bucket is empty;</li>
-<li>A configured maximum number of buckets has been reached. Discard the bucket with the earliest creation timestamp.</li>
-<li>The number of closer online peers to the destination is equal to or has exceeded $n$.</li>
-</ul>
-</li>
-<li>MAY expire individual messages after a sufficiently long Time to Live (TTL)</li>
-</ul>
-<p>This approach has the following benefits:</p>
-<ul>
-<li>When a destination comes online, it will receive pending messages without having to query them.</li>
-<li>The &quot;closer within a threshold&quot; metric is simple.</li>
-<li>Messages are stored on multiple peers, which makes it less likely for messages to disappear as nodes come and go
-(depending on threshold $n$).</li>
-</ul>
-<h3 id="queue-overflow-strategy"><a class="header" href="#queue-overflow-strategy">Queue Overflow Strategy</a></h3>
-<p>Inbound/OutboundConnections (and therefore PeerConnection) have an HWM set.</p>
-<p>If the HWM is hit:</p>
-<ul>
-<li>any call to <code>send()</code> should return an error; and</li>
-<li>incoming messages should be silently discarded.</li>
-</ul>
-<h3 id="outstanding-items"><a class="header" href="#outstanding-items">Outstanding Items</a></h3>
-<ul>
-<li>A PeerConnection will probably need to implement a heartbeat to detect if a peer has gone offline.</li>
-<li>InboundConnection(Service) may want to send small replies (such as OK, ERR) when the message has been accepted or rejected.</li>
-<li>OutboundConnection(Service) may want to receive and handle small replies.</li>
-<li>Encrypted communication for the <a href="RFC-0172_PeerToPeerMessagingProtocol.html#controlservice">ControlService</a> would be better privacy, but since ZMQ requires a CURVE public key before
-the connection is bound, a dedicated &quot;secure connection negotiation socket&quot; would be needed.</li>
-<li>Details of distributed message storage.</li>
-<li>Which <a href="RFC-0172_PeerToPeerMessagingProtocol.html#netaddress">NetAddress</a> to use if a peer has many.</li>
-</ul>
+<p>On receipt of a valid message with destination set to <code>PUBLIC_KEY(xxxx)</code>, and if the peer is sufficiently close to the destination,
+a node SHOULD store the message for a time and return it later to the peer in response to a <code>SafRequestMessages</code> message.</p>
+<p>If the [DhtEnvelopeBody] is encrypted, the type and contents of the message remain private.</p>
+<h5 id="message-deduplication"><a class="header" href="#message-deduplication">Message Deduplication</a></h5>
+<p>A peer propagating/routing a message may receive the same message after propagation from another peer as there is no way 
+for routing node to know which peers have seen the message before. To prevent infinite message propagation, message contents 
+should be hashed and stored in a <em>dedup cache</em>. On receiving a message, if the message hash is found, the message SHOULD be
+discarded and not propagated further.</p>
 <h1 id="change-log-11"><a class="header" href="#change-log-11">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">13 Jun 2022</td><td align="left">Moved from tari repo</td><td align="left">sdbondi</td></tr>
 <tr><td align="left">9 Nov 2022</td><td align="left">Removed I2P and ZeroMQ</td><td align="left">stringhandler</td></tr>
+<tr><td align="left">17 Jan 2023</td><td align="left">Implementation parity updates</td><td align="left">sdbondi</td></tr>
 </tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0173versioning"><a class="header" href="#rfc-0173versioning">RFC-0173/Versioning</a></h1>
 <h2 id="versioning"><a class="header" href="#versioning">Versioning</a></h2>
