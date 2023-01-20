@@ -544,11 +544,11 @@ reorgs are no longer possible beyond that horizon. These nodes can sync from any
 </tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0111basenodesarchitecture"><a class="header" href="#rfc-0111basenodesarchitecture">RFC-0111/BaseNodesArchitecture</a></h1>
 <h2 id="base-node-architecture"><a class="header" href="#base-node-architecture">Base Node Architecture</a></h2>
-<p><img src="theme/images/status-draft.svg" alt="status: draft" /></p>
-<p><strong>Maintainer(s)</strong>: <a href="https://github.com/CjS77">Cayle Sharrock</a>, <a href="https://github.com/philipr-za">Philip Robinson</a></p>
+<p><img src="theme/images/status-stable.svg" alt="status: stable" /></p>
+<p><strong>Maintainer(s)</strong>: <a href="https://github.com/CjS77">Cayle Sharrock</a>, <a href="https://github.com/philipr-za">Philip Robinson</a>, <a href="https://github.com/jorgeantonio21">Jorge Antonio</a></p>
 <h1 id="licence-2"><a class="header" href="#licence-2">Licence</a></h1>
 <p><a href="https://opensource.org/licenses/BSD-3-Clause"> The 3-Clause BSD Licence</a>.</p>
-<p>Copyright 2021 The Tari Development Community</p>
+<p>Copyright 2022 The Tari Development Community</p>
 <p>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 following conditions are met:</p>
 <ol>
@@ -596,8 +596,8 @@ service also provides a local interface to its functionality via an asynchronous
 node will validate it. Its action depends on the validation outcome:</p>
 <ul>
 <li><em>Invalid block</em> - drop the block.</li>
-<li><em>Valid block appending to the longest chain</em> - add the block to the local state; propagate the block to peers.</li>
-<li><em>Valid block forking off main chain</em> - add the block to the local state; propagate the block to peers.</li>
+<li><em>Valid block appending to the longest chain</em> - add the block to the local state and propagate the block to peers.</li>
+<li><em>Valid block forking off main chain</em> - add the block to the local state and propagate the block to peers.</li>
 <li><em>Valid block building off unknown block</em> - add the orphan block to the local state.</li>
 </ul>
 </li>
@@ -607,7 +607,7 @@ node will validate it. Its action depends on the validation outcome:</p>
 </ul>
 <h3 id="base-node-state-machine-service"><a class="header" href="#base-node-state-machine-service">Base Node State Machine Service</a></h3>
 <p>This service is essentially a finite state machine that synchronises its blockchain state with its peers. When the state 
-machine decides it needs to synchronize its chain state with a peer it uses the Base Node Sync RPC service to do so. The
+machine decides it needs to synchronise its chain state with a peer it uses the Base Node Sync RPC service to do so. The
 RPC service allows for streaming of headers and blocks in a far more efficient manner than using the P2P messaging.</p>
 <p>This service does not provide a local API but does provide an event stream and Status Info watch channel for other 
 modules to subscribe to.</p>
@@ -616,7 +616,7 @@ modules to subscribe to.</p>
 block. The mempool is ephemeral and non-consensus critical, and as such may be a memory-only data structure. Maintaining
 a large mempool is far more important for Base Nodes serving miners than those serving wallets. The mempool structure 
 itself is a set of hash maps as described in <a href="RFC-0190_Mempool.html">RFC-0190</a></p>
-<p>When the node reboots the Mempool sync service will contact peers and sync valid mempool transactions from them. After 
+<p>When either the node reboots, or it synchronises a default number of 5 blocks, the Mempool sync service will contact peers and sync valid mempool transactions from them. After 
 it has synced this service runs to field such requests from other peers.</p>
 <p>The Mempool service handles Mempool Service Requests which it can receive from the P2P comms stack via its 
 subscriptions, via the Mempool RPC service and via an internal Request-Response API. All these interfaces provide the 
@@ -640,8 +640,8 @@ emit this data as an event which the Base Node State Machine monitors.</p>
 <h3 id="distributed-hash-table-dht-service"><a class="header" href="#distributed-hash-table-dht-service">Distributed Hash Table (DHT) Service</a></h3>
 <p>Peer discovery is a key service that blockchain nodes provide so that the peer mesh network can be navigated by the full
 nodes making up the network.</p>
-<p>In Tari, the peer-to-peer network is not only used by full nodes (Base Nodes), but also by Validator Nodes, and</p>
-<p>Tari and Digital Assets Network (DAN) clients.</p>
+<p>In Tari, the peer-to-peer network is not only used by full nodes (Base Nodes), but also by Validator Nodes, and
+Tari and Digital Assets Network (DAN) clients.</p>
 <p>For this reason, peer management is handled internally by the Comms layer. If a Base Node wants to propagate a message, 
 new block or transaction, for example, it simply selects a <code>BROADCAST</code> strategy for the message and the Comms layer
 will do the rest.</p>
@@ -671,7 +671,7 @@ Base Node are:</p>
 <ul>
 <li><strong>Wallet RPC service</strong>: An RPC interface containing methods used by wallets to submit and query transactions on a 
 Base Node</li>
-<li><strong>Base Node Sync RPC Service</strong>: Used by the Base Node State Machine Service to synchronize blocks</li>
+<li><strong>Base Node Sync RPC Service</strong>: Used by the Base Node State Machine Service to synchronise blocks</li>
 <li><strong>Mempool RPC Service</strong>: Provides the Mempool Service API via RPC</li>
 </ul>
 <h3 id="grpc-interface"><a class="header" href="#grpc-interface">gRPC Interface</a></h3>
@@ -712,6 +712,8 @@ provides; third-party applications such as block explorers; and, of course, mine
 <tr><td align="left">2 Jul 2019</td><td align="left">First outline</td><td align="left">CjS77</td></tr>
 <tr><td align="left">11 Aug 2019</td><td align="left">Updates</td><td align="left">CjS77</td></tr>
 <tr><td align="left">15 Jun 2021</td><td align="left">Significant updates</td><td align="left">SimianZa</td></tr>
+<tr><td align="left">11 Sep 2022</td><td align="left">Minor update</td><td align="left">JorgeAnt</td></tr>
+<tr><td align="left">18 Jan 2023</td><td align="left">Minor update</td><td align="left">JorgeAnt</td></tr>
 </tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0120consensus"><a class="header" href="#rfc-0120consensus">RFC-0120/Consensus</a></h1>
 <h2 id="base-layer-consensus"><a class="header" href="#base-layer-consensus">Base Layer Consensus</a></h2>
