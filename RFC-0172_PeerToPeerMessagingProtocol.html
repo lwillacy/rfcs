@@ -458,9 +458,10 @@ to be fully determined by domain-level components.</p>
 </li>
 </ul>
 </li>
-<li>If <code>ENCRYPTED</code> is not set
+<li>If the <code>ENCRYPTED</code> flag is not set, indicating a cleartext message
 <ul>
 <li>The <code>message_signature</code> MAY be specified. If it is, it MUST be valid.</li>
+<li>Other fields relating to encryption e.g. <code>ephemeral_public_key</code> MAY be set but SHOULD be ignored.</li>
 </ul>
 </li>
 </ul>
@@ -503,6 +504,8 @@ The destination peer will attempt to contact the sender and send a <code>Discove
 <p>The <code>EnvelopeBody</code> is the &quot;payload&quot; of the message and consists of an arbitrary number of ordered opaque BLOBs.
 It may be encrypted for a particular destination. The contents of these BLOBs are decided by domain-level requirements.</p>
 <p>The Tari protocol inserts a <code>MessageHeader</code> at index 0 and <code>MessageBody</code> at index 1.</p>
+<p>A zero-sized encoding of <code>EnvelopeBody</code> is permitted as that is a valid proto3 encoding. When applying <a href="#message-encryption">message encryption</a>, 
+the body MUST be padded and, therefore, a message SHOULD be discarded if the encoded <code>EnvelopeBody</code> is zero-sized.</p>
 <h5 id="messageheader"><a class="header" href="#messageheader">MessageHeader</a></h5>
 <p>Every Tari message MUST have a payload header containing the following fields at index 0 in the <code>EnvelopeBody</code>:</p>
 <table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
@@ -532,7 +535,7 @@ contents of the message. An encrypted message reveals to recipient but keeps the
 <li>The destination public key MUST be specified.</li>
 <li>The <code>message_signature</code> MUST be non-empty and SHOULD be encrypted.</li>
 <li>The <code>ephemeral_public_key</code> MUST be a valid <a href="https://ristretto.group/">Ristretto</a> public key.</li>
-<li>The <code>EnvelopeBody</code> MUST be non-empty.</li>
+<li>The <code>EnvelopeBody</code> MUST be non-empty, as message padding (described below) is required.</li>
 <li>If the message <code>expiry</code> is specified, a routing node MAY discard the message if the expiry time has passed.</li>
 </ul>
 <p>A message is encrypted using the following procedure:</p>
@@ -589,6 +592,7 @@ discarded and not propagated further.</p>
 <tr><td align="left">13 Jun 2022</td><td align="left">Moved from tari repo</td><td align="left">sdbondi</td></tr>
 <tr><td align="left">9 Nov 2022</td><td align="left">Removed I2P and ZeroMQ</td><td align="left">stringhandler</td></tr>
 <tr><td align="left">17 Jan 2023</td><td align="left">Implementation parity updates</td><td align="left">sdbondi</td></tr>
+<tr><td align="left">25 Jan 2023</td><td align="left">Clarify empty body rules</td><td align="left">sdbondi</td></tr>
 </tbody></table>
 
                     </main>
