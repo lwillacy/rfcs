@@ -256,6 +256,10 @@ $$</p>
 plus the total transaction fees within the block</li>
 <li>have a lock-height as per consensus</li>
 </ul>
+<p>A coinbase transaction contained in a block CAN:</p>
+<ul>
+<li>include any arbitrary 64 bytes of extra data, <a href="Glossary.html#coinbase-extra">coinbase-extra</a></li>
+</ul>
 <h3 id="block-headers"><a class="header" href="#block-headers">Block Headers</a></h3>
 <p>Every <a href="Glossary.html#block-header">block header</a> MUST contain the following fields:</p>
 <ul>
@@ -448,6 +452,7 @@ done by the whole network, and verification of sorting is exceptionally cheap.</
 <h1 id="change-log"><a class="header" href="#change-log">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">11 Oct 2022</td><td align="left">First stable</td><td align="left">SWvHeerden</td></tr>
+<tr><td align="left">13 Mar 2023</td><td align="left">Add mention of coinbase extra</td><td align="left">SWvHeerden</td></tr>
 </tbody></table>
 
                     </main>

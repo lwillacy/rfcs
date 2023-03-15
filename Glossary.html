@@ -185,6 +185,9 @@ this process transaction in the mempool could become orphaned or invalid.</p>
 <h2 id="coinbase-transaction"><a class="header" href="#coinbase-transaction">Coinbase transaction</a></h2>
 <p>The first transaction in every Tari block yields a <a href="#block-reward" title="The amount of Tari created in every block">Block Reward</a> according to the Tari <a href="#emission-schedule">emission Schedule</a> and is
 awarded to the miner that performed the Proof of Work for the block.</p>
+<h2 id="coinbase-extra"><a class="header" href="#coinbase-extra">Coinbase extra</a></h2>
+<p>An arbitrary 64 bytes can be included with the coinbase utxo that can be used to store any data. This can be used to identify the pool that mined the
+block for example or a Merkle root used when merge mining with Tari as the parent chain.</p>
 <h2 id="committee"><a class="header" href="#committee">Committee</a></h2>
 <p>A group of <a href="#validator-node" title="A second-layer node that manages and validates digital asset state transitions">Validator Node</a>s that are responsible for managing the state of a specific <a href="#digital-asset" title="Sets of Native digital tokens, both fungible and non-fungible that are created by
 asset issuers on the Tari 2nd layer">Digital Asset</a>. A committee is

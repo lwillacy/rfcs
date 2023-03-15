@@ -839,6 +839,10 @@ $$</p>
 plus the total transaction fees within the block</li>
 <li>have a lock-height as per consensus</li>
 </ul>
+<p>A coinbase transaction contained in a block CAN:</p>
+<ul>
+<li>include any arbitrary 64 bytes of extra data, <a href="Glossary.html#coinbase-extra">coinbase-extra</a></li>
+</ul>
 <h3 id="block-headers"><a class="header" href="#block-headers">Block Headers</a></h3>
 <p>Every <a href="Glossary.html#block-header">block header</a> MUST contain the following fields:</p>
 <ul>
@@ -1031,6 +1035,7 @@ done by the whole network, and verification of sorting is exceptionally cheap.</
 <h1 id="change-log-3"><a class="header" href="#change-log-3">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">11 Oct 2022</td><td align="left">First stable</td><td align="left">SWvHeerden</td></tr>
+<tr><td align="left">13 Mar 2023</td><td align="left">Add mention of coinbase extra</td><td align="left">SWvHeerden</td></tr>
 </tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0131mining"><a class="header" href="#rfc-0131mining">RFC-0131/Mining</a></h1>
 <h2 id="full-node-mining-on-tari-base-layer"><a class="header" href="#full-node-mining-on-tari-base-layer">Full-node Mining on Tari Base Layer</a></h2>
@@ -11802,6 +11807,9 @@ this process transaction in the mempool could become orphaned or invalid.</p>
 <h2 id="coinbase-transaction"><a class="header" href="#coinbase-transaction">Coinbase transaction</a></h2>
 <p>The first transaction in every Tari block yields a <a href="Glossary.html#block-reward" title="The amount of Tari created in every block">Block Reward</a> according to the Tari <a href="Glossary.html#emission-schedule">emission Schedule</a> and is
 awarded to the miner that performed the Proof of Work for the block.</p>
+<h2 id="coinbase-extra"><a class="header" href="#coinbase-extra">Coinbase extra</a></h2>
+<p>An arbitrary 64 bytes can be included with the coinbase utxo that can be used to store any data. This can be used to identify the pool that mined the
+block for example or a Merkle root used when merge mining with Tari as the parent chain.</p>
 <h2 id="committee"><a class="header" href="#committee">Committee</a></h2>
 <p>A group of <a href="Glossary.html#validator-node" title="A second-layer node that manages and validates digital asset state transitions">Validator Node</a>s that are responsible for managing the state of a specific <a href="Glossary.html#digital-asset" title="Sets of Native digital tokens, both fungible and non-fungible that are created by
 asset issuers on the Tari 2nd layer">Digital Asset</a>. A committee is
