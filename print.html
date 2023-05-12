@@ -6628,7 +6628,7 @@ tari://testnet/payments/send?amount=1.23&amp;pubKey=01234556789abcde
 </ul>
 <p>The data contains transaction information used in the send tokens process.</p>
 <table><thead><tr><th>Value Name</th><th align="center">Value Type</th><th>Note</th></tr></thead><tbody>
-<tr><td>publicKey</td><td align="center">String</td><td>Receiver's public key</td></tr>
+<tr><td>tariAddress</td><td align="center">String</td><td>Receiver's Tari Address</td></tr>
 <tr><td>amount</td><td align="center">UInt64?</td><td>The amount in micro Tari</td></tr>
 <tr><td>note</td><td align="center">String?</td><td>Note passed with transaction</td></tr>
 </tbody></table>
@@ -6639,6 +6639,10 @@ tari://testnet/payments/send?amount=1.23&amp;pubKey=01234556789abcde
 <table><thead><tr><th>Value Name</th><th align="center">Value Type</th><th>Note</th></tr></thead><tbody>
 <tr><td>name</td><td align="center">String</td><td>The name of the base node</td></tr>
 <tr><td>peer</td><td align="center">String</td><td>Base node's public link and onion address combined together</td></tr>
+</tbody></table>
+<h1 id="change-log-22"><a class="header" href="#change-log-22">Change Log</a></h1>
+<table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
+<tr><td align="left">19 Apr 2023</td><td align="left">First stable, replace public key with tari address</td><td align="left">SWvHeerden</td></tr>
 </tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0230time-related-transactions"><a class="header" href="#rfc-0230time-related-transactions">RFC-0230/Time-related Transactions</a></h1>
 <h2 id="time-related-transactions"><a class="header" href="#time-related-transactions">Time-related Transactions</a></h2>
@@ -6732,7 +6736,7 @@ ELSE
 ENDIF
 </code></pre>
 <p>A more detailed analysis of the execution of this kind of script can be found at <a href="RFC-0202_TariScriptOpcodes.html#time-locked-contract">Time-locked Contact</a></p>
-<h1 id="change-log-22"><a class="header" href="#change-log-22">Change Log</a></h1>
+<h1 id="change-log-23"><a class="header" href="#change-log-23">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">14 Apr 2019</td><td align="left">First draft</td><td align="left">SWvheerden</td></tr>
 <tr><td align="left">19 Dec 2021</td><td align="left">TariScript updates</td><td align="left">philipr</td></tr>
@@ -6887,7 +6891,7 @@ assigned greek lowercase letters in most cases. Some terms used here are noted d
 <tr><td align="left">Pre-image</td><td>\( \preimage \)</td><td>The random byte data used for the pre-image of the hash</td></tr>
 <tr><td align="left"></td><td></td><td></td></tr>
 </tbody></table>
-<h2 id="change-log-23"><a class="header" href="#change-log-23">Change Log</a></h2>
+<h2 id="change-log-24"><a class="header" href="#change-log-24">Change Log</a></h2>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">17 Oct 2022</td><td align="left">First outline</td><td align="left">SWvHeerden</td></tr>
 </tbody></table>
@@ -8689,7 +8693,7 @@ deployed as part of the Tari network.</p>
 <p>Github: <a href="https://github.com/tari-project/tari-crypto">tari-project/tari-crypto</a></p>
 <p>Tari Crypto was refactored into its own <a href="https://crates.io/crates/tari_crypto">crate</a>, for ease of use and integration across different projects.
 It includes all cryptographic services, including a Curve25519 implementation.</p>
-<h1 id="change-log-24"><a class="header" href="#change-log-24">Change Log</a></h1>
+<h1 id="change-log-25"><a class="header" href="#change-log-25">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Description</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">21 Dec 2018</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 <tr><td align="left">14 Jan 2022</td><td align="left">Deprecated in favour of README</td><td align="left">CjS77</td></tr>
@@ -10943,7 +10947,7 @@ chain.</li>
 <li>Contract B is a trusted party from the PoV of Bob / A (e.g. Bob &amp; B collude to lie about account updates in order to
 defraud A)</li>
 </ul>
-<h1 id="change-log-25"><a class="header" href="#change-log-25">Change Log</a></h1>
+<h1 id="change-log-26"><a class="header" href="#change-log-26">Change Log</a></h1>
 <ul>
 <li><strong>06-04-2022</strong>: First draft</li>
 </ul>
@@ -11860,7 +11864,7 @@ technological merits of the potential system outlined herein.</p>
 <h2 id="goals-52"><a class="header" href="#goals-52">Goals</a></h2>
 <h2 id="related-requests-for-comment-44"><a class="header" href="#related-requests-for-comment-44">Related Requests for Comment</a></h2>
 <h2 id="description-39"><a class="header" href="#description-39">Description</a></h2>
-<h1 id="change-log-26"><a class="header" href="#change-log-26">Change Log</a></h1>
+<h1 id="change-log-27"><a class="header" href="#change-log-27">Change Log</a></h1>
 <ul>
 <li><strong>dd-mm-yyyy</strong>: Summary of changes</li>
 </ul>

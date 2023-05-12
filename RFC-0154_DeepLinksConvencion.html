@@ -204,7 +204,7 @@ tari://testnet/payments/send?amount=1.23&amp;pubKey=01234556789abcde
 </ul>
 <p>The data contains transaction information used in the send tokens process.</p>
 <table><thead><tr><th>Value Name</th><th align="center">Value Type</th><th>Note</th></tr></thead><tbody>
-<tr><td>publicKey</td><td align="center">String</td><td>Receiver's public key</td></tr>
+<tr><td>tariAddress</td><td align="center">String</td><td>Receiver's Tari Address</td></tr>
 <tr><td>amount</td><td align="center">UInt64?</td><td>The amount in micro Tari</td></tr>
 <tr><td>note</td><td align="center">String?</td><td>Note passed with transaction</td></tr>
 </tbody></table>
@@ -215,6 +215,10 @@ tari://testnet/payments/send?amount=1.23&amp;pubKey=01234556789abcde
 <table><thead><tr><th>Value Name</th><th align="center">Value Type</th><th>Note</th></tr></thead><tbody>
 <tr><td>name</td><td align="center">String</td><td>The name of the base node</td></tr>
 <tr><td>peer</td><td align="center">String</td><td>Base node's public link and onion address combined together</td></tr>
+</tbody></table>
+<h1 id="change-log"><a class="header" href="#change-log">Change Log</a></h1>
+<table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
+<tr><td align="left">19 Apr 2023</td><td align="left">First stable, replace public key with tari address</td><td align="left">SWvHeerden</td></tr>
 </tbody></table>
 
                     </main>
