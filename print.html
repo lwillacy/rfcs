@@ -6621,6 +6621,7 @@ testnet/payments/request
 <pre><code class="language-ignore">tari://mainnet/profile
 tari://mainnet/profile/username
 tari://testnet/payments/send?amount=1.23&amp;pubKey=01234556789abcde
+tari://nextnet/contacts/list[0][alias]=MrTari&amp;list[0][hex]=01234556789abcde&amp;list[1][alias]=AdamSmith&amp;list[1][hex]=edcba9876543210
 </code></pre>
 <h3 id="deeplinks-in-use"><a class="header" href="#deeplinks-in-use">Deeplinks in use:</a></h3>
 <ul>
@@ -6640,9 +6641,30 @@ tari://testnet/payments/send?amount=1.23&amp;pubKey=01234556789abcde
 <tr><td>name</td><td align="center">String</td><td>The name of the base node</td></tr>
 <tr><td>peer</td><td align="center">String</td><td>Base node's public link and onion address combined together</td></tr>
 </tbody></table>
+<ul>
+<li><code>{network_name}/contacts</code></li>
+</ul>
+<p>List of contacts. This deep link is used to share multiple Tari contacts with another user.</p>
+<table><thead><tr><th>Value Name</th><th align="center">Value Type</th><th>Note</th></tr></thead><tbody>
+<tr><td>list</td><td align="center">Array&lt;Contact&gt;</td><td>List of <code>Contact</code> objects</td></tr>
+</tbody></table>
+<p><code>Contact</code> object</p>
+<table><thead><tr><th>Value Name</th><th align="center">Value Type</th><th>Note</th></tr></thead><tbody>
+<tr><td>alias</td><td align="center">String?</td><td>Contact's name/alias</td></tr>
+<tr><td>hex</td><td align="center">String</td><td>Contact's Tari Address</td></tr>
+</tbody></table>
+<ul>
+<li><code>{network_name}/profile</code></li>
+</ul>
+<p>User's profile card. It is used to initiate the transaction with a predefined receiver address and presented alias.</p>
+<table><thead><tr><th>Value Name</th><th align="center">Value Type</th><th>Note</th></tr></thead><tbody>
+<tr><td>alias</td><td align="center">String</td><td>User's name/alias</td></tr>
+<tr><td>hex</td><td align="center">String</td><td>User's Tari Address</td></tr>
+</tbody></table>
 <h1 id="change-log-22"><a class="header" href="#change-log-22">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
-<tr><td align="left">19 Apr 2023</td><td align="left">First stable, replace public key with tari address</td><td align="left">SWvHeerden</td></tr>
+<tr><td align="left">19 Apr 2023</td><td align="left">First stable, replace public key with tari address</td><td align="left"><a href="https://github.com/SWvheerden">SWvHeerden</a></td></tr>
+<tr><td align="left">06 Jun 2023</td><td align="left">Added descriptions for <code>/contacts</code> and <code>/profile</code> deep links</td><td align="left"><a href="https://github.com/TruszczynskiA">Adrian Truszczyński</a></td></tr>
 </tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0230time-related-transactions"><a class="header" href="#rfc-0230time-related-transactions">RFC-0230/Time-related Transactions</a></h1>
 <h2 id="time-related-transactions"><a class="header" href="#time-related-transactions">Time-related Transactions</a></h2>
