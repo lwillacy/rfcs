@@ -255,6 +255,8 @@ $$</p>
 <li>have a value exactly equal to the emission at the block height it was minted (see <a href="Glossary.html#emission-schedule">emission schedule</a>) 
 plus the total transaction fees within the block</li>
 <li>have a lock-height as per consensus</li>
+<li>can not have a offset except 0</li>
+<li>can not have a script offset except 0</li>
 </ul>
 <p>A coinbase transaction contained in a block CAN:</p>
 <ul>
@@ -453,6 +455,7 @@ done by the whole network, and verification of sorting is exceptionally cheap.</
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">11 Oct 2022</td><td align="left">First stable</td><td align="left">SWvHeerden</td></tr>
 <tr><td align="left">13 Mar 2023</td><td align="left">Add mention of coinbase extra</td><td align="left">SWvHeerden</td></tr>
+<tr><td align="left">05 Jun 2023</td><td align="left">Add coinbase excess rule</td><td align="left">SWvHeerden</td></tr>
 </tbody></table>
 
                     </main>
