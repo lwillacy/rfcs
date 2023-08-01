@@ -3220,7 +3220,7 @@ notice.</p>
 community. The release of this document is intended solely for review and discussion by the community of the
 technological merits of the potential system outlined herein.</p>
 <h2 id="goals-14"><a class="header" href="#goals-14">Goals</a></h2>
-<p>This Request for Comment (RFC) describes Tari-specific implementation details for Bulletproofs+ range proving and verifying.</p>
+<p>This Request for Comment (RFC) describes Tari-specific implementation details for Bulletproofs+ range proving and verifying, in addition to giving an outline of comparative performance.</p>
 <h2 id="related-requests-for-comment-12"><a class="header" href="#related-requests-for-comment-12">Related Requests for Comment</a></h2>
 <ul>
 <li><a href="./RFC-0150_Wallets.html">RFC-0150: Wallets</a></li>
@@ -3243,9 +3243,11 @@ Batch verification is described only informally in the Bulletproofs+ preprint, a
 Minimum value assertion is not addressed in the preprint.
 An approach to mask and value recovery was <a href="https://github.com/mimblewimble/grin-wallet/issues/105">used by Grin</a> for the Bulletproofs range proving system, implemented as described by the deprecated <a href="RFCD-0180_BulletproofRewinding.html">RFC-0180</a>, and can be modified to support Bulletproofs+ range proofs with extended commitments.</p>
 <h2 id="notation"><a class="header" href="#notation">Notation</a></h2>
-<p>To reduce confusion in our description and more closely match implementation libraries, we use additive notation and uppercase letters for group elements, and otherwise assume notation from the preprints.
+<p>To reduce confusion in our description and more closely match implementation libraries, we use additive notation and uppercase letters for group elements, and otherwise generally assume notation from the preprints.
 Denote the commitment value generator by $G_c$ and the commitment mask generator vector by $\vec{H}_c$.
 Because the preprint uses the notation $A$ differently in the weighted inner product and range proving protocols, we rename it to $A'$ in the weighted inner product protocol.</p>
+<p>We assume that a range proof aggregates $m$ range assertions, each of which is to an $n$-bit range.
+We further assume that each value commitment uses $p$ masks; that is, a standard Pedersen commitment would have $p = 1$.</p>
 <p>A specific definition of note relates to that of the vector $\vec{d}$ introduced in the preprint.
 This vector is defined as
 \[
@@ -3277,11 +3279,11 @@ The single multiscalar multiplication used to verify an aggregated range proof (
 We assume indexing starts at zero unless otherwise noted.
 Single aggregated proof verification reduces (by suitable modification of the equation given in Section 6.1 of the Bulletproofs+ preprint) to checking that the following equation holds:
 \[
-\sum_i (r'es_i) G_i + \sum_i (s'es_i') H_i + \sum_l \delta_l' H_{c,l} = e^2 \widehat{A} + \sum_j (e^2e_j^2) L_j + \sum_j (e^2e_j^{-2}) R_j + e A' + B
+\sum_{i=0}^{mn-1} (r'es_i) G_i + \sum_{i=0}^{mn-1} (s'es_i') H_i + \sum_{l=0}^{p-1} \delta_l' H_{c,l} = e^2 \widehat{A} + \sum_{j=0}^{\operatorname{lg}(mn)-1} (e^2e_j^2) L_j + \sum_{j=0}^{\operatorname{lg}(mn)-1} (e^2e_j^{-2}) R_j + e A' + B
 \]
 But we also have (from suitable modification of the definition given in Figure 3 of the Bulletproofs+ preprint) that
 \[
-\widehat{A} = A - \sum_i z G_i + \sum_i (z + d_iy^{mn-i}) H_i + x G_c + y^{mn+1}\sum_k z^{2(k+1)} (V_k - v_{\text{min},k} G_c)
+\widehat{A} = A - \sum_{i=0}^{mn-1} z G_i + \sum_{i=0}^{mn-1} (z + d_iy^{mn-i}) H_i + x G_c + y^{mn+1}\sum_{k=0}^{m-1} z^{2(k+1)} (V_k - v_{\text{min},k} G_c)
 \]
 defined by the range proving system outside of the inner product argument.
 Here
@@ -3295,8 +3297,8 @@ is a scalar defined entirely in terms of constants and challenge values from the
 Grouping terms, we find that a single aggregated range proof can be verified by checking that the following equation holds:
 \[
 \begin{multline*}
-\sum_i (r'es_i + e^2z) G_i + \sum_i (s'es_i' - e^2(z + d_iy^{mn-i})) H_i + \left( r'ys' - e^2x + e^2y^{mn+1}\sum_k z^{2(k+1)}v_{\text{min},k} \right) G_c \\
-+ \sum_l \delta_l' H_{c,i} - \sum_k (y^{mn+1}z^{2(k+1)}e^2) V_k - e^2 A - \sum_j (e^2e_j^2) L_j - \sum_j (e^2e_j^{-2}) R_j - e A' - B = 0
+\sum_{i=0}^{mn-1} (r'es_i + e^2z) G_i + \sum_{i=0}^{mn-1} (s'es_i' - e^2(z + d_iy^{mn-i})) H_i + \left( r'ys' - e^2x + e^2y^{mn+1}\sum_{k=0}^{m-1} z^{2(k+1)}v_{\text{min},k} \right) G_c \\
++ \sum_{l=0}^{p-1} \delta_l' H_{c,i} - \sum_{k=0}^{m-1} (y^{mn+1}z^{2(k+1)}e^2) V_k - e^2 A - \sum_{j=0}^{\operatorname{lg}(mn)-1} (e^2e_j^2) L_j - \sum_{j=0}^{\operatorname{lg}(mn)-1} (e^2e_j^{-2}) R_j - e A' - B = 0 \tag{4}
 \end{multline*}
 \]</p>
 <h2 id="batch-verification"><a class="header" href="#batch-verification">Batch verification</a></h2>
@@ -3320,17 +3322,18 @@ During the verification process, the designated verifier performs the same deter
 Because the resulting proof is still special honest-verifier zero knowledge, as long as the nonce seed is sampled uniformly at random, a non-designated verifier is not able to gain any information about the masks.</p>
 <p>After sampling a nonce seed, the prover passes it through an appropriate set of domain-separated hash functions with scalar output to generate the following nonces used in the proof:
 \[
-\{\eta_k\}, \{\delta_k\}, \{\alpha_k\}, \{d_{L,j,k}\}, \{d_{R,j,k}\}
+\{\eta_l\}, \{\delta_l\}, \{\alpha_l\}, \{d_{L,j,l}\}, \{d_{R,j,l}\}
 \]
-Here, as before, $k$ is indexed over the number of masks used in the extended commitment, and $j$ is indexed over the weighted inner product argument rounds.</p>
-<p>By doing this, the prover effectively defines the proof element set $\{\delta_k'\}$ as follows:
+Here, as before, $0 \leq l &lt; p$ is indexed over the number of masks used in the extended commitment, and $0 \leq j &lt; \operatorname{lg}(mn)$ is indexed over the weighted inner product argument rounds.
+Let $\{\gamma_l\}$ be the masks used in the non-aggregated proof.</p>
+<p>By doing this, the prover effectively defines the proof element set $\{\delta_l'\}$ as follows:
 \[
-\delta_k' = \eta_k + \delta_ke + e^2 \left( \alpha_k + \gamma_ky^{n+1}z^2 + \sum_j(e_j^2d_{L,j,k} + e_j^{-2}d_{R,j,k}) \right)
+\delta_l' = \eta_l + \delta_le + e^2 \left( \alpha_l + \gamma_ly^{n+1}z^2 + \sum_{j=0}^{\operatorname{lg}(mn)-1}(e_j^2d_{L,j,l} + e_j^{-2}d_{R,j,l}) \right)
 \]</p>
 <p>When verifying the proof, the designated verifier uses the nonce seed to perform the same nonce derivation as the prover.
-It then computes the mask set $\{\gamma_k\}$ as follows:
+It then computes the mask set $\{\gamma_l\}$ as follows:
 \[
-\gamma_k = \left( (\delta_k' - \eta_k - \delta_ke)e^{-2} - \alpha_k - \sum_j(e_j^2d_{L,j,k} + e_j^{-2}d_{R,j,k}) \right) y^{-(n+1)}z^{-2}
+\gamma_l = \left( (\delta_l' - \eta_l - \delta_le)e^{-2} - \alpha_l - \sum_{j=0}^{\operatorname{lg}(mn)-1}(e_j^2d_{L,j,l} + e_j^{-2}d_{R,j,l}) \right) y^{-(n+1)}z^{-2}
 \]
 The recovered masks must then be checked against the extended commitment once the value is separately communicated to the verifier.
 Otherwise, if the verifier uses a different nonce seed than the prover did (or if the prover otherwise did not derive the nonces using a nonce seed at all), it will recover incorrect masks.
@@ -3359,10 +3362,36 @@ for all $0 \leq j &lt; m$.</p>
 \end{align*}
 \]
 This requires a sum of only $m$ even powers of $z$, which can be computed iteratively.</p>
+<h2 id="comparative-performance"><a class="header" href="#comparative-performance">Comparative performance</a></h2>
+<p>We now compare Bulletproofs+ performance to that of the <a href="https://eprint.iacr.org/2017/1066">Bulletproofs</a> range proving system.</p>
+<h3 id="size"><a class="header" href="#size">Size</a></h3>
+<p>Bulletproofs+ range proofs, like Bulletproofs, scale logarithmically in size.
+In each case, a proof consists of the following:</p>
+<table><thead><tr><th align="left">Proving system</th><th align="left">Group elements</th><th align="left">Scalars</th></tr></thead><tbody>
+<tr><td align="left">Bulletproofs</td><td align="left">$2 \operatorname{lg}(nm) + 4$</td><td align="left">$5$</td></tr>
+<tr><td align="left">Bulletproofs+</td><td align="left">$2 \operatorname{lg}(nm) + 3$</td><td align="left">$p + 2$</td></tr>
+</tbody></table>
+<p>That is, both the range bit length $n$ and aggregation factor $m$ contribute logarithmically to the proof size.
+In the case of the Tari-specific implementation of Bulletproofs+, the number of masks contributes linearly to the proof size.</p>
+<p>Regardless of the bit length $n$ or aggregation factor $m$ used, a single-mask ($p = 1$) Bulletproofs+ range proof saves $1$ group element and $2$ scalars over the equivalent Bulletproofs range proof. For the <a href="https://ristretto.group/">Ristretto</a>-based Tari implementation, this amounts to $96$ bytes after group element and scalar encoding.</p>
+<p>We also note that while it is possible to encode an extra scalar of data in a Bulletproofs non-aggregated range proof (in addition to the mask) using nonce-based recovery techniques, this is not possible with Bulletproofs+ range proofs.</p>
+<h3 id="verification-efficiency"><a class="header" href="#verification-efficiency">Verification efficiency</a></h3>
+<p>Like in Bulletproofs+, it is possible to reduce verification of a batch of Bulletproofs range proofs to a single multiscalar multiplication operation.</p>
+<p>To compare this efficiency, we count unique generators used in the multiscalar multiplication operation in both cases.
+It is the case that scalar-only operations differ greatly between the two systems, but these operations are much faster than those involving group elements.</p>
+<p>Let $b$ be the batch size of such a verification; that is, the number of proofs to be verified together.
+This means single-proof verification has $b = 1$.</p>
+<table><thead><tr><th align="left">Proving system</th><th align="left">Operation size</th></tr></thead><tbody>
+<tr><td align="left">Bulletproofs</td><td align="left">$b[2\operatorname{lg}(mn) + m + 4] + 2mn + 2$</td></tr>
+<tr><td align="left">Bulletproofs+</td><td align="left">$b[2\operatorname{lg}(mn) + m + 3] + 2mn + p + 1$</td></tr>
+</tbody></table>
+<p>Verification in Bulletproofs+ is slightly faster than in Bulletproofs.</p>
+<h2 id="changelog"><a class="header" href="#changelog">Changelog</a></h2>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">7 Dec 2022</td><td align="left">First draft</td><td align="left">Aaron</td></tr>
 <tr><td align="left">13 Jan 2022</td><td align="left">Performance updates</td><td align="left">brianp</td></tr>
 <tr><td align="left">20 Jul 2023</td><td align="left">Sum optimization</td><td align="left">Aaron</td></tr>
+<tr><td align="left">31 Jul 2023</td><td align="left">Notation and efficiency</td><td align="left">Aaron</td></tr>
 </tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0182commitmentsignatures"><a class="header" href="#rfc-0182commitmentsignatures">RFC-0182/CommitmentSignatures</a></h1>
 <h2 id="commitment-and-public-key-signatures"><a class="header" href="#commitment-and-public-key-signatures">Commitment and public key signatures</a></h2>
