@@ -333,13 +333,20 @@ This means single-proof verification has $b = 1$.</p>
 <tr><td align="left">Bulletproofs</td><td align="left">$b[2\operatorname{lg}(mn) + m + 4] + 2mn + 2$</td></tr>
 <tr><td align="left">Bulletproofs+</td><td align="left">$b[2\operatorname{lg}(mn) + m + 3] + 2mn + p + 1$</td></tr>
 </tbody></table>
-<p>Verification in Bulletproofs+ is slightly faster than in Bulletproofs.</p>
+<p>Verification in Bulletproofs+ is slightly faster than in Bulletproofs in theory.</p>
+<p>In practice, verification of a single 64-bit range proof in the <a href="https://github.com/tari-project/bulletproofs-plus">Tari Bulletproofs+</a> implementation is comparable to an <a href="https://github.com/tari-project/bulletproofs">updated fork</a> of the <a href="https://github.com/dalek-cryptography/bulletproofs">Dalek Bulletproofs</a> implementation, though verification of an aggregated proof is notably slower.</p>
+<h3 id="proving-efficiency"><a class="header" href="#proving-efficiency">Proving efficiency</a></h3>
+<p>It is more challenging to compare proving efficiency, since generation of a range proof does not reduce cleanly to a single multiscalar multiplication evaluation for either Bulletproofs or Bulletproofs+ range proofs.
+However, we note that the overall complexity between the inner-product arguments in the proving systems is similar in terms of group operations; outside of these inner-product arguments, Bulletproofs+ requires fewer group operations.
+Overall efficiency is likely to depend on specific optimizations.</p>
+<p>In practice, generation of a single 64-bit range proof in the Tari Bulletproofs+ implementation is about 10% faster than in the Dalek Bulletproofs updated fork, with similar performance for aggregated proofs.</p>
 <h2 id="changelog"><a class="header" href="#changelog">Changelog</a></h2>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
 <tr><td align="left">7 Dec 2022</td><td align="left">First draft</td><td align="left">Aaron</td></tr>
 <tr><td align="left">13 Jan 2022</td><td align="left">Performance updates</td><td align="left">brianp</td></tr>
 <tr><td align="left">20 Jul 2023</td><td align="left">Sum optimization</td><td align="left">Aaron</td></tr>
 <tr><td align="left">31 Jul 2023</td><td align="left">Notation and efficiency</td><td align="left">Aaron</td></tr>
+<tr><td align="left">3 Aug 2023</td><td align="left">Proving efficiency note</td><td align="left">Aaron</td></tr>
 </tbody></table>
 
                     </main>
