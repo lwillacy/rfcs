@@ -180,9 +180,8 @@ without notice.</p>
 community. The release of this document is intended solely for review and discussion by the community of the
 technological merits of the potential system outlined herein.</p>
 <h2 id="goals"><a class="header" href="#goals">Goals</a></h2>
-<p>The Thaum is a <a href="https://discworld.fandom.com/wiki/Thaum">unit of magic</a>. Thaums are used to power the DAN's economic
-engine.</p>
-<p>This RFC describes the motivation and mechanism of the Tari to Dan peg-in mechanism. </p>
+<p>Tari is used to power the DAN's economic engine.</p>
+<p>This RFC describes the motivation and mechanism of the Minotari to DAN peg-in mechanism. </p>
 <h2 id="related-requests-for-comment"><a class="header" href="#related-requests-for-comment">Related Requests for Comment</a></h2>
 <ul>
 <li><a href="./RFC-0111_BaseNodeArchitecture.html">RFC-0111: Base Node Architecture</a></li>
@@ -201,7 +200,7 @@ channels, like the Lightning Network, where the same parties peg-in and -out).</
 side-chains, like <a href="https://elementsproject.org/how-it-works">elements</a>. All of them have particular trade-offs and difficulties.</p>
 <p>For Tari, we propose a slightly different approach: A one-way peg with persistent 2nd-layer burn.</p>
 <p>Because the operating principle is quite similar to that of a gas turbine, we call this approach the <em>turbine model</em>.
-Fuel (Tari) is fed into the turbine, which is burnt (also burnt :)) which produces a hot, motive gas (Thaums) that 
+Fuel (Minotari) is fed into the turbine, which is burnt (also burnt :)) which produces a hot, motive gas (Tari) that 
 drives the engine (the DAN). The exhaust gas is ejected from the rear of the turbine (a portion of the instruction 
 fees are burnt).</p>
 <h3 id="an-aside---the-monetary-policy-trilemma"><a class="header" href="#an-aside---the-monetary-policy-trilemma">An aside - the monetary policy trilemma</a></h3>
@@ -215,8 +214,8 @@ control all 3 of these things simultaneously</em>:</p>
 <p>Let's briefly consider the trilemma from the point of view of the DAN.</p>
 <h4 id="monetary-policy"><a class="header" href="#monetary-policy">Monetary policy</a></h4>
 <p>We are effectively forced to control monetary policy.
-Or put another way, we can't let people freely mint their own Thaums. Unfortunately, even though we have &quot;chosen&quot; to
-control supply, it's difficult for us to control the Thaums supply in practice. In the physical world, the money 
+Or put another way, we can't let people freely mint their own Tari. Unfortunately, even though we have &quot;chosen&quot; to
+control supply, it's difficult for us to control the Tari supply in practice. In the physical world, the money 
 supply is typically managed by a central bank, with the emphasis on &quot;central&quot;.</p>
 <p>The designers of a decentralised monetary system have precious few levers available to control supply and no simple ones.</p>
 <h4 id="capital-flow"><a class="header" href="#capital-flow">Capital flow</a></h4>
@@ -247,27 +246,28 @@ will tend to remain range-bound.</p>
 <p>And the money supply can be tuned, if not controlled. This all leads to the proposal of a new mechanism, the turbine 
 model:</p>
 <p><img src="./assets/turbine.png" alt="turbine" /></p>
-<p>The DAN Thaum supply is increased by user peg-in deposits, and any other mechanism that we may want to enforce, 
+<p>The DAN Tari supply is increased by user peg-in deposits, and any other mechanism that we may want to enforce, 
 such as asset issuer financing. </p>
-<p>To prevent the eventual collapse of the Thaum price to zero, there must be an exhaust mechanism that continually 
-removes Thaums from the system..</p>
-<p>The simplest exhaust mechanism is to simply burn a fraction of Thaums fees from every transaction! These can be very
-low. Presumably, over the long-run the burn rate should approximately match the Tari base layer tail emission.</p>
-<p>The exhaust places a permanent upward pressure on the Thaums exchange rate; but it will never exceed 1:1 with Tari,
-since any premium will be immediately arbitraged away. This is because anyone can <em>always</em> burn as much Tari as they 
-wish and mint Thaums at a 1:1 ratio on the DAN and then sell them for a risk-free profit. This action will increase 
-the supply of Thaums and drive the price back down to parity.</p>
-<p>If the exhaust is temporarily insufficient to hold the peg, the Thaums price will drop below 1 XTR. This will 
-immediately shut off deposits because submarine swaps will a be cheaper route to obtaining Thaums than burning 
-Tari (which are always 1:1). Since the exhausts upward price pressure is a constant force, the Thaums price will 
+<p>To prevent the eventual collapse of the Tari price to zero, there must be an exhaust mechanism that continually 
+removes Tari from the system..</p>
+<p>The simplest exhaust mechanism is to simply burn a fraction of Tari fees from every transaction! These can be very
+low. Presumably, over the long-run the burn rate should approximately match the Minotari blockchain tail emission.</p>
+<p>The exhaust places a permanent upward pressure on the Tari exchange rate; but it will never exceed 1:1 with Minotari,
+since any premium will be immediately arbitraged away. This is because anyone can <em>always</em> burn as much Minotari as they 
+wish and mint Tari at a 1:1 ratio on the DAN and then sell them for a risk-free profit. This action will increase 
+the supply of Tari and drive the price back down to parity.</p>
+<p>If the exhaust is temporarily insufficient to hold the peg, the Tari price will drop below 1 XTR. This will 
+immediately shut off deposits because submarine swaps will a be cheaper route to obtaining Tari than burning 
+Minotari (which are always 1:1). Since the exhausts upward price pressure is a constant force, the Tari price will 
 eventually approach 1:1 again.</p>
-<p>Over time, we expect this mechanism to provide a somewhat stable peg between Thaum and Tari with the Thaum price 
+<p>Over time, we expect this mechanism to provide a somewhat stable peg between Tari and Minotari with the Tari price 
 occasionally dropping below parity and possibly remaining there for some time. As secondary markets for the 
-Tari-Thaum pair matures, this event will immediately create a bid on Thaums, since -- in the absence of catastrophic 
-failure -- speculators know that the Thaum price will eventually return to parity, causing upward pressure to come into 
+Tari-Minotari pair matures, this event will immediately create a bid on Tari, since -- in the absence of catastrophic 
+failure -- speculators know that the Tari price will eventually return to parity, causing upward pressure to come into 
 play quickly and efficiently.</p>
 <h1 id="change-log"><a class="header" href="#change-log">Change Log</a></h1>
 <table><thead><tr><th align="left">Date</th><th align="left">Change</th><th align="left">Author</th></tr></thead><tbody>
+<tr><td align="left">23 Nov 2023</td><td align="left">Thaum -&gt; Tari</td><td align="left">CjS77</td></tr>
 <tr><td align="left">1 Nov 2022</td><td align="left">First draft</td><td align="left">CjS77</td></tr>
 </tbody></table>
 
