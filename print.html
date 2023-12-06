@@ -4631,12 +4631,12 @@ pushed to the stack if multiple signature validation succeeds. </p>
 <ul>
 <li>Fails with <code>VerifyFailed</code> if any signature is invalid.</li>
 </ul>
-<h5 id="toristrettopoint"><a class="header" href="#toristrettopoint">ToRistrettoPoint,</a></h5>
-<p>Pops the top element from the stack, either a scalar or a hash, calculates the corresponding Ristretto point,
-and pushes the result to the stack. </p>
+<h5 id="toristrettopoint"><a class="header" href="#toristrettopoint">ToRistrettoPoint</a></h5>
+<p>Pops the top element from the stack (either a scalar or a hash), parses it canonically as a Ristretto secret key if possible, computes the corresponding Ristretto public key, and pushes this value to the stack.</p>
 <ul>
-<li>Fails with <code>StackUnderflow</code> if the stack is empty. </li>
-<li>Fails with <code>IncompatibleTypes</code> if the stack item is not a valid 32 byte sequence.</li>
+<li>Fails with <code>StackUnderflow</code> if the stack is empty.</li>
+<li>Fails with <code>IncompatibleTypes</code> if the stack item is not either a scalar or a hash.</li>
+<li>Fails with <code>InvalidInput</code> if the stack item cannot be canonically parsed as a Ristretto secret key.</li>
 </ul>
 <h3 id="miscellaneous"><a class="header" href="#miscellaneous">Miscellaneous</a></h3>
 <h5 id="return"><a class="header" href="#return">Return</a></h5>
@@ -4834,6 +4834,7 @@ and contributions to this RFC.</p>
 <tr><td align="left">27 Sep 2022</td><td align="left">Add aggregate signatures to transaction inputs and outputs</td><td align="left">hansieodendaal</td></tr>
 <tr><td align="left">28 Sep 2022</td><td align="left">Minor update to reflect implementation</td><td align="left">sdbondi</td></tr>
 <tr><td align="left">11 Nov 2022</td><td align="left">Update for code review/audit</td><td align="left">hansieodendaal</td></tr>
+<tr><td align="left">20 Nov 2023</td><td align="left">Update <code>ToRistrettoPoint</code> documentation</td><td align="left">AaronFeickert</td></tr>
 </tbody></table>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rfc-0204tariscriptexamples"><a class="header" href="#rfc-0204tariscriptexamples">RFC-0204/TariScriptExamples</a></h1>
 <p>$$
